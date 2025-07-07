@@ -16,7 +16,7 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     required this.validator,
     required this.controller,
-    this.suffixIcon,  bool? readOnly,  void Function()? onTap,
+    this.suffixIcon,  bool? readOnly,  void Function()? onTap,  Icon? prefixIcon,
   });
 
   @override
@@ -28,7 +28,7 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppColors.background,
+        fillColor: AppColors.textfield,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,

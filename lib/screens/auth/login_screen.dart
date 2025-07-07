@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +14,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginScreenState createState() => _LoginScreenState();
 }
 
@@ -20,6 +23,20 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String _topText = 'Log In';
+
+  @override
+  void initState() {
+    super.initState();
+    // Change text after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          _topText = 'Hello';
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -74,96 +91,173 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      body: Column(
+      body: GestureDetector(
+        onTap: () {
+          // Dismiss keyboard when tapping outside text fields
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
         children: [
           Container(
             height: screenHeight * 0.3,
             color: AppColors.background,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        child: Text(
+                          _topText,
+                          key: ValueKey(_topText),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Balance the back button
+                ],
+              ),
+            ),
           ),
           Expanded(
             child: Container(
-              color: AppColors.white,
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+              ),
               padding: const EdgeInsets.all(20),
               child: Form(
                 key: _formKey,
                 child: Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CustomTextField(
-                          label: 'Email',
-                          controller: _emailController,
-                          validator: Validator.validateEmail,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
                         const SizedBox(height: 20),
-                        CustomTextField(
-                          label: 'Password',
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          validator: Validator.validatePassword,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '  Welcome',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _forgotPassword,
-                            child: const Text('Forgot Password?'),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        authProvider.isLoading
-                            ? const CircularProgressIndicator()
-                            : CustomButton(
-                                text: 'Log In',
-                                onPressed: _login,
+                        const SizedBox(height: 30),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CustomTextField(
+                                label: 'Email',
+                                controller: _emailController,
+                                validator: Validator.validateEmail,
+                                keyboardType: TextInputType.emailAddress,
                               ),
-                        const SizedBox(height: 20),
-                        if (!authProvider.isLoading)
-                          GestureDetector(
-                            onTap: () async {
-                              try {
-                                final success = await authProvider.googleSignIn();
-                                if (success) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const BottomNavigator()),
-                                  );
-                                }
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(e.toString())),
-                                );
-                              }
-                            },
-                            child: Image.asset('assets/Google_Logo/google-logo.png', height: 40),
+                              const SizedBox(height: 20),
+                              CustomTextField(
+                                label: 'Password',
+                                controller: _passwordController,
+                                obscureText: _obscurePassword,
+                                validator: Validator.validatePassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                    color: AppColors.primary,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: _forgotPassword,
+                                  child: Text(
+                                    'Forgot Password?',
+                                    style: TextStyle(color: AppColors.primary),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              authProvider.isLoading
+                                  ? const CircularProgressIndicator()
+                                  : CustomButton(
+                                      text: '    Log In    ', 
+                                      onPressed: _login,
+                                    ),
+                              const SizedBox(height: 15),
+                              const Text(
+                                'or',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 15),
+                              if (!authProvider.isLoading)
+                                GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      final success = await authProvider.googleSignIn();
+                                      if (success) {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => const BottomNavigator()),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    }
+                                  },
+                                  child: Image.asset('assets/Google_Logo/google-logo.png', height: 40),
+                                ),
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text("Don't have an account? "),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Sign Up',
+                                      style: TextStyle(color: AppColors.primary),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text("Don't have an account? "),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                                );
-                              },
-                              child: const Text('Sign Up'),
-                            ),
-                          ],
                         ),
                       ],
                     );
@@ -172,8 +266,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        ],
-      ),
+        ]),
+      ), 
     );
   }
 }
