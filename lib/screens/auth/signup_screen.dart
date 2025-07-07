@@ -151,7 +151,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               );
                             }
                           },
-                          child: Image.asset('assets/Naivedhya_Logo/naivedhya_logo.png', height: 40),
+                          child: Image.asset('assets/Google_Logo/google-logo.png', height: 40),
                         ),
                     ],
                   );

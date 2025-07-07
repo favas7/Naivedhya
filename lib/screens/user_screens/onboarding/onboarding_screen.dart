@@ -16,17 +16,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      'image': 'assets/Naivedhya_Logo/naivedhya_logo.png',
+      'image': 'assets/Onboard_screen_images/11.jpg',
       'title': 'Welcome to Naivedhya',
       'description': 'Discover delicious meals from our restaurants.',
     },
     {
-      'image': 'assets/Naivedhya_Logo/naivedhya_logo.png',
+      'image': 'assets/Onboard_screen_images/22.jpg',
       'title': 'Fast Delivery',
       'description': 'Track your order in real-time.',
     },
     {
-      'image': 'assets/Naivedhya_Logo/naivedhya_logo.png',
+      'image': 'assets/Onboard_screen_images/33.jpg',
       'title': 'Enjoy Your Meal',
       'description': 'Multiple payment options for your convenience.',
     },
@@ -42,100 +42,103 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      body: Column(
-        children: [
-          Container(
-            height: screenHeight * 0.6,
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              itemCount: _onboardingData.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    Image.asset(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              height: screenHeight * 0.6,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: _onboardingData.length,
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: [
+                      Image.asset(
                       _onboardingData[index]['image']!,
                       height: screenHeight * 0.6,
+                      width: double.infinity,
                       fit: BoxFit.cover,
-                    ),
-                  ],
-                );
-              },
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: Container(
-              color: AppColors.white,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _onboardingData[_currentPage]['title']!,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    _onboardingData[_currentPage]['description']!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 20),
-                  if (_currentPage < _onboardingData.length - 1)
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: TextButton(
-                        onPressed: () {
+            Expanded(
+              child: Container(
+                color: AppColors.white,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _onboardingData[_currentPage]['title']!,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _onboardingData[_currentPage]['description']!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 20),
+                    if (_currentPage < _onboardingData.length - 1)
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const BottomNavigator()),
+                            );
+                          },
+                          child: const Text('Skip'),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        _onboardingData.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _currentPage == index ? AppColors.primary : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    CustomButton(
+                      text: _currentPage == _onboardingData.length - 1 ? 'Get Started' : 'Next',
+                      onPressed: () {
+                        if (_currentPage == _onboardingData.length - 1) {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (_) => const BottomNavigator()),
                           );
-                        },
-                        child: const Text('Skip'),
-                      ),
+                        } else {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeIn,
+                          );
+                        }
+                      },
                     ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _onboardingData.length,
-                      (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 5),
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _currentPage == index ? AppColors.primary : Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  CustomButton(
-                    text: _currentPage == _onboardingData.length - 1 ? 'Get Started' : 'Next',
-                    onPressed: () {
-                      if (_currentPage == _onboardingData.length - 1) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const BottomNavigator()),
-                        );
-                      } else {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeIn,
-                        );
-                      }
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

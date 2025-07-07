@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 );
                               }
                             },
-                            child: Image.asset('assets/Naivedhya_Logo/naivedhya_logo.png', height: 40),
+                            child: Image.asset('assets/Google_Logo/google-logo.png', height: 40),
                           ),
                         const SizedBox(height: 20),
                         Row(
