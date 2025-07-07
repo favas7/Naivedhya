@@ -16,17 +16,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> _onboardingData = [
     {
-      'image': 'assets/images/onboarding_image1.jpg',
+      'image': 'assets/Naivedhya_Logo/naivedhya_logo.png',
       'title': 'Welcome to Naivedhya',
       'description': 'Discover delicious meals from our restaurants.',
     },
     {
-      'image': 'assets/images/onboarding_image2.jpg',
+      'image': 'assets/Naivedhya_Logo/naivedhya_logo.png',
       'title': 'Fast Delivery',
       'description': 'Track your order in real-time.',
     },
     {
-      'image': 'assets/images/onboarding_image3.jpg',
+      'image': 'assets/Naivedhya_Logo/naivedhya_logo.png',
       'title': 'Enjoy Your Meal',
       'description': 'Multiple payment options for your convenience.',
     },

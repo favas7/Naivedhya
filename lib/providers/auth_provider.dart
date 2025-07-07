@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
-import '../services/supabase_service.dart';
+import '../services/firebase_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final SupabaseService _supabaseService = SupabaseService();
-  final supabase = Supabase.instance.client;
+  final FirebaseService _firebaseService = FirebaseService();
   UserModel? _user;
   bool _isLoading = false;
 
@@ -14,9 +12,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> checkAuthStatus() async {
     try {
-      final session = supabase.auth.currentSession;
-      if (session != null) {
-        final userData = await _supabaseService.getUser(session.user.id);
+      final firebaseUser = _firebaseService.currentUser;
+      if (firebaseUser != null) {
+        final userData = await _firebaseService.getUser(firebaseUser.uid);
         if (userData != null) {
           _user = UserModel.fromJson(userData);
           notifyListeners();
@@ -32,10 +30,14 @@ Future<bool> login(String email, String password) async {
   notifyListeners();
   
   try {
-    final response = await _supabaseService.signIn(email, password);
+    debugPrint('Attempting sign-in for $email');
+    final firebaseUser = await _firebaseService.signIn(email, password);
+    debugPrint('Sign-in result: $firebaseUser');
     
-    if (response?.user != null) {
-      final userData = await _supabaseService.getUser(response!.user!.id);
+    if (firebaseUser != null) {
+      debugPrint('Fetching user data for UID: ${firebaseUser.uid}');
+      final userData = await _firebaseService.getUser(firebaseUser.uid);
+      debugPrint('User data result: $userData');
       if (userData != null) {
         _user = UserModel.fromJson(userData);
         _isLoading = false;
@@ -52,61 +54,39 @@ Future<bool> login(String email, String password) async {
     debugPrint('Login error: $e');
     _isLoading = false;
     notifyListeners();
-    return false;
+    throw Exception(e.toString().replaceAll('Exception: ', ''));
   }
 }
-
   Future<bool> signUp(UserModel user, String password) async {
     _isLoading = true;
     notifyListeners();
+    
     try {
-      // Sign up the user with Supabase using email and password
-      final response = await _supabaseService.signUp(user, password);
-      if (response != null && response.user != null) {
-        // Save user data to the profiles table
-        await supabase.from('profiles').insert({
-          'id': response.user!.id,
-          'userId': user.userId,
-          'name': user.name,
-          'email': user.email,
-          'phone': user.phone,
-          'dob': user.dob,
-          'address': user.address,
-          'pending_payments': user.pendingPayments,
-          'order_history': user.orderHistory,
-          'created_at': user.createdAt.toIso8601String(),
-          'updated_at': user.updatedAt.toIso8601String(),
-          'user_type': user.userType,
-        });
-
-        _user = user.copyWith(id: response.user!.id);
+      final firebaseUser = await _firebaseService.signUp(user, password);
+      
+      if (firebaseUser != null) {
+        _user = user.copyWith(id: firebaseUser.uid);
         _isLoading = false;
         notifyListeners();
         return true;
       }
+      
       debugPrint('SignUp failed: No user returned');
       _isLoading = false;
       notifyListeners();
       return false;
-    } on AuthException catch (e) {
-      debugPrint('Auth error: ${e.message}');
-      if (e.message.contains('Database error saving new user')) {
-        debugPrint('Check your database triggers or RLS policies.');
-      }
-      _isLoading = false;
-      notifyListeners();
-      throw Exception('Sign-up failed: ${e.message}'); // User-friendly error
+      
     } catch (e) {
-      debugPrint('Unexpected error: $e');
+      debugPrint('SignUp error: $e');
       _isLoading = false;
       notifyListeners();
-      throw Exception('An unexpected error occurred during sign-up. Please try again.'); // User-friendly error
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
   Future<void> logout() async {
     try {
-      await _supabaseService.signOut();
+      await _firebaseService.signOut();
       _user = null;
       notifyListeners();
     } catch (e) {
@@ -117,26 +97,12 @@ Future<bool> login(String email, String password) async {
   Future<bool> googleSignIn() async {
     _isLoading = true;
     notifyListeners();
+    
     try {
-      final response = await _supabaseService.googleSignIn();
-      if (response != null && response.user != null) {
-        // Save or update user data in profiles table
-        await supabase.from('profiles').upsert({
-          'id': response.user!.id,
-          'userId': response.user!.id,
-          'name': response.user!.userMetadata?['full_name'] ?? 'Unknown',
-          'email': response.user!.email,
-          'phone': '',
-          'dob': '',
-          'address': '',
-          'pending_payments': 0.0,
-          'order_history': [],
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
-          'user_type': 'user',
-        });
-
-        final userData = await _supabaseService.getUser(response.user!.id);
+      final firebaseUser = await _firebaseService.googleSignIn();
+      
+      if (firebaseUser != null) {
+        final userData = await _firebaseService.getUser(firebaseUser.uid);
         if (userData != null) {
           _user = UserModel.fromJson(userData);
         }
@@ -144,15 +110,26 @@ Future<bool> login(String email, String password) async {
         notifyListeners();
         return true;
       }
+      
       debugPrint('Google SignIn failed: No user returned');
       _isLoading = false;
       notifyListeners();
       return false;
+      
     } catch (e) {
       debugPrint('Google SignIn error: $e');
       _isLoading = false;
       notifyListeners();
-      return false;
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseService.sendPasswordResetEmail(email);
+    } catch (e) {
+      debugPrint('Password reset error: $e');
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
 }

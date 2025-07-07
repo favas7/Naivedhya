@@ -23,7 +23,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _dobController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -48,22 +47,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
       try {
         final user = UserModel(
-          userId: DateTime.now().millisecondsSinceEpoch.toString(),
+          userid: DateTime.now().millisecondsSinceEpoch.toString(),
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
           dob: _dobController.text,
           address: '',
-          pendingPayments: 0.0,
-          orderHistory: [],
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          userType: 'user',
+          pendingpayments: 0.0,
+          orderhistory: [],
+          created_at: DateTime.now(),
+          updated_at: DateTime.now(),
+          usertype: 'user',
         );
         
         await Navigator.push(
@@ -76,10 +72,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -94,82 +86,76 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomTextField(
-                    label: 'Name',
-                    controller: _nameController,
-                    validator: Validator.validateName,
-                  ),
-                  const SizedBox(height: 20),
-                  CustomTextField(
-                    label: 'Email',
-                    controller: _emailController,
-                    validator: Validator.validateEmail,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 20),
-                  CustomTextField(
-                    label: 'Phone',
-                    controller: _phoneController,
-                    validator: Validator.validatePhone,
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 20),
-                  CustomTextField(
-                    label: 'Date of Birth',
-                    controller: _dobController,
-                    validator: Validator.validateDob,
-                    keyboardType: TextInputType.datetime,
-                    readOnly: true,
-                    onTap: _selectDate,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'By continuing, you agree to\nTerms of Use and Privacy Policy.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  _isLoading
-                      ? const CircularProgressIndicator()
-                      : CustomButton(
-                          text: 'Sign Up',
-                          onPressed: _handleSignUp,
+              child: Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomTextField(
+                        label: 'Name',
+                        controller: _nameController,
+                        validator: Validator.validateName,
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        label: 'Email',
+                        controller: _emailController,
+                        validator: Validator.validateEmail,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        label: 'Phone',
+                        controller: _phoneController,
+                        validator: Validator.validatePhone,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 20),
+                      CustomTextField(
+                        label: 'Date of Birth',
+                        controller: _dobController,
+                        validator: Validator.validateDob,
+                        keyboardType: TextInputType.datetime,
+                        readOnly: true,
+                        onTap: _selectDate,
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'By continuing, you agree to\nTerms of Use and Privacy Policy.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      authProvider.isLoading
+                          ? const CircularProgressIndicator()
+                          : CustomButton(
+                              text: 'Sign Up',
+                              onPressed: _handleSignUp,
+                            ),
+                      const SizedBox(height: 20),
+                      const Text('or sign up with'),
+                      const SizedBox(height: 10),
+                      if (!authProvider.isLoading)
+                        GestureDetector(
+                          onTap: () async {
+                            try {
+                              final success = await authProvider.googleSignIn();
+                              if (success) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const BottomNavigator()),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
+                          },
+                          child: Image.asset('assets/Naivedhya_Logo/naivedhya_logo.png', height: 40),
                         ),
-                  const SizedBox(height: 20),
-                  const Text('or sign up with'),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () async {
-                      setState(() {
-                        _isLoading = true;
-                      });
-                      try {
-                        final success = await Provider.of<AuthProvider>(context, listen: false).googleSignIn();
-                        if (success) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => const BottomNavigator()),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Google Sign-In failed')),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Google Sign-In error: $e')),
-                        );
-                      } finally {
-                        setState(() {
-                          _isLoading = false;
-                        });
-                      }
-                    },
-                    child: Image.asset('assets/Naivedhya_Logo/naivedhya_logo.png', height: 40),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),

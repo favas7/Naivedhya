@@ -22,7 +22,6 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -40,10 +39,6 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         return;
       }
 
-      setState(() {
-        _isLoading = true;
-      });
-
       try {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final success = await authProvider.signUp(widget.user, _passwordController.text);
@@ -53,19 +48,11 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
             MaterialPageRoute(builder: (_) => const OnboardingScreen()),
             (route) => false,
           );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to create account')),
-          );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(e.toString())),
         );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -78,40 +65,44 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CustomTextField(
-                label: 'Password',
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                validator: Validator.validatePassword,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: 'Confirm Password',
-                controller: _confirmPasswordController,
-                obscureText: _obscurePassword,
-                validator: Validator.validatePassword,
-              ),
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : CustomButton(
-                      text: 'Create New Password',
-                      onPressed: _createPassword,
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CustomTextField(
+                    label: 'Password',
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    validator: Validator.validatePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
-            ],
+                  ),
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    label: 'Confirm Password',
+                    controller: _confirmPasswordController,
+                    obscureText: _obscurePassword,
+                    validator: Validator.validatePassword,
+                  ),
+                  const SizedBox(height: 20),
+                  authProvider.isLoading
+                      ? const CircularProgressIndicator()
+                      : CustomButton(
+                          text: 'Create New Password',
+                          onPressed: _createPassword,
+                        ),
+                ],
+              );
+            },
           ),
         ),
       ),
