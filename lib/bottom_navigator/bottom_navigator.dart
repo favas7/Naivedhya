@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/constants/colors.dart';
-import 'package:naivedhya/screens/user_screens/home/customer_care_screen.dart';
-import 'package:naivedhya/screens/user_screens/home/favorites_screen.dart';
-import 'package:naivedhya/screens/user_screens/home/food_screen.dart';
-import 'package:naivedhya/screens/user_screens/home/home_screen.dart';
-import 'package:naivedhya/screens/user_screens/home/list_screen.dart';
+import 'package:naivedhya/screens/user/home/customer_care_screen.dart';
+import 'package:naivedhya/screens/user/home/favorites_screen.dart';
+import 'package:naivedhya/screens/user/home/food_screen.dart';
+import 'package:naivedhya/screens/user/home/home_screen.dart';
+import 'package:naivedhya/screens/user/home/list_screen.dart';
 
 class BottomNavigator extends StatefulWidget {
   const BottomNavigator({super.key});

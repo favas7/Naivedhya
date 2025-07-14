@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
+final _supabase = Supabase.instance.client;
 
 class AuthProvider with ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
@@ -25,38 +27,93 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-Future<bool> login(String email, String password) async {
-  _isLoading = true;
-  notifyListeners();
-  
-  try {
-    debugPrint('Attempting sign-in for $email');
-    final firebaseUser = await _firebaseService.signIn(email, password);
-    debugPrint('Sign-in result: $firebaseUser');
-    
-    if (firebaseUser != null) {
-      debugPrint('Fetching user data for UID: ${firebaseUser.uid}');
-      final userData = await _firebaseService.getUser(firebaseUser.uid);
-      debugPrint('User data result: $userData');
-      if (userData != null) {
-        _user = UserModel.fromJson(userData);
-        _isLoading = false;
-        notifyListeners();
-        return true;
+  // Add this method for splash screen to get user type
+  Future<String?> getUserType() async {
+    try {
+      final firebaseUser = _firebaseService.currentUser;
+      if (firebaseUser != null) {
+        return await checkUserType(firebaseUser.uid);
       }
+      return null;
+    } catch (e) {
+      debugPrint('Get user type error: $e');
+      return 'user'; // Default to user if error
     }
-    
-    _isLoading = false;
-    notifyListeners();
-    return false;
-    
-  } catch (e) {
-    debugPrint('Login error: $e');
-    _isLoading = false;
-    notifyListeners();
-    throw Exception(e.toString().replaceAll('Exception: ', ''));
   }
-}
+
+  // Updated login method in your AuthProvider
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      debugPrint('Attempting sign-in for $email');
+      final firebaseUser = await _firebaseService.signIn(email, password);
+      debugPrint('Sign-in result: $firebaseUser');
+      
+      if (firebaseUser != null) {
+        debugPrint('Fetching user data for UID: ${firebaseUser.uid}');
+        final userData = await _firebaseService.getUser(firebaseUser.uid);
+        debugPrint('User data result: $userData');
+        
+        if (userData != null) {
+          _user = UserModel.fromJson(userData);
+          
+          // Check usertype from Supabase profiles table
+          debugPrint('Checking user type for UID: ${firebaseUser.uid}');
+          final usertype = await checkUserType(firebaseUser.uid);
+          debugPrint('User type result: $usertype');
+          
+          _isLoading = false;
+          notifyListeners();
+          
+          return {
+            'success': true,
+            'usertype': usertype,
+            'user': _user,
+          };
+        }
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'success': false,
+        'usertype': null,
+        'user': null,
+      };
+      
+    } catch (e) {
+      debugPrint('Login error: $e');
+      _isLoading = false;
+      notifyListeners();
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // Helper method to check user type from Supabase (add this if not already present)
+  Future<String?> checkUserType(String uid) async {
+    try {
+      // Replace with your actual Supabase client and query
+      final response = await _supabase
+          .from('profiles')
+          .select('usertype')
+          .eq('id', uid)
+          .single();
+      
+      if (response['usertype'] != null) {
+        return response['usertype'].toString();
+      }
+      
+      // Default to 'user' if no usertype found
+      return 'user';
+    } catch (e) {
+      debugPrint('Error checking user type: $e');
+      // Default to 'user' if there's an error
+      return 'user';
+    }
+  }
+
   Future<bool> signUp(UserModel user, String password) async {
     _isLoading = true;
     notifyListeners();

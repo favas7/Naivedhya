@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
+import 'package:naivedhya/screens/admin/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../providers/auth_provider.dart';
@@ -45,26 +46,46 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-            final success = await Provider.of<AuthProvider>(context, listen: false)
-                  .login(_emailController.text, _passwordController.text);
-              print('Login success: $success, user: ');
-              if (success) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BottomNavigator()),
-                );
-              }
-          } catch (e) {
-            print('Caught error in _login: $e'); // Add this
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(e.toString())),
-            );
-          }
+// Updated _login method for your LoginScreen
+void _login() async {
+  if (_formKey.currentState!.validate()) {
+    try {
+      final result = await Provider.of<AuthProvider>(context, listen: false)
+          .login(_emailController.text, _passwordController.text);
+      
+      print('Login result: $result');
+      
+      if (result['success']) {
+        final userType = result['usertype'];
+        
+        if (userType == 'admin') {
+          // Navigate to Admin Dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+          );
+        } else {
+          // Navigate to regular user dashboard (BottomNavigator)
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const BottomNavigator()),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed. Please try again.')),
+        );
+      }
+    } catch (e) {
+      print('Caught error in _login: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
   }
+}
+
+
 
   void _forgotPassword() async {
     if (_emailController.text.isEmpty) {

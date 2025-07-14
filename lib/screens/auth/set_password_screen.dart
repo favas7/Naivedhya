@@ -8,7 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../utils/validator.dart';
-import '../user_screens/onboarding/onboarding_screen.dart';
+import '../user/onboarding/onboarding_screen.dart';
 
 class SetPasswordScreen extends StatefulWidget {
   final UserModel user;
