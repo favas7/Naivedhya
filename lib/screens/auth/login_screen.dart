@@ -1,8 +1,9 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
-import 'package:naivedhya/screens/admin/admin_dashboard.dart';
+import 'package:naivedhya/screens/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../providers/auth_provider.dart';
@@ -107,23 +108,20 @@ void _login() async {
       );
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          // Dismiss keyboard when tapping outside text fields
-          FocusScope.of(context).unfocus();
-        },
-        child: Column(
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Column(
         children: [
           Container(
-            height: screenHeight * 0.3,
+            height: 0.3.sh,
             color: AppColors.background,
             child: Padding(
-              padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+              padding: EdgeInsets.only(top: 40.h, left: 20.w, right: 20.w),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,8 +139,8 @@ void _login() async {
                         child: Text(
                           _topText,
                           key: ValueKey(_topText),
-                          style: const TextStyle(
-                            fontSize: 24,
+                          style: TextStyle(
+                            fontSize: 24.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -150,145 +148,143 @@ void _login() async {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48), // Balance the back button
+                  SizedBox(width: 48.w),
                 ],
               ),
             ),
           ),
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(25),
-                  topRight: Radius.circular(25),
+                  topLeft: Radius.circular(25.r),
+                  topRight: Radius.circular(25.r),
                 ),
               ),
-              padding: const EdgeInsets.all(20),
-              child: Form(
-                key: _formKey,
-                child: Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    return Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '  Welcome',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.r),
+                child: Form(
+                  key: _formKey,
+                  child: Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      return Column(
+                        children: [
+                          SizedBox(height: 20.h),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '  Welcome',
+                              style: TextStyle(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 30),
-                        Expanded(
-                          child: Column(
+                          SizedBox(height: 30.h),
+                          // Remove the nested Expanded widget
+                          CustomTextField(
+                            label: 'Email',
+                            controller: _emailController,
+                            validator: Validator.validateEmail,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          SizedBox(height: 20.h),
+                          CustomTextField(
+                            label: 'Password',
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            validator: Validator.validatePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                color: AppColors.primary,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 10.h),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _forgotPassword,
+                              child: Text(
+                                'Forgot Password?',
+                                style: TextStyle(color: AppColors.primary),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20.h),
+                          authProvider.isLoading
+                              ? const CircularProgressIndicator()
+                              : CustomButton(
+                                  text: '    Log In    ', 
+                                  onPressed: _login,
+                                ),
+                          SizedBox(height: 15.h),
+                          Text(
+                            'or',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          SizedBox(height: 15.h),
+                          if (!authProvider.isLoading)
+                            GestureDetector(
+                              onTap: () async {
+                                try {
+                                  final success = await authProvider.googleSignIn();
+                                  if (success) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const BottomNavigator()),
+                                    );
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())),
+                                  );
+                                }
+                              },
+                              child: Image.asset('assets/Google_Logo/google-logo.png', height: 40.h),
+                            ),
+                          SizedBox(height: 20.h),
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              CustomTextField(
-                                label: 'Email',
-                                controller: _emailController,
-                                validator: Validator.validateEmail,
-                                keyboardType: TextInputType.emailAddress,
-                              ),
-                              const SizedBox(height: 20),
-                              CustomTextField(
-                                label: 'Password',
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                validator: Validator.validatePassword,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                                    color: AppColors.primary,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
+                              const Text("Don't have an account? "),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                                  );
+                                },
+                                child: Text(
+                                  'Sign Up',
+                                  style: TextStyle(color: AppColors.primary),
                                 ),
-                              ),
-                              const SizedBox(height: 10),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: _forgotPassword,
-                                  child: Text(
-                                    'Forgot Password?',
-                                    style: TextStyle(color: AppColors.primary),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              authProvider.isLoading
-                                  ? const CircularProgressIndicator()
-                                  : CustomButton(
-                                      text: '    Log In    ', 
-                                      onPressed: _login,
-                                    ),
-                              const SizedBox(height: 15),
-                              const Text(
-                                'or',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              if (!authProvider.isLoading)
-                                GestureDetector(
-                                  onTap: () async {
-                                    try {
-                                      final success = await authProvider.googleSignIn();
-                                      if (success) {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(builder: (_) => const BottomNavigator()),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(e.toString())),
-                                      );
-                                    }
-                                  },
-                                  child: Image.asset('assets/Google_Logo/google-logo.png', height: 40),
-                                ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text("Don't have an account? "),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                                      );
-                                    },
-                                    child: Text(
-                                      'Sign Up',
-                                      style: TextStyle(color: AppColors.primary),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                          SizedBox(height: 20.h), // Extra bottom padding
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
           ),
-        ]),
-      ), 
-    );
-  }
+        ],
+      ),
+    ),
+  );
+}
 }

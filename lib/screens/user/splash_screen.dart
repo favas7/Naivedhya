@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
-import 'package:naivedhya/screens/admin/admin_dashboard.dart';
+import 'package:naivedhya/screens/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../constants/colors.dart';

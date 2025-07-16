@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:naivedhya/config/supabase_config.dart';
 import 'package:naivedhya/firebase_options.dart';
+import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,13 +13,12 @@ import 'constants/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await Supabase.initialize(
-    url: 'https://plhvaeegrhzvkqlltzyb.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsaHZhZWVncmh6dmtxbGx0enliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4MTU3NTEsImV4cCI6MjA2NzM5MTc1MX0.1t4BRB4p_BQWWUBSz0IO6B3wjLHWySuqnhNgLpjE8RY',
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
   );
   
   runApp(const MyApp());
@@ -30,21 +32,38 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => HotelProvider()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Naivedhya',
-        theme: ThemeData(
-          primaryColor: AppColors.primary,
-          scaffoldBackgroundColor: AppColors.background,
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+      child: ScreenUtilInit(
+        // Design size for mobile (you can adjust based on your design)
+        designSize: const Size(375, 812),
+        
+        // Minimum text adapt size
+        minTextAdapt: true,
+        
+        // Split screen adaptation for tablets/web
+        splitScreenMode: true,
+        
+        // Responsive breakpoints for web
+        useInheritedMediaQuery: true,
+        
+        builder: (context, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Naivedhya',
+            theme: ThemeData(
+              primaryColor: AppColors.primary,
+              scaffoldBackgroundColor: AppColors.background,
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
             ),
-          ),
-        ),
-        home: const SplashScreen(),
+            home: const SplashScreen(),
+          );
+        },
       ),
     );
   }
