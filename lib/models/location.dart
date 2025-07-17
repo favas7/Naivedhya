@@ -4,6 +4,7 @@ class Location {
   final String state;
   final String country;
   final String postalCode;
+  final String? hotelid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -13,6 +14,7 @@ class Location {
     required this.state,
     required this.country,
     required this.postalCode,
+    this.hotelid,
     this.createdAt,
     this.updatedAt,
   });
@@ -24,6 +26,7 @@ class Location {
       state: json['state'],
       country: json['country'],
       postalCode: json['postal_code'],
+      hotelid: json['hotel_id'],
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
@@ -39,6 +42,7 @@ class Location {
       'state': state,
       'country': country,
       'postal_code': postalCode,
+      'hotel_id': hotelid,
     };
   }
 
@@ -48,6 +52,7 @@ class Location {
     String? state,
     String? country,
     String? postalCode,
+    String? hotelid,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -57,6 +62,7 @@ class Location {
       state: state ?? this.state,
       country: country ?? this.country,
       postalCode: postalCode ?? this.postalCode,
+      hotelid: hotelid ?? this.hotelid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
