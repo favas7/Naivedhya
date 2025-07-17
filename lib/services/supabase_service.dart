@@ -166,4 +166,80 @@ class SupabaseService {
       return [];
     }
   }
+
+  // Get manager by ID
+  Future<Manager?> getManagerById(String managerId) async {
+    try {
+      final response = await _client
+          .from('managers')
+          .select()
+          .eq('id', managerId)
+          .maybeSingle();
+
+      if (response != null) {
+        return Manager.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting manager by ID: $e');
+      return null;
+    }
+  }
+
+  // Get location by ID
+  Future<Location?> getLocationById(String locationId) async {
+    try {
+      final response = await _client
+          .from('locations')
+          .select()
+          .eq('id', locationId)
+          .maybeSingle();
+
+      if (response != null) {
+        return Location.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting location by ID: $e');
+      return null;
+    }
+  }
+
+  // Get manager by hotel ID
+  Future<Manager?> getManagerByHotelId(String hotelId) async {
+    try {
+      final response = await _client
+          .from('managers')
+          .select()
+          .eq('hotel_id', hotelId)
+          .maybeSingle();
+
+      if (response != null) {
+        return Manager.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting manager by hotel ID: $e');
+      return null;
+    }
+  }
+
+  // Get location by hotel ID
+  Future<Location?> getLocationByHotelId(String hotelId) async {
+    try {
+      final response = await _client
+          .from('locations')
+          .select()
+          .eq('hotel_id', hotelId)
+          .maybeSingle();
+
+      if (response != null) {
+        return Location.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting location by hotel ID: $e');
+      return null;
+    }
+  }
 }

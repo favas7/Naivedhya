@@ -1,0 +1,91 @@
+import 'package:flutter/material.dart';
+import 'package:naivedhya/models/manager.dart';
+import 'package:naivedhya/services/manager_service.dart';
+
+class ManagerProvider extends ChangeNotifier {
+  final ManagerService _managerService = ManagerService();
+  
+  List<Manager> _managers = [];
+  bool _isLoading = false;
+  String? _error;
+
+  List<Manager> get managers => _managers;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  Future<void> loadManagers() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _managers = await _managerService.getAllManagers();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> addManager(Manager manager) async {
+    try {
+      _error = null;
+      final managerId = await _managerService.addManager(manager);
+      await loadManagers(); // Refresh the list
+      return managerId;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<void> updateManager(Manager manager) async {
+    try {
+      _error = null;
+      await _managerService.updateManager(manager);
+      await loadManagers(); // Refresh the list
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteManager(String managerId) async {
+    try {
+      _error = null;
+      await _managerService.deleteManager(managerId);
+      await loadManagers(); // Refresh the list
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<Manager?> getManagerById(String managerId) async {
+    try {
+      return await _managerService.getManagerById(managerId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<Manager?> getManagerByHotelId(String hotelId) async {
+    try {
+      return await _managerService.getManagerByHotelId(hotelId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+}

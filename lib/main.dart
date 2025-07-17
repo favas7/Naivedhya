@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:naivedhya/config/supabase_config.dart';
 import 'package:naivedhya/firebase_options.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
+import 'package:naivedhya/providers/location_provider.dart';
+import 'package:naivedhya/providers/manager_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -33,6 +35,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => HotelProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()), 
+        ChangeNotifierProvider(create: (_) => ManagerProvider()),  
       ],
       child: ScreenUtilInit(
         // Design size for mobile (you can adjust based on your design)

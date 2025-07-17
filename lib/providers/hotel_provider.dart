@@ -117,6 +117,85 @@ class HotelProvider with ChangeNotifier {
     }
   }
 
+  // Update hotel with manager ID
+  Future<bool> updateHotelManager(String hotelId, String managerId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Find the hotel to update
+      final hotelIndex = _hotels.indexWhere((h) => h.id == hotelId);
+      if (hotelIndex == -1) {
+        _error = 'Hotel not found';
+        return false;
+      }
+
+      final currentHotel = _hotels[hotelIndex];
+      final updatedHotel = currentHotel.copyWith(managerId: managerId);
+      
+      final success = await _supabaseService.updateHotel(hotelId, updatedHotel);
+      if (success != null) {
+        _hotels[hotelIndex] = updatedHotel;
+        notifyListeners();
+        return true;
+      } else {
+        _error = 'Failed to update hotel manager';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Failed to update hotel manager: $e';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Update hotel with location ID
+  Future<bool> updateHotelLocation(String hotelId, String locationId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Find the hotel to update
+      final hotelIndex = _hotels.indexWhere((h) => h.id == hotelId);
+      if (hotelIndex == -1) {
+        _error = 'Hotel not found';
+        return false;
+      }
+
+      final currentHotel = _hotels[hotelIndex];
+      final updatedHotel = currentHotel.copyWith(locationId: locationId);
+      
+      final success = await _supabaseService.updateHotel(hotelId, updatedHotel);
+      if (success != null) {
+        _hotels[hotelIndex] = updatedHotel;
+        notifyListeners();
+        return true;
+      } else {
+        _error = 'Failed to update hotel location';
+        return false;
+      }
+    } catch (e) {
+      _error = 'Failed to update hotel location: $e';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Get hotel by ID
+  Hotel? getHotelById(String hotelId) {
+    try {
+      return _hotels.firstWhere((hotel) => hotel.id == hotelId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Clear error
   void clearError() {
     _error = null;
