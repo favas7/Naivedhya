@@ -30,15 +30,20 @@ class ManagerProvider extends ChangeNotifier {
   }
 
   Future<String?> addManager(Manager manager) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
     try {
-      _error = null;
       final managerId = await _managerService.addManager(manager);
       await loadManagers(); // Refresh the list
       return managerId;
-    } catch (e) {
+        } catch (e) {
       _error = e.toString();
-      notifyListeners();
       return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

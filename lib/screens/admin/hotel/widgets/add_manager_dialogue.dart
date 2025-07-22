@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/models/manager.dart';
+import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/providers/manager_provider.dart'; // Changed import
 import 'package:provider/provider.dart';
 
@@ -29,26 +30,31 @@ class _AddManagerDialogState extends State<AddManagerDialog> {
     super.dispose();
   }
 
-  Future<void> _saveManager() async {
-    if (!_formKey.currentState!.validate()) return;
+Future<void> _saveManager() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      final provider = Provider.of<ManagerProvider>(context, listen: false); // Changed provider
+  try {
+    final managerProvider = Provider.of<ManagerProvider>(context, listen: false);
+    final hotelProvider = Provider.of<HotelProvider>(context, listen: false);
+    
+    final manager = Manager(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      hotelid: widget.hotel.id,
+    );
+
+    final managerId = await managerProvider.addManager(manager);
+
+    if (managerId != null && widget.hotel.id != null) {
+      // Update the hotel with the manager ID
+      final success = await hotelProvider.updateHotelManager(widget.hotel.id!, managerId);
       
-      final manager = Manager(
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-        hotelid: widget.hotel.id,
-      );
-
-      final managerId = await provider.addManager(manager); // Updated method call
-
-      if (managerId != null) {
+      if (success) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -59,27 +65,34 @@ class _AddManagerDialogState extends State<AddManagerDialog> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(provider.error ?? 'Failed to add manager'),
+            content: Text(hotelProvider.error ?? 'Failed to update hotel with manager'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text(managerProvider.error ?? 'Failed to add manager'),
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -124,7 +137,7 @@ class _AddManagerDialogState extends State<AddManagerDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withAlpha(0),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
