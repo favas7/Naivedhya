@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
@@ -9,7 +11,7 @@ import 'package:provider/provider.dart';
 class AddManagerDialog extends StatefulWidget {
   final Hotel hotel;
 
-  const AddManagerDialog({Key? key, required this.hotel}) : super(key: key);
+  const AddManagerDialog({super.key, required this.hotel});
 
   @override
   State<AddManagerDialog> createState() => _AddManagerDialogState();

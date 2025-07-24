@@ -1,10 +1,15 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:naivedhya/constants/colors.dart';
+import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:provider/provider.dart';
 
 class AddHotelDialog extends StatefulWidget {
-  const AddHotelDialog({Key? key}) : super(key: key);
+  final Hotel? hotel; // Make it optional for both add and edit modes
+  
+  const AddHotelDialog({super.key, this.hotel});
 
   @override
   State<AddHotelDialog> createState() => _AddHotelDialogState();
@@ -15,6 +20,18 @@ class _AddHotelDialogState extends State<AddHotelDialog> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
   bool _isLoading = false;
+
+  bool get _isEditMode => widget.hotel != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill fields if editing
+    if (_isEditMode) {
+      _nameController.text = widget.hotel!.name;
+      _addressController.text = widget.hotel!.address;
+    }
+  }
 
   @override
   void dispose() {
@@ -32,23 +49,45 @@ class _AddHotelDialogState extends State<AddHotelDialog> {
 
     try {
       final provider = Provider.of<HotelProvider>(context, listen: false);
-      final success = await provider.addHotel(
-        _nameController.text,
-        _addressController.text,
-      );
+      bool success;
+      
+      if (_isEditMode) {
+        // Check if hotel ID is not null
+        final hotelId = widget.hotel!.id;
+        if (hotelId == null) {
+          throw Exception('Hotel ID is required for update');
+        }
+        
+        // Create updated hotel object
+        final updatedHotel = Hotel(
+          id: hotelId,
+          name: _nameController.text,
+          address: _addressController.text,
+          // Add other properties from the original hotel if needed
+          createdAt: widget.hotel!.createdAt,
+          // Add any other properties your Hotel model has
+        );
+        
+        success = await provider.updateHotel(hotelId, updatedHotel);
+      } else {
+        success = await provider.addHotel(
+          _nameController.text,
+          _addressController.text,
+        );
+      }
 
       if (success) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hotel added successfully!'),
+          SnackBar(
+            content: Text(_isEditMode ? 'Hotel updated successfully!' : 'Hotel added successfully!'),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(provider.error ?? 'Failed to add hotel'),
+            content: Text(provider.error ?? (_isEditMode ? 'Failed to update hotel' : 'Failed to add hotel')),
             backgroundColor: Colors.red,
           ),
         );
@@ -87,9 +126,9 @@ class _AddHotelDialogState extends State<AddHotelDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Add New Hotel',
-                    style: TextStyle(
+                  Text(
+                    _isEditMode ? 'Edit Hotel' : 'Add New Hotel',
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -165,7 +204,7 @@ class _AddHotelDialogState extends State<AddHotelDialog> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text('Add Hotel'),
+                        : Text(_isEditMode ? 'Update Hotel' : 'Add Hotel'),
                   ),
                 ],
               ),

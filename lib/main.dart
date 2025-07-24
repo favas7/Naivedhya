@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:naivedhya/config/supabase_config.dart';
 import 'package:naivedhya/firebase_options.dart';
+import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
+import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
 import 'package:naivedhya/providers/location_provider.dart';
 import 'package:naivedhya/providers/manager_provider.dart';
+import 'package:naivedhya/providers/order_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -37,6 +40,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => HotelProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()), 
         ChangeNotifierProvider(create: (_) => ManagerProvider()),  
+        ChangeNotifierProvider(create: (_) => VendorHotelProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => DeliveryPersonnelProvider()),
       ],
       child: ScreenUtilInit(
         // Design size for mobile (you can adjust based on your design)

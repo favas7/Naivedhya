@@ -6,7 +6,7 @@ import 'package:naivedhya/screens/admin/hotel/widgets/hotel_card.dart';
 import 'package:provider/provider.dart';
 
 class HotelScreen extends StatelessWidget {
-  const HotelScreen({Key? key}) : super(key: key);
+  const HotelScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class HotelScreen extends StatelessWidget {
 }
 
 class HotelScreenContent extends StatefulWidget {
-  const HotelScreenContent({Key? key}) : super(key: key);
+  const HotelScreenContent({super.key});
 
   @override
   State<HotelScreenContent> createState() => _HotelScreenContentState();

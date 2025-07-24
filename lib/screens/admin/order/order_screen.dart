@@ -1,7 +1,64 @@
-import 'package:flutter/material.dart';
+// screens/orders_screen.dart
+import 'package:flutter/material.dart' hide ErrorWidget;
+import 'package:naivedhya/providers/order_provider.dart';
+import 'package:naivedhya/screens/admin/order/widget/loading_error.dart';
+import 'package:naivedhya/screens/admin/order/widget/order_desktop_table.dart';
+import 'package:naivedhya/screens/admin/order/widget/order_details.dart';
+import 'package:naivedhya/screens/admin/order/widget/order_filter.dart';
+import 'package:naivedhya/screens/admin/order/widget/order_mobile_list.dart';
+import 'package:provider/provider.dart';
 
-class OrdersScreen extends StatelessWidget {
+class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
+
+  @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    
+    // Load orders when the screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OrderProvider>().loadOrders();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    context.read<OrderProvider>().setSearchQuery(_searchController.text);
+  }
+
+  void _onStatusChanged(String status) {
+    context.read<OrderProvider>().setSelectedStatus(status);
+  }
+
+  void _onRefresh() {
+    context.read<OrderProvider>().refreshOrders();
+  }
+
+  void _showOrderDetails(order) {
+    OrderDetailsDialog.show(context, order);
+  }
+
+  void _editOrder(order) {
+    // TODO: Implement order editing functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Order editing functionality will be implemented here'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +87,49 @@ class OrdersScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    _buildSearchBar(context, isDesktop),
+                    Consumer<OrderProvider>(
+                      builder: (context, orderProvider, child) {
+                        return OrderFiltersWidget(
+                          searchController: _searchController,
+                          selectedStatus: orderProvider.selectedStatus,
+                          statusOptions: orderProvider.statusOptions,
+                          onStatusChanged: _onStatusChanged,
+                          onRefresh: _onRefresh,
+                        );
+                      },
+                    ),
                     const SizedBox(height: 16),
-                    _buildOrdersTable(context, isDesktop),
+                    Expanded(
+                      child: Consumer<OrderProvider>(
+                        builder: (context, orderProvider, child) {
+                          // Show error if exists
+                          if (orderProvider.error != null) {
+                            return Column(
+                              children: [
+                                ErrorWidget(
+                                  error: orderProvider.error!,
+                                  onRetry: _onRefresh,
+                                ),
+                                if (!orderProvider.isLoading)
+                                  Expanded(
+                                    child: _buildOrdersList(orderProvider, isDesktop),
+                                  ),
+                              ],
+                            );
+                          }
+
+                          // Show loading state
+                          if (orderProvider.isLoading) {
+                            return const LoadingWidget(
+                              message: 'Loading orders...',
+                            );
+                          }
+
+                          // Show orders list or empty state
+                          return _buildOrdersList(orderProvider, isDesktop);
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -43,49 +140,37 @@ class OrdersScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context, bool isDesktop) {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: 'Search orders...',
-        prefixIcon: const Icon(Icons.search),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-      ),
-    );
-  }
+  Widget _buildOrdersList(OrderProvider orderProvider, bool isDesktop) {
+    if (orderProvider.filteredOrders.isEmpty) {
+      return const EmptyStateWidget(
+        title: 'No orders found',
+        subtitle: 'Try adjusting your search or filters',
+      );
+    }
 
-  Widget _buildOrdersTable(BuildContext context, bool isDesktop) {
-    return Expanded(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: DataTable(
-          columns: const [
-            DataColumn(label: Text('Order ID')),
-            DataColumn(label: Text('Customer')),
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('Total')),
-            DataColumn(label: Text('Actions')),
-          ],
-          rows: List.generate(
-            10,
-            (index) => DataRow(cells: [
-              DataCell(Text('#${1000 + index}')),
-              DataCell(Text('Customer ${index + 1}')),
-              DataCell(Text('2025-07-${14 - index}')),
-              DataCell(Text('Pending')),
-              DataCell(Text('\$${(index + 1) * 25.99}')),
-              DataCell(IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {},
-              )),
-            ]),
+    return Column(
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            child: isDesktop
+                ? OrderDesktopTable(
+                    orders: orderProvider.filteredOrders,
+                    onViewDetails: _showOrderDetails,
+                    onEditOrder: _editOrder,
+                  )
+                : OrderMobileList(
+                    orders: orderProvider.filteredOrders,
+                    onViewDetails: _showOrderDetails,
+                    onEditOrder: _editOrder,
+                  ),
           ),
         ),
-      ),
+        if (orderProvider.hasMore || orderProvider.isLoadingMore)
+          LoadMoreButton(
+            isLoading: orderProvider.isLoadingMore,
+            onPressed: () => orderProvider.loadOrders(loadMore: true),
+          ),
+      ],
     );
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
@@ -8,7 +10,7 @@ import 'package:provider/provider.dart';
 class AddLocationDialog extends StatefulWidget {
   final Hotel hotel;
 
-  const AddLocationDialog({Key? key, required this.hotel}) : super(key: key);
+  const AddLocationDialog({super.key, required this.hotel});
 
   @override
   State<AddLocationDialog> createState() => _AddLocationDialogState();
@@ -127,7 +129,7 @@ class _AddLocationDialogState extends State<AddLocationDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withAlpha(0),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
