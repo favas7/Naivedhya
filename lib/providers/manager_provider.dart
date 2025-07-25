@@ -38,7 +38,26 @@ class ManagerProvider extends ChangeNotifier {
       final managerId = await _managerService.addManager(manager);
       await loadManagers(); // Refresh the list
       return managerId;
-        } catch (e) {
+    } catch (e) {
+      _error = e.toString();
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // New method to handle both manager creation and hotel update
+  Future<String?> addManagerAndUpdateHotel(Manager manager, String hotelId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final managerId = await _managerService.addManagerAndUpdateHotel(manager, hotelId);
+      await loadManagers(); // Refresh the list
+      return managerId;
+    } catch (e) {
       _error = e.toString();
       return null;
     } finally {

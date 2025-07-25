@@ -93,7 +93,7 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.hotel_outlined,
+                    Icons.restaurant,
                     size: 64,
                     color: Colors.grey[400],
                   ),

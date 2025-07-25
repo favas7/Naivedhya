@@ -68,7 +68,7 @@ class _HotelCardState extends State<HotelCard> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
-                    Icons.hotel,
+                    Icons.restaurant,
                     color: AppColors.primary,
                     size: 24,
                   ),

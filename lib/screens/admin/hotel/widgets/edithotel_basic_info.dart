@@ -77,7 +77,7 @@ class _EditHotelBasicInfoDialogState extends State<EditHotelBasicInfoDialog> {
                 decoration: InputDecoration(
                   labelText: 'Hotel Name',
                   hintText: 'Enter hotel name',
-                  prefixIcon: const Icon(Icons.hotel, color: AppColors.primary),
+                  prefixIcon: const Icon(Icons.restaurant, color: AppColors.primary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: AppColors.primary),

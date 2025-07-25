@@ -65,16 +65,16 @@ class HotelProvider with ChangeNotifier {
     }
   }
 
-  // Update hotel
-  Future<bool> updateHotel(String id, Hotel hotel) async {
+  // Update hotel basic info (name and address only)
+  Future<bool> updateHotelBasicInfo(String hotelId, String name, String address) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final updatedHotel = await _supabaseService.updateHotel(id, hotel);
+      final updatedHotel = await _supabaseService.updateHotelBasicInfo(hotelId, name, address);
       if (updatedHotel != null) {
-        final index = _hotels.indexWhere((h) => h.id == id);
+        final index = _hotels.indexWhere((h) => h.id == hotelId);
         if (index != -1) {
           _hotels[index] = updatedHotel;
           notifyListeners();
@@ -93,15 +93,15 @@ class HotelProvider with ChangeNotifier {
   }
 
   // Delete hotel
-  Future<bool> deleteHotel(String id) async {
+  Future<bool> deleteHotel(String hotelId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final success = await _supabaseService.deleteHotel(id);
+      final success = await _supabaseService.deleteHotel(hotelId);
       if (success) {
-        _hotels.removeWhere((h) => h.id == id);
+        _hotels.removeWhere((h) => h.id == hotelId);
         notifyListeners();
         return true;
       } else {
@@ -117,28 +117,22 @@ class HotelProvider with ChangeNotifier {
     }
   }
 
-  // Update hotel with manager ID
+  // Update hotel with manager ID (Fixed method)
   Future<bool> updateHotelManager(String hotelId, String managerId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // Find the hotel to update
-      final hotelIndex = _hotels.indexWhere((h) => h.id == hotelId);
-      if (hotelIndex == -1) {
-        _error = 'Hotel not found';
-        return false;
-      }
-
-      final currentHotel = _hotels[hotelIndex];
-      final updatedHotel = currentHotel.copyWith(managerId: managerId);
-      
-      final success = await _supabaseService.updateHotel(hotelId, updatedHotel);
-      if (success != null) {
-        _hotels[hotelIndex] = updatedHotel;
-        notifyListeners();
-        return true;
+      final updatedHotel = await _supabaseService.updateHotelManager(hotelId, managerId);
+      if (updatedHotel != null) {
+        final hotelIndex = _hotels.indexWhere((h) => h.id == hotelId);
+        if (hotelIndex != -1) {
+          _hotels[hotelIndex] = updatedHotel;
+          notifyListeners();
+          return true;
+        }
+        return true; // Hotel updated successfully but not in local list
       } else {
         _error = 'Failed to update hotel manager';
         return false;
@@ -201,4 +195,5 @@ class HotelProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+  
 }

@@ -33,6 +33,45 @@ class ManagerService {
     }
   }
 
+  // Updated method to handle both manager and hotel updates
+  Future<String?> addManagerAndUpdateHotel(Manager manager, String hotelId) async {
+    try {
+      // Step 1: Create manager without hotel_id first
+      final managerData = manager.toJson();
+      managerData.remove('hotel_id'); // Remove hotel_id for initial creation
+      
+      final managerResponse = await _supabase
+          .from('managers')
+          .insert(managerData)
+          .select()
+          .single();
+
+      final managerId = managerResponse['manager_id'] as String;
+
+      // Step 2: Update hotel with manager_id
+      await _supabase
+          .from('hotels')
+          .update({
+            'manager_id': managerId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('hotel_id', hotelId);
+
+      // Step 3: Update manager with hotel_id to complete the relationship
+      await _supabase
+          .from('managers')
+          .update({
+            'hotel_id': hotelId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('manager_id', managerId);
+
+      return managerId;
+    } catch (e) {
+      throw Exception('Failed to add manager and update hotel: $e');
+    }
+  }
+
   Future<void> updateManager(Manager manager) async {
     try {
       await _supabase

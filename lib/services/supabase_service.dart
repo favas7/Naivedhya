@@ -531,4 +531,88 @@ Future<bool> updateDeliveryPersonnelLocation(String userId, Map<String, dynamic>
     return false;
   }
 }
+// Add these methods to your existing SupabaseService class
+
+// Update hotel with manager ID
+Future<Hotel?> updateHotelManager(String hotelId, String managerId) async {
+  try {
+    final response = await _client
+        .from('hotels')
+        .update({
+          'manager_id': managerId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('hotel_id', hotelId) // Use hotel_id instead of id
+        .select()
+        .single();
+
+    return Hotel.fromJson(response);
+  } catch (e) {
+    print('Error updating hotel manager: $e');
+    return null;
+  }
+}
+
+// Update manager with hotel ID
+Future<Manager?> updateManagerHotel(String managerId, String hotelId) async {
+  try {
+    final response = await _client
+        .from('managers')
+        .update({
+          'hotel_id': hotelId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('manager_id', managerId) // Use manager_id instead of id
+        .select()
+        .single();
+
+    return Manager.fromJson(response);
+  } catch (e) {
+    print('Error updating manager hotel: $e');
+    return null;
+  }
+}
+
+// Create manager and update hotel (transactional approach)
+Future<String?> createManagerAndUpdateHotel(Manager manager, String hotelId) async {
+  try {
+    // Step 1: Create manager without hotel_id first
+    final managerData = manager.toJson();
+    managerData.remove('hotel_id'); // Remove hotel_id for initial creation
+    
+    final managerResponse = await _client
+        .from('managers')
+        .insert(managerData)
+        .select()
+        .single();
+
+    final managerId = managerResponse['manager_id'] as String;
+
+    // Step 2: Update hotel with manager_id
+    // ignore: unused_local_variable
+    final hotelUpdateResponse = await _client
+        .from('hotels')
+        .update({
+          'manager_id': managerId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('hotel_id', hotelId)
+        .select()
+        .single();
+
+    // Step 3: Update manager with hotel_id to complete the relationship
+    await _client
+        .from('managers')
+        .update({
+          'hotel_id': hotelId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('manager_id', managerId);
+
+    return managerId;
+  } catch (e) {
+    print('Error creating manager and updating hotel: $e');
+    return null;
+  }
+}
 }

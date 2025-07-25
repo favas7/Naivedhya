@@ -59,16 +59,8 @@ class _AddHotelDialogState extends State<AddHotelDialog> {
         }
         
         // Create updated hotel object
-        final updatedHotel = Hotel(
-          id: hotelId,
-          name: _nameController.text,
-          address: _addressController.text,
-          // Add other properties from the original hotel if needed
-          createdAt: widget.hotel!.createdAt,
-          // Add any other properties your Hotel model has
-        );
         
-        success = await provider.updateHotel(hotelId, updatedHotel);
+        success = await provider.updateHotelBasicInfo(hotelId, _nameController.text,_addressController.text);
       } else {
         success = await provider.addHotel(
           _nameController.text,
@@ -146,7 +138,7 @@ class _AddHotelDialogState extends State<AddHotelDialog> {
                   labelText: 'Hotel Name',
                   hintText: 'Enter hotel name',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.hotel),
+                  prefixIcon: Icon(Icons.restaurant),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
