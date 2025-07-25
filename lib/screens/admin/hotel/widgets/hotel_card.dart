@@ -3,7 +3,7 @@ import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_location_dialogue.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_manager_dialogue.dart';
-import 'package:naivedhya/services/supabase_service.dart';
+import 'package:naivedhya/services/hotel_service.dart';
     
 class HotelCard extends StatefulWidget {
   final Hotel hotel;

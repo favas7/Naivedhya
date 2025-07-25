@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/location.dart';
 import 'package:naivedhya/services/location_service.dart';
+import 'package:naivedhya/services/hotel_service.dart'; // Import your SupabaseService
 
 class LocationProvider extends ChangeNotifier {
   final LocationService _locationService = LocationService();
+  final SupabaseService _supabaseService = SupabaseService(); // Add this
   
   List<Location> _locations = [];
   bool _isLoading = false;
@@ -29,10 +31,25 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
+  // Updated addLocation method to also update hotel table
   Future<String?> addLocation(Location location) async {
     try {
       _error = null;
       final locationId = await _locationService.addLocation(location);
+      
+      // Update hotel table with the new location_id
+      if (location.hotelid != null) {
+        final updatedHotel = await _supabaseService.updateHotelLocation(
+          location.hotelid!, 
+          locationId!
+        );
+        
+        if (updatedHotel == null) {
+          // Log warning but don't fail the entire operation
+          print('Warning: Location created but hotel update failed');
+        }
+      }
+      
       await loadLocations(); // Refresh the list
       return locationId;
     } catch (e) {

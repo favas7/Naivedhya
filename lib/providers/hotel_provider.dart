@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/hotel.dart';
-import '../services/supabase_service.dart';
+import '../services/hotel_service.dart';
 
 class HotelProvider with ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();

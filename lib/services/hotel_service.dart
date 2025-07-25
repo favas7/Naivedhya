@@ -615,4 +615,22 @@ Future<String?> createManagerAndUpdateHotel(Manager manager, String hotelId) asy
     return null;
   }
 }
+Future<Hotel?> updateHotelLocation(String hotelId, String locationId) async {
+  try {
+    final response = await _client
+        .from('hotels')
+        .update({
+          'location_id': locationId,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('hotel_id', hotelId) // Use hotel_id as per your database schema
+        .select()
+        .single();
+
+    return Hotel.fromJson(response);
+  } catch (e) {
+    print('Error updating hotel location: $e');
+    return null;
+  }
+}
 }

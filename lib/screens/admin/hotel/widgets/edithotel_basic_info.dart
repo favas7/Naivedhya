@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
-import 'package:naivedhya/services/supabase_service.dart';
+import 'package:naivedhya/services/hotel_service.dart';
 
 class EditHotelBasicInfoDialog extends StatefulWidget {
   final Hotel hotel;

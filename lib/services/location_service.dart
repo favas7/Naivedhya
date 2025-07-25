@@ -19,7 +19,8 @@ class LocationService {
     }
   }
 
-  Future<String> addLocation(Location location) async {
+  // Updated to return String? to match the provider expectation
+  Future<String?> addLocation(Location location) async {
     try {
       final response = await _supabase
           .from('locations')
@@ -27,7 +28,8 @@ class LocationService {
           .select()
           .single();
       
-      return response['location_id'] as String;
+      // Return the location_id as String, matching your database schema
+      return response['location_id'] as String?;
     } catch (e) {
       throw Exception('Failed to add location: $e');
     }

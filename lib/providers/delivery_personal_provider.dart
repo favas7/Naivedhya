@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:naivedhya/models/deliver_person_model.dart';
-import '../services/supabase_service.dart';
+import '../services/hotel_service.dart';
 
 class DeliveryPersonnelProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();

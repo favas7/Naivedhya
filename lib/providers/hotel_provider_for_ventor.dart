@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/hotel.dart';
-import '../services/supabase_service.dart';
+import '../services/hotel_service.dart';
 
 class VendorHotelProvider with ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
@@ -195,4 +195,38 @@ class VendorHotelProvider with ChangeNotifier {
       'has_hotels': _hotels.isNotEmpty,
     };
   }
+  // Add this method to your existing VendorHotelProvider class
+
+// Update hotel location
+Future<bool> updateHotelLocation(String hotelId, String locationId) async {
+  _setLoading(true);
+  _clearError();
+  
+  try {
+    final updatedHotel = await _supabaseService.updateHotelLocation(hotelId, locationId);
+    if (updatedHotel != null) {
+      // Update the hotel in the list
+      final index = _hotels.indexWhere((h) => h.id == hotelId);
+      if (index != -1) {
+        _hotels[index] = updatedHotel;
+        
+        // Also update selected hotel if it's the same one
+        if (_selectedHotel?.id == hotelId) {
+          _selectedHotel = updatedHotel;
+        }
+        
+        notifyListeners();
+      }
+      return true;
+    } else {
+      _setError('Failed to update hotel location');
+      return false;
+    }
+  } catch (e) {
+    _setError('Failed to update hotel location: ${e.toString()}');
+    return false;
+  } finally {
+    _setLoading(false);
+  }
+}
 }

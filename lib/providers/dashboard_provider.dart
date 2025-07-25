@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/supabase_service.dart';
+import '../services/hotel_service.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
