@@ -172,9 +172,9 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
                   itemCount: provider.hotels.length,
                   itemBuilder: (context, index) {
                     final hotel = provider.hotels[index];
-                    return HotelCard(
+                    return ExpandableHotelCard(
                       hotel: hotel,
-                      onHotelUpdated: _refreshHotels, // Pass refresh callback
+                      onHotelUpdated: _refreshHotels,
                     );
                   },
                 ),
