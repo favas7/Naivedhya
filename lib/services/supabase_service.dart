@@ -10,6 +10,7 @@ import '../models/manager.dart';
 
 class SupabaseService {
   final SupabaseClient _client = Supabase.instance.client;
+  final SupabaseClient client = Supabase.instance.client;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   // Get current user's email from profiles table
