@@ -15,14 +15,14 @@ class FirebaseService {
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
   // Get user data from Supabase database
-  Future<Map<String, dynamic>?> getUser(String userid) async {
-    try {
-      final response = await _supabase.from('profiles').select().eq('userid', userid).single();
-      return response;
-    } catch (e) {
-      return null;
-    }
+Future<Map<String, dynamic>?> getUser(String userid) async {
+  try {
+    final response = await _supabase.from('profiles').select().eq('id', userid).single();
+    return response;
+  } catch (e) {
+    return null;
   }
+}
 
   // Sign in with email and password
   Future<User?> signIn(String email, String password) async {

@@ -67,7 +67,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
         _filteredCustomers = _customers.where((customer) {
           return customer.name.toLowerCase().contains(query.toLowerCase()) ||
                  customer.email.toLowerCase().contains(query.toLowerCase()) ||
-                 (customer.userid ?? '').toLowerCase().contains(query.toLowerCase());
+                 (customer.id ?? '').toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
     });

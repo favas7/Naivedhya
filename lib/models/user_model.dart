@@ -2,7 +2,6 @@
 
   class UserModel {
     final String? id; // Supabase auth user ID
-    final String? userid;
     final String name;
     final String email;
     final String phone;
@@ -16,7 +15,6 @@
 
     UserModel({
       this.id,
-      required this.userid,
       required this.name,
       required this.email,
       required this.phone,
@@ -32,7 +30,6 @@
     factory UserModel.fromJson(Map<String, dynamic> json) {
       return UserModel(
         id: json['id'],
-        userid: json['userid'],
         name: json['name'],
         email: json['email'],
         phone: json['phone'],
@@ -49,7 +46,6 @@
     Map<String, dynamic> toJson() {
       return {
         'id': id,
-        'userid': userid,
         'name': name,
         'email': email,
         'phone': phone,
@@ -79,7 +75,6 @@
     }) {
       return UserModel(
         id: id ?? this.id,
-        userid: userid ?? this.userid,
         name: name ?? this.name,
         email: email ?? this.email,
         phone: phone ?? this.phone,

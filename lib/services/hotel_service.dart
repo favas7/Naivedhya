@@ -25,10 +25,10 @@ class SupabaseService {
       final response = await _client
           .from('profiles')
           .select('email')
-          .eq('userid', currentUser.uid)
+          .eq('id', currentUser.uid)
           .single();
 
-      return response['email'];
+      return response['email']; 
     } catch (e) {
       print('Error getting current user email: $e');
       return null;
@@ -444,7 +444,7 @@ Future<DeliveryPersonnel?> updateDeliveryPersonnel(String userId, DeliveryPerson
   } catch (e) {
     print('Error updating delivery personnel: $e');
     return null;
-  }
+  } 
 }
 
 // Delete delivery personnel

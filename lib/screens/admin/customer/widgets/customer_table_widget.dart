@@ -1,5 +1,6 @@
 // widgets/customer_table_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Add this import for clipboard
 import 'package:naivedhya/models/user_model.dart';
 
 class CustomerTableWidget extends StatelessWidget {
@@ -39,7 +40,7 @@ class CustomerTableWidget extends StatelessWidget {
             rows: customers.map((customer) {
               return DataRow(
                 cells: [
-                  DataCell(_buildCustomerIdChip(customer)),
+                  DataCell(_buildCustomerIdChip(context, customer)),
                   DataCell(_buildNameCell(customer)),
                   DataCell(Text(customer.email)),
                   DataCell(Text(customer.phone)),
@@ -55,22 +56,83 @@ class CustomerTableWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomerIdChip(UserModel customer) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        customer.userid ?? 'N/A',
-        style: TextStyle(
-          fontFamily: 'monospace',
-          color: Colors.blue.shade700,
-          fontWeight: FontWeight.w500,
+  Widget _buildCustomerIdChip(BuildContext context, UserModel customer) {
+    return GestureDetector(
+      onTap: () => _copyToClipboard(context, customer.id ?? 'N/A'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: Colors.blue.shade200, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              customer.id ?? 'N/A',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.copy,
+              size: 14,
+              color: Colors.blue.shade600,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Future<void> _copyToClipboard(BuildContext context, String text) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      
+      // Show success feedback
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Customer ID "$text" copied to clipboard'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error feedback
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                const Text('Failed to copy to clipboard'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildNameCell(UserModel customer) {

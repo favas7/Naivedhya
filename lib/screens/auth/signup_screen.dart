@@ -66,7 +66,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         final user = UserModel(
-          userid: DateTime.now().millisecondsSinceEpoch.toString(),
+          id: DateTime.now().millisecondsSinceEpoch.toString(), 
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),

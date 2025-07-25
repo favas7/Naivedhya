@@ -5,12 +5,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class CustomerService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // Get all customers
+  // Get all customers (only users with usertype 'user')
   Future<List<UserModel>> getAllCustomers() async {
     try {
       final response = await _supabase
           .from('profiles')
           .select()
+          .eq('usertype', 'user') // Filter to only show users, not admins
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -21,7 +22,7 @@ class CustomerService {
     }
   }
 
-  // Search customers by name or email
+  // Search customers by name or email (only users with usertype 'user')
   Future<List<UserModel>> searchCustomers(String query) async {
     if (query.isEmpty) return getAllCustomers();
 
@@ -29,6 +30,7 @@ class CustomerService {
       final response = await _supabase
           .from('profiles')
           .select()
+          .eq('usertype', 'user') // Filter to only show users, not admins
           .or('name.ilike.%$query%,email.ilike.%$query%')
           .order('created_at', ascending: false);
 
@@ -40,13 +42,14 @@ class CustomerService {
     }
   }
 
-  // Get customer by ID
+  // Get customer by ID (only if usertype is 'user')
   Future<UserModel?> getCustomerById(String id) async {
     try {
       final response = await _supabase
           .from('profiles')
           .select()
           .eq('id', id)
+          .eq('usertype', 'user') // Ensure we only get users, not admins
           .maybeSingle();
 
       if (response == null) return null;
@@ -56,7 +59,7 @@ class CustomerService {
     }
   }
 
-  // Update customer
+  // Update customer (only if usertype is 'user')
   Future<UserModel> updateCustomer(String id, Map<String, dynamic> updates) async {
     try {
       // Add updated_at timestamp
@@ -66,6 +69,7 @@ class CustomerService {
           .from('profiles')
           .update(updates)
           .eq('id', id)
+          .eq('usertype', 'user') // Ensure we only update users, not admins
           .select()
           .single();
 
@@ -75,24 +79,26 @@ class CustomerService {
     }
   }
 
-  // Delete customer
+  // Delete customer (only if usertype is 'user')
   Future<void> deleteCustomer(String id) async {
     try {
       await _supabase
           .from('profiles')
           .delete()
-          .eq('id', id);
+          .eq('id', id)
+          .eq('usertype', 'user'); // Ensure we only delete users, not admins
     } catch (e) {
       throw Exception('Failed to delete customer: $e');
     }
   }
 
-  // Get customers with pending payments
+  // Get customers with pending payments (only users with usertype 'user')
   Future<List<UserModel>> getCustomersWithPendingPayments() async {
     try {
       final response = await _supabase
           .from('profiles')
           .select()
+          .eq('usertype', 'user') // Filter to only show users, not admins
           .gt('pending_payments', 0)
           .order('pending_payments', ascending: false);
 
@@ -104,12 +110,13 @@ class CustomerService {
     }
   }
 
-  // Get customer statistics
+  // Get customer statistics (only for users with usertype 'user')
   Future<Map<String, dynamic>> getCustomerStats() async {
     try {
       final response = await _supabase
           .from('profiles')
-          .select('pending_payments, orderhistory');
+          .select('pending_payments, orderhistory')
+          .eq('usertype', 'user'); // Only calculate stats for users, not admins
 
       int totalCustomers = response.length;
       double totalPendingPayments = 0;
@@ -132,4 +139,37 @@ class CustomerService {
       throw Exception('Failed to fetch customer statistics: $e');
     }
   }
-}
+
+  // Optional: Get all profiles including admins (if needed for admin management)
+  Future<List<UserModel>> getAllProfiles() async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => UserModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch all profiles: $e');
+    }
+  }
+
+  // Optional: Get only admin profiles (if needed for admin management)
+  Future<List<UserModel>> getAllAdmins() async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .eq('usertype', 'admin')
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => UserModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch admins: $e');
+    }
+  }
+} 
