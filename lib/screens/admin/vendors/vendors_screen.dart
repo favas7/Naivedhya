@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_hotel_dialogue.dart';
@@ -367,8 +368,8 @@ class _VendorScreenState extends State<VendorScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue[200]!),
+        borderRadius: BorderRadius.circular(8), 
+        border: Border.all(color: AppColors.primary),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

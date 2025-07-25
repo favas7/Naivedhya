@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
@@ -6,9 +7,6 @@ import 'package:naivedhya/services/ventor_Service.dart';
 import 'package:provider/provider.dart';
 
 // Assuming AppColors is not imported, adding a simple color definition
-class AppColors {
-  static const Color primary = Colors.blue;
-}
 
 class AddVendorDialog extends StatefulWidget {
   final Hotel? hotel; // If provided, vendor will be added to this specific hotel
