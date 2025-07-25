@@ -3,14 +3,17 @@ import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_location_dialogue.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_manager_dialogue.dart';
+import 'package:naivedhya/screens/admin/hotel/widgets/edithotel_basic_info.dart';
 import 'package:naivedhya/services/hotel_service.dart';
     
 class HotelCard extends StatefulWidget {
   final Hotel hotel;
+  final VoidCallback? onHotelUpdated; // Callback for when hotel is updated
 
   const HotelCard({
     super.key,
     required this.hotel,
+    this.onHotelUpdated,
   });
 
   @override
@@ -21,11 +24,15 @@ class _HotelCardState extends State<HotelCard> {
   final SupabaseService _supabaseService = SupabaseService();
   bool _canEdit = false;
   bool _isCheckingPermission = true;
+  int _managerCount = 0;
+  int _locationCount = 0;
+  bool _isLoadingCounts = true;
 
   @override
   void initState() {
     super.initState();
     _checkEditPermission();
+    _loadCounts();
   }
 
   Future<void> _checkEditPermission() async {
@@ -42,6 +49,31 @@ class _HotelCardState extends State<HotelCard> {
         _isCheckingPermission = false;
       });
     }
+  }
+
+  Future<void> _loadCounts() async {
+    if (widget.hotel.id != null) {
+      final counts = await _supabaseService.getHotelCounts(widget.hotel.id!);
+      if (mounted) {
+        setState(() {
+          _managerCount = counts['managers'] ?? 0;
+          _locationCount = counts['locations'] ?? 0;
+          _isLoadingCounts = false;
+        });
+      }
+    } else {
+      setState(() {
+        _isLoadingCounts = false;
+      });
+    }
+  }
+
+  // Refresh counts after adding manager/location
+  Future<void> _refreshCounts() async {
+    setState(() {
+      _isLoadingCounts = true;
+    });
+    await _loadCounts();
   }
 
   @override
@@ -62,7 +94,7 @@ class _HotelCardState extends State<HotelCard> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(1),
+                    color: AppColors.primary.withAlpha(30),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -116,6 +148,9 @@ class _HotelCardState extends State<HotelCard> {
                         case 'edit':
                           _showEditDialog();
                           break;
+                        case 'edit_basic':
+                          _showEditBasicInfoDialog();
+                          break;
                         case 'delete':
                           _showDeleteConfirmation();
                           break;
@@ -126,9 +161,19 @@ class _HotelCardState extends State<HotelCard> {
                         value: 'edit',
                         child: Row(
                           children: [
+                            Icon(Icons.settings, size: 18),
+                            SizedBox(width: 8),
+                            Text('Manage'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'edit_basic',
+                        child: Row(
+                          children: [
                             Icon(Icons.edit, size: 18),
                             SizedBox(width: 8),
-                            Text('Edit'),
+                            Text('Edit Info'),
                           ],
                         ),
                       ),
@@ -153,7 +198,7 @@ class _HotelCardState extends State<HotelCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withAlpha(0),
+                  color: Colors.blue.withAlpha(30),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -176,6 +221,128 @@ class _HotelCardState extends State<HotelCard> {
                   ],
                 ),
               ),
+
+            const SizedBox(height: 12),
+
+            // Manager and Location Status
+            if (!_isLoadingCounts) ...[
+              Row(
+                children: [
+                  // Manager Status
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _managerCount > 0 
+                          ? Colors.green.withAlpha(30) 
+                          : Colors.orange.withAlpha(30),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _managerCount > 0 ? Icons.person : Icons.person_outline,
+                          size: 14,
+                          color: _managerCount > 0 
+                              ? Colors.green[700] 
+                              : Colors.orange[700],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Managers: $_managerCount',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _managerCount > 0 
+                                ? Colors.green[700] 
+                                : Colors.orange[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 8),
+                  
+                  // Location Status
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _locationCount > 0 
+                          ? Colors.green.withAlpha(30) 
+                          : Colors.orange.withAlpha(30),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _locationCount > 0 ? Icons.location_on : Icons.location_off,
+                          size: 14,
+                          color: _locationCount > 0 
+                              ? Colors.green[700] 
+                              : Colors.orange[700],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Locations: $_locationCount',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _locationCount > 0 
+                                ? Colors.green[700] 
+                                : Colors.orange[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Overall Status Indicator
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (_managerCount > 0 && _locationCount > 0)
+                          ? Colors.green.withAlpha(30)
+                          : Colors.red.withAlpha(30),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Icon(
+                      (_managerCount > 0 && _locationCount > 0)
+                          ? Icons.check_circle
+                          : Icons.warning,
+                      size: 16,
+                      color: (_managerCount > 0 && _locationCount > 0)
+                          ? Colors.green[700]
+                          : Colors.red[700],
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Loading status...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 8),
             
@@ -209,145 +376,196 @@ class _HotelCardState extends State<HotelCard> {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-void _showEditDialog() {
-  showDialog(
-    context: context,
-    builder: (context) => Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+  void _showEditBasicInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => EditHotelBasicInfoDialog(
+        hotel: widget.hotel,
+        onSuccess: () {
+          widget.onHotelUpdated?.call();
+        },
       ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        constraints: const BoxConstraints(maxWidth: 400),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.restaurant, color: AppColors.primary), 
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Edit Hotel',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+    );
+  }
+
+  void _showEditDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.restaurant, color: AppColors.primary), 
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Manage Hotel',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Hotel Info Display
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hotel: ${widget.hotel.name}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'ID: ${widget.hotel.id}', 
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Status Row
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 16,
+                          color: _managerCount > 0 ? Colors.green : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Managers: $_managerCount',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _managerCount > 0 ? Colors.green : Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: _locationCount > 0 ? Colors.green : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Locations: $_locationCount',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _locationCount > 0 ? Colors.green : Colors.orange,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Hotel Info Display
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(20),
-                borderRadius: BorderRadius.circular(8),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              
+              const SizedBox(height: 24),
+              
+              // Action Buttons
+              Column(
                 children: [
-                  Text(
-                    'Hotel: ${widget.hotel.name}', // Replace with your hotel object
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  // Add Manager Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // Close current dialog
+                        final result = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AddManagerDialog(hotel: widget.hotel),
+                        );
+                        if (result == true) {
+                          _refreshCounts();
+                        }
+                      },
+                      icon: const Icon(Icons.person_add),
+                      label: Text(_managerCount > 0 ? 'Add Another Manager' : 'Add Manager'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'ID: ${widget.hotel.id}', // Replace with your hotel object
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Add Location Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // Close current dialog
+                        final result = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AddLocationDialog(hotel: widget.hotel),
+                        );
+                        if (result == true) {
+                          _refreshCounts();
+                        }
+                      },
+                      icon: const Icon(Icons.location_on),
+                      label: Text(_locationCount > 0 ? 'Add Another Location' : 'Add Location'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Action Buttons
-            Column(
-              children: [
-                // Add Manager Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close current dialog
-                      showDialog(
-                        context: context,
-                        builder: (context) => AddManagerDialog(hotel: widget.hotel), // Replace with your hotel object
-                      );
-                    },
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('Add Manager'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Add Location Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close current dialog
-                      showDialog(
-                        context: context,
-                        builder: (context) => AddLocationDialog(hotel: widget.hotel), // Replace with your hotel object
-                      );
-                    },
-                    icon: const Icon(Icons.location_on),
-                    label: const Text('Add Location'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Cancel Button
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
+              
+              const SizedBox(height: 16),
+              
+              // Cancel Button
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _showDeleteConfirmation() {
     showDialog(
@@ -386,8 +604,7 @@ void _showEditDialog() {
             backgroundColor: Colors.green,
           ),
         );
-        // You might want to refresh the hotel list here
-        // Or emit an event to the parent widget
+        widget.onHotelUpdated?.call();
       }
     } else {
       if (mounted) {

@@ -633,4 +633,82 @@ Future<Hotel?> updateHotelLocation(String hotelId, String locationId) async {
     return null;
   }
 }
+// Add these methods to your existing SupabaseService class in services/hotel_service.dart
+
+// Get manager count for a hotel
+Future<int> getManagerCount(String hotelId) async {
+  try {
+    final response = await _client
+        .from('managers')
+        .select('manager_id')
+        .eq('hotel_id', hotelId);
+    
+    return (response as List).length;
+  } catch (e) {
+    print('Error getting manager count: $e');
+    return 0;
+  }
+}
+
+// Get location count for a hotel
+Future<int> getLocationCount(String hotelId) async {
+  try {
+    final response = await _client
+        .from('locations')
+        .select('location_id')
+        .eq('hotel_id', hotelId);
+    
+    return (response as List).length;
+  } catch (e) {
+    print('Error getting location count: $e');
+    return 0;
+  }
+}
+
+// Get both manager and location counts in a single call
+Future<Map<String, int>> getHotelCounts(String hotelId) async {
+  try {
+    // Execute both queries in parallel for better performance
+    final results = await Future.wait([
+      getManagerCount(hotelId),
+      getLocationCount(hotelId),
+    ]);
+    
+    return {
+      'managers': results[0],
+      'locations': results[1],
+    };
+  } catch (e) {
+    print('Error getting hotel counts: $e');
+    return {
+      'managers': 0,
+      'locations': 0,
+    };
+  }
+}
+
+// Check if hotel has manager
+Future<bool> hasManager(String hotelId) async {
+  final count = await getManagerCount(hotelId);
+  return count > 0;
+}
+
+// Check if hotel has location
+Future<bool> hasLocation(String hotelId) async {
+  final count = await getLocationCount(hotelId);
+  return count > 0;
+}
+
+// Get hotel status (for more detailed status if needed)
+Future<Map<String, dynamic>> getHotelStatus(String hotelId) async {
+  final counts = await getHotelCounts(hotelId);
+  
+  return {
+    'managerCount': counts['managers'],
+    'locationCount': counts['locations'],
+    'hasManager': counts['managers']! > 0,
+    'hasLocation': counts['locations']! > 0,
+    'isComplete': counts['managers']! > 0 && counts['locations']! > 0,
+  };
+}
 }

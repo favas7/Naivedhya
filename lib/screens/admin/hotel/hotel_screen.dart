@@ -34,11 +34,20 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
     });
   }
 
-  void _showAddHotelDialog() {
-    showDialog(
+  void _showAddHotelDialog() async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => const AddHotelDialog(),
     );
+    
+    // Refresh the hotel list if a new hotel was added
+    if (result == true && mounted) {
+      Provider.of<HotelProvider>(context, listen: false).loadHotels();
+    }
+  }
+
+  void _refreshHotels() {
+    Provider.of<HotelProvider>(context, listen: false).loadHotels();
   }
 
   @override
@@ -49,12 +58,27 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          // Refresh button
+          IconButton(
+            onPressed: _refreshHotels,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: Consumer<HotelProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.hotels.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading hotels...'),
+                ],
+              ),
             );
           }
 
@@ -80,6 +104,10 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => provider.loadHotels(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -103,6 +131,7 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -112,6 +141,21 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
                       fontSize: 14,
                       color: Colors.grey[500],
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _showAddHotelDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Hotel'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -120,13 +164,36 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
 
           return RefreshIndicator(
             onRefresh: () async => provider.loadHotels(),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: provider.hotels.length,
-              itemBuilder: (context, index) {
-                final hotel = provider.hotels[index];
-                return HotelCard(hotel: hotel);
-              },
+            color: AppColors.primary,
+            child: Stack(
+              children: [
+                ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: provider.hotels.length,
+                  itemBuilder: (context, index) {
+                    final hotel = provider.hotels[index];
+                    return HotelCard(
+                      hotel: hotel,
+                      onHotelUpdated: _refreshHotels, // Pass refresh callback
+                    );
+                  },
+                ),
+                
+                // Loading overlay when refreshing
+                if (provider.isLoading && provider.hotels.isNotEmpty)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: SizedBox(
+                      height: 3,
+                      child: const LinearProgressIndicator(
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           );
         },
@@ -135,6 +202,7 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
         onPressed: _showAddHotelDialog,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        tooltip: 'Add Hotel',
         child: const Icon(Icons.add),
       ),
     );
