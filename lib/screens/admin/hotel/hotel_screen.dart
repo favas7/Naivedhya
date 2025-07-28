@@ -58,6 +58,8 @@ class _HotelScreenContentState extends State<HotelScreenContent> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        // Removed the leading property to hide the back button
+        automaticallyImplyLeading: false,
         actions: [
           // Refresh button
           IconButton(
