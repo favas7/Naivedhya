@@ -1,15 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
 import 'package:provider/provider.dart';
-import '../../constants/colors.dart';
-import '../../models/user_model.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
-import '../../utils/validator.dart';
+import '../../../constants/colors.dart';
+import '../../../models/user_model.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../widgets/custom_button.dart';
+import '../../../widgets/custom_text_field.dart';
+import '../../../utils/validator.dart';
 import 'set_password_screen.dart';
 
 class SignUpScreen extends StatefulWidget {

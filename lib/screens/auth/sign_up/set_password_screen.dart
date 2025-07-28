@@ -2,13 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../constants/colors.dart';
-import '../../models/user_model.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
-import '../../utils/validator.dart';
-import '../user/onboarding/onboarding_screen.dart';
+import '../../../constants/colors.dart';
+import '../../../models/user_model.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../widgets/custom_button.dart';
+import '../../../widgets/custom_text_field.dart';
+import '../../../utils/validator.dart';
+import '../../user/onboarding/onboarding_screen.dart';
 
 class SetPasswordScreen extends StatefulWidget {
   final UserModel user;

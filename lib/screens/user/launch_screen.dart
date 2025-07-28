@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:naivedhya/widgets/custom_button_launch1.dart';
 import 'package:naivedhya/widgets/custom_button_launch2.dart';
 import '../../constants/colors.dart';
-import '../auth/login_screen.dart';
-import '../auth/signup_screen.dart';
+import '../auth/login/login_screen.dart';
+import '../auth/sign_up/signup_screen.dart';
 
 class LaunchScreen extends StatelessWidget {
   const LaunchScreen({super.key});

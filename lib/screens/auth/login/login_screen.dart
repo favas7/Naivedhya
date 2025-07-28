@@ -5,12 +5,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
 import 'package:naivedhya/screens/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
-import '../../constants/colors.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/custom_text_field.dart';
-import '../../utils/validator.dart';
-import 'signup_screen.dart';
+import '../../../constants/colors.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../widgets/custom_button.dart';
+import '../../../widgets/custom_text_field.dart';
+import '../../../utils/validator.dart';
+import '../sign_up/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
