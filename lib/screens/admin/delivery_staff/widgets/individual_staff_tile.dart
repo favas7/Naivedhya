@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/deliver_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/screens/admin/delivery_staff/widgets/dialogue_components.dart';
 import '../../../../constants/colors.dart';

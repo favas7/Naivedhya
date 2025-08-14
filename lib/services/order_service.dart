@@ -1,9 +1,11 @@
-// services/order_service.dart
+// services/order_service.dart (Updated)
 import 'package:naivedhya/models/order_model.dart';
+import 'package:naivedhya/services/delivery_person_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
   static const int ordersPerPage = 20;
 
   Future<List<Order>> fetchOrders({
@@ -73,6 +75,74 @@ class OrderService {
           .eq('order_id', orderId);
     } catch (e) {
       throw Exception('Failed to delete order: ${e.toString()}');
+    }
+  }
+
+  // New method for assigning delivery personnel
+  Future<bool> assignDeliveryPersonnel(String orderId, String deliveryPersonId) async {
+    try {
+      final success = await _deliveryService.assignOrderToDeliveryPersonnel(
+        orderId,
+        deliveryPersonId,
+      );
+      return success;
+    } catch (e) {
+      throw Exception('Failed to assign delivery personnel: ${e.toString()}');
+    }
+  }
+
+  // New method for unassigning delivery personnel
+  Future<bool> unassignDeliveryPersonnel(String orderId, String? currentDeliveryPersonId) async {
+    try {
+      final success = await _deliveryService.unassignOrderFromDeliveryPersonnel(
+        orderId,
+        currentDeliveryPersonId,
+      );
+      return success;
+    } catch (e) {
+      throw Exception('Failed to unassign delivery personnel: ${e.toString()}');
+    }
+  }
+
+  // New method to update order status with delivery tracking
+  Future<Order> updateOrderStatus(String orderId, String status, {
+    String? deliveryStatus,
+    DateTime? proposedDeliveryTime,
+    DateTime? pickupTime,
+    DateTime? deliveryTime,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (deliveryStatus != null) {
+        updateData['delivery_status'] = deliveryStatus;
+      }
+
+      if (proposedDeliveryTime != null) {
+        updateData['proposed_delivery_time'] = proposedDeliveryTime.toIso8601String();
+      }
+
+      if (pickupTime != null) {
+        updateData['pickup_time'] = pickupTime.toIso8601String();
+      }
+
+      if (deliveryTime != null) {
+        updateData['delivery_time'] = deliveryTime.toIso8601String();
+      }
+
+      final response = await _supabase
+          .from('orders')
+          .update(updateData)
+          .eq('order_id', orderId)
+          .select()
+          .single();
+
+      return Order.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to update order status: ${e.toString()}');
     }
   }
 

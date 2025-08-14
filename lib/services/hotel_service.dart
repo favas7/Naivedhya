@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_print
 
-import 'package:naivedhya/models/deliver_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
