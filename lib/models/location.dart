@@ -21,12 +21,12 @@ class Location {
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
-      id: json['id'],
+      id: json['location_id'], // ✅ Maps from 'location_id' UUID column
       city: json['city'],
       state: json['state'],
       country: json['country'],
       postalCode: json['postal_code'],
-      hotelid: json['hotel_id'],
+      hotelid: json['hotel_id'], // ✅ Maps from 'hotel_id' UUID column
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
@@ -42,7 +42,18 @@ class Location {
       'state': state,
       'country': country,
       'postal_code': postalCode,
-      'hotel_id': hotelid,
+      'hotel_id': hotelid, // ✅ Maps to 'hotel_id' UUID column
+    };
+  }
+
+  // ✅ Separate method for updates (doesn't include auto-generated fields)
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      'city': city,
+      'state': state,
+      'country': country,
+      'postal_code': postalCode,
+      'hotel_id': hotelid, // ✅ Maps to 'hotel_id' UUID column
     };
   }
 

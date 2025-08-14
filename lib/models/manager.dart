@@ -4,6 +4,7 @@ class Manager {
   final String email;
   final String phone;
   final String? hotelid;
+  final String? imageUrl; // New field for profile image
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -13,17 +14,19 @@ class Manager {
     required this.email,
     required this.phone,
     this.hotelid,
+    this.imageUrl,
     this.createdAt,
     this.updatedAt,
   });
 
   factory Manager.fromJson(Map<String, dynamic> json) {
     return Manager(
-      id: json['id'],
+      id: json['manager_id'],
       name: json['name'],
       email: json['email'],
       phone: json['phone'],
       hotelid: json['hotel_id'],
+      imageUrl: json['image_url'], // Map from database
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
@@ -39,6 +42,19 @@ class Manager {
       'email': email,
       'phone': phone,
       'hotel_id': hotelid,
+      'image_url': imageUrl, // Include image URL
+      'updated_at': updatedAt?.toIso8601String(),
+    };
+  }
+
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'hotel_id': hotelid,
+      'image_url': imageUrl, // Include image URL
+      'updated_at': DateTime.now().toIso8601String(),
     };
   }
 
@@ -48,6 +64,7 @@ class Manager {
     String? email,
     String? phone,
     String? hotelid,
+    String? imageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -57,6 +74,7 @@ class Manager {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       hotelid: hotelid ?? this.hotelid,
+      imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

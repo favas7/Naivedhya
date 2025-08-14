@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/models/location.dart';
+import 'package:naivedhya/screens/admin/hotel/manager/edit_manager.dart';
 import 'package:naivedhya/screens/admin/hotel/menu/menu_managment_screen.dart';
 import 'package:naivedhya/screens/admin/hotel/menu/widgets/add_menu_item.dart';
-import 'package:naivedhya/screens/admin/hotel/widgets/location/add_location_dialogue.dart';
-import 'package:naivedhya/screens/admin/hotel/widgets/manager/add_manager_dialogue.dart';
+import 'package:naivedhya/screens/admin/hotel/location/add_location_dialogue.dart';
+import 'package:naivedhya/screens/admin/hotel/manager/add_manager_dialogue.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/edithotel_basic_info.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/hotel_card_basic_info.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/hotel_card_expanded.dart';
@@ -14,7 +15,6 @@ import 'package:naivedhya/screens/admin/hotel/widgets/hotel_card_meta_info.dart'
 import 'package:naivedhya/screens/admin/hotel/widgets/hotel_card_status_row.dart';
 import 'package:naivedhya/services/hotel_service.dart';
 import 'package:naivedhya/services/menu_service.dart';
-
 
 class ExpandableHotelCard extends StatefulWidget {
   final Hotel hotel;
@@ -207,6 +207,30 @@ class _ExpandableHotelCardState extends State<ExpandableHotelCard>
     );
   }
 
+  // NEW: Method to handle manager editing
+  Future<void> _editManager(Manager manager) async {
+    final updatedManager = await showDialog<Manager>(
+      context: context,
+      builder: (context) => EditManagerDialog(
+        manager: manager,
+        hotel: widget.hotel,
+      ),
+    );
+
+    if (updatedManager != null) {
+      // Update the local manager list
+      setState(() {
+        final index = _managers.indexWhere((m) => m.id == updatedManager.id);
+        if (index != -1) {
+          _managers[index] = updatedManager;
+        }
+      });
+      
+      // Optionally refresh counts to ensure consistency
+      await _loadCounts();
+    }
+  }
+
   void _handleMenuAction(String action) async {
     switch (action) {
       case 'edit_basic':
@@ -232,7 +256,8 @@ class _ExpandableHotelCardState extends State<ExpandableHotelCard>
             context: context,
             builder: (context) => AddEditMenuItemDialog(
               hotelId: widget.hotel.id!,
-              onSuccess: _refreshData, categories: [],
+              onSuccess: _refreshData, 
+              categories: [],
             ),
           );
           if (result == true) _refreshData();
@@ -390,6 +415,7 @@ class _ExpandableHotelCardState extends State<ExpandableHotelCard>
               onMenuAction: _handleMenuAction,
               onNavigateToMenuManagement: _navigateToMenuManagement,
               onRefreshData: _refreshData,
+              onEditManager: _editManager, // Pass the edit manager callback
             ),
           ),
         ],

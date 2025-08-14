@@ -84,7 +84,6 @@ Future<Map<String, dynamic>?> getUser(String userid) async {
         // Save or update user data in Supabase database
         await _supabase.from('profiles').upsert({
           'id': userCredential.user!.uid,
-          'userid': userCredential.user!.uid,
           'name': userCredential.user!.displayName ?? 'Unknown',
           'email': userCredential.user!.email,
           'phone': '',

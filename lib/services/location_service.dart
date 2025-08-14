@@ -35,17 +35,26 @@ class LocationService {
     }
   }
 
-  Future<void> updateLocation(Location location) async {
-    try {
-      await _supabase
-          .from('locations')
-          .update(location.toJson())
-          .eq('location_id', location.id!);
-    } catch (e) {
-      throw Exception('Failed to update location: $e');
+Future<void> updateLocation(Location location) async {
+  try {
+    // ✅ Check if location has an ID (UUID)
+    if (location.id == null || location.id!.isEmpty) {
+      throw Exception('Location ID is required for update');
     }
-  }
 
+    await _supabase
+        .from('locations')
+        .update(location.toUpdateJson()) // ✅ Use dedicated update method
+        .eq('location_id', location.id!); // ✅ Match the exact column name
+    
+    // Note: Supabase will automatically handle updated_at if you have triggers set up
+    
+  } catch (e) {
+    // ✅ More detailed error information
+    print('LocationService Error: $e'); // For debugging
+    throw Exception('Failed to update location: $e');
+  }
+}
   Future<void> deleteLocation(String locationId) async {
     try {
       await _supabase

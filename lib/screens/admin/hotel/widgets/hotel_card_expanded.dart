@@ -3,6 +3,9 @@ import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/models/location.dart';
+import 'package:naivedhya/screens/admin/hotel/location/location_detail.dart';
+import 'package:naivedhya/screens/admin/hotel/manager/manager_detail.dart';
+
 
 class HotelCardExpandedContent extends StatelessWidget {
   final Hotel hotel;
@@ -31,8 +34,32 @@ class HotelCardExpandedContent extends StatelessWidget {
     required this.canEdit,
     required this.onMenuAction,
     required this.onNavigateToMenuManagement,
-    required this.onRefreshData,
+    required this.onRefreshData, required Future<void> Function(Manager manager) onEditManager,
   });
+
+  void _navigateToManagerDetail(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ManagerDetailScreen(
+          hotel: hotel,
+          onManagersUpdated: onRefreshData,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToLocationDetail(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationDetailScreen(
+          hotel: hotel,
+          onLocationsUpdated: onRefreshData,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,11 +89,11 @@ class HotelCardExpandedContent extends StatelessWidget {
               const SizedBox(height: 16),
               _buildMenuSection(context),
               const SizedBox(height: 16),
-              _buildManagersSection(),
+              _buildManagersSection(context),
               const SizedBox(height: 16),
-              _buildLocationsSection(),
+              _buildLocationsSection(context),
               const SizedBox(height: 16),
-              _buildActionButtons(),
+              _buildActionButtons(context),
             ],
           ],
         ),
@@ -236,7 +263,7 @@ class HotelCardExpandedContent extends StatelessWidget {
     );
   }
 
-  Widget _buildManagersSection() {
+  Widget _buildManagersSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -251,13 +278,26 @@ class HotelCardExpandedContent extends StatelessWidget {
               ),
             ),
             if (canEdit)
-              TextButton.icon(
-                onPressed: () => onMenuAction('add_manager'),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                ),
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () => onMenuAction('add_manager'),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _navigateToManagerDetail(context),
+                    icon: const Icon(Icons.visibility, size: 16),
+                    label: const Text('View All'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -269,18 +309,69 @@ class HotelCardExpandedContent extends StatelessWidget {
               border: Border.all(color: Colors.grey[300]!),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: Text(
-                'No managers assigned',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
+            child: Center(
+              child: Column(
+                children: [
+                  const Text(
+                    'No managers assigned',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (canEdit)
+                    ElevatedButton.icon(
+                      onPressed: () => _navigateToManagerDetail(context),
+                      icon: const Icon(Icons.person_add, size: 16),
+                      label: const Text('Manage Managers'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 32),
+                      ),
+                    ),
+                ],
               ),
             ),
           )
-        else
-          ...managers.map((manager) => _buildManagerCard(manager)),
+        else ...[
+          ...managers.take(2).map((manager) => _buildManagerCard(manager)),
+          if (managers.length > 2)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              child: InkWell(
+                onTap: () => _navigateToManagerDetail(context),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.primary.withAlpha(100)),
+                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.primary.withAlpha(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.visibility,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'View ${managers.length - 2} more managers',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -336,7 +427,7 @@ class HotelCardExpandedContent extends StatelessWidget {
     );
   }
 
-  Widget _buildLocationsSection() {
+  Widget _buildLocationsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -351,13 +442,26 @@ class HotelCardExpandedContent extends StatelessWidget {
               ),
             ),
             if (canEdit)
-              TextButton.icon(
-                onPressed: () => onMenuAction('add_location'),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                ),
+              Row(
+                children: [
+                  // TextButton.icon(
+                  //   onPressed: () => onMenuAction('add_location'),
+                  //   icon: const Icon(Icons.add, size: 16),
+                  //   label: const Text('Add'),
+                  //   style: TextButton.styleFrom(
+                  //     foregroundColor: AppColors.primary,
+                  //   ),
+                  // ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _navigateToLocationDetail(context),
+                    icon: const Icon(Icons.visibility, size: 16),
+                    label: const Text('View All'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -369,18 +473,69 @@ class HotelCardExpandedContent extends StatelessWidget {
               border: Border.all(color: Colors.grey[300]!),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: Text(
-                'No locations assigned',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
+            child: Center(
+              child: Column(
+                children: [
+                  const Text(
+                    'No locations assigned',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (canEdit)
+                    ElevatedButton.icon(
+                      onPressed: () => _navigateToLocationDetail(context),
+                      icon: const Icon(Icons.location_on, size: 16),
+                      label: const Text('Manage Locations'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(0, 32),
+                      ),
+                    ),
+                ],
               ),
             ),
           )
-        else
-          ...locations.map((location) => _buildLocationCard(location)),
+        else ...[
+          ...locations.take(2).map((location) => _buildLocationCard(location)),
+          if (locations.length > 2)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              child: InkWell(
+                onTap: () => _navigateToLocationDetail(context),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.primary.withAlpha(100)),
+                    borderRadius: BorderRadius.circular(8),
+                    color: AppColors.primary.withAlpha(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.visibility,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'View ${locations.length - 2} more locations',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -429,7 +584,7 @@ class HotelCardExpandedContent extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
     if (!canEdit) return const SizedBox.shrink();
 
     return Column(
@@ -463,14 +618,14 @@ class HotelCardExpandedContent extends StatelessWidget {
               onTap: () => onMenuAction('add_menu_item'),
             ),
             _buildActionChip(
-              icon: Icons.person_add,
-              label: 'Add Manager',
-              onTap: () => onMenuAction('add_manager'),
+              icon: Icons.people,
+              label: 'Manage Managers',
+              onTap: () => _navigateToManagerDetail(context),
             ),
             _buildActionChip(
-              icon: Icons.location_on,
-              label: 'Add Location',
-              onTap: () => onMenuAction('add_location'),
+              icon: Icons.location_city,
+              label: 'Manage Locations',
+              onTap: () => _navigateToLocationDetail(context),
             ),
             _buildActionChip(
               icon: Icons.refresh,
