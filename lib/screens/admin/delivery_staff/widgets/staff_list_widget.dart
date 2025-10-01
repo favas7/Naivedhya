@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/simple_delivery_person_model.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
-import '../../../../constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 
 class DeliveryStaffTile extends StatelessWidget {
   final SimpleDeliveryPersonnel staff;

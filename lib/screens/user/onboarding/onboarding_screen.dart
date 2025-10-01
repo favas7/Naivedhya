@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
-import '../../../constants/colors.dart';
+import 'package:naivedhya/screens/bottom_navigator/bottom_navigator.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import '../../../widgets/custom_button.dart';
 
 class OnboardingScreen extends StatefulWidget {

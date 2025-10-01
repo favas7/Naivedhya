@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/screens/user/home/customer_care_screen.dart';
 import 'package:naivedhya/screens/user/home/favorites_screen.dart';
 import 'package:naivedhya/screens/user/home/food_screen.dart';

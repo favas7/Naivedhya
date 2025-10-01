@@ -1,6 +1,4 @@
 // ignore_for_file: avoid_print
-
-import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -54,40 +52,40 @@ class SupabaseService {
   }
 
   // Create hotel with current user's email as admin
-  Future<Hotel?> createHotel(String name, String address) async {
-    try {
-      final enterpriseId = await getEnterpriseId();
-      if (enterpriseId == null) {
-        throw Exception('Enterprise ID not found');
-      }
+  // Future<Hotel?> createHotel(String name, String address) async {
+  //   try {
+  //     final enterpriseId = await getEnterpriseId();
+  //     if (enterpriseId == null) {
+  //       throw Exception('Enterprise ID not found');
+  //     }
 
-      // Get current user's email
-      final adminEmail = await getCurrentUserEmail();
-      if (adminEmail == null) {
-        throw Exception('User email not found');
-      }
+  //     // Get current user's email
+  //     final adminEmail = await getCurrentUserEmail();
+  //     if (adminEmail == null) {
+  //       throw Exception('User email not found');
+  //     }
 
-      final hotel = Hotel(
-        name: name,
-        address: address,
-        enterpriseId: enterpriseId,
-        locationId: null, // Will be added later
-        managerId: null,  // Will be added later
-        adminEmail: adminEmail, // Set current user's email
-      );
+  //     final hotel = Hotel(
+  //       name: name,
+  //       address: address,
+  //       enterpriseId: enterpriseId,
+  //       locationId: null, // Will be added later
+  //       managerId: null,  // Will be added later
+  //       adminEmail: adminEmail, // Set current user's email
+  //     );
 
-      final response = await _client
-          .from('hotels')
-          .insert(hotel.toJson())
-          .select()
-          .single();
+  //     final response = await _client
+  //         .from('hotels')
+  //         .insert(hotel.toJson())
+  //         .select()
+  //         .single();
 
-      return Hotel.fromJson(response);
-    } catch (e) {
-      print('Error creating hotel: $e');
-      return null;
-    }
-  }
+  //     return Hotel.fromJson(response);
+  //   } catch (e) {
+  //     print('Error creating hotel: $e');
+  //     return null;
+  //   }
+  // }
 
   // Get all hotels
   Future<List<Hotel>> getHotels() async {
@@ -106,48 +104,25 @@ class SupabaseService {
     }
   }
 
-  // Get hotels for current user (only hotels created by current user)
-  Future<List<Hotel>> getHotelsForCurrentUser() async {
-    try {
-      final adminEmail = await getCurrentUserEmail();
-      if (adminEmail == null) {
-        print('No authenticated user found');
-        return [];
-      }
-
-      final response = await _client
-          .from('hotels')
-          .select()
-          .eq('adminemail', adminEmail)
-          .order('created_at', ascending: false);
-
-      return (response as List)
-          .map((json) => Hotel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error getting hotels for current user: $e');
-      return [];
-    }
-  }
 
 
 
   // Update hotel
-  Future<Hotel?> updateHotel(String id, Hotel hotel) async {
-    try {
-      final response = await _client
-          .from('hotels')
-          .update(hotel.toJson())
-          .eq('id', id)
-          .select()
-          .single();
+  // Future<Hotel?> updateHotel(String id, Hotel hotel) async {
+  //   try {
+  //     final response = await _client
+  //         .from('hotels')
+  //         .update(hotel.toJson())
+  //         .eq('id', id)
+  //         .select()
+  //         .single();
 
-      return Hotel.fromJson(response);
-    } catch (e) {
-      print('Error updating hotel: $e');
-      return null;
-    }
-  }
+  //     return Hotel.fromJson(response);
+  //   } catch (e) {
+  //     print('Error updating hotel: $e');
+  //     return null;
+  //   }
+  // }
 
 
   // Create location for hotel
@@ -294,25 +269,25 @@ class SupabaseService {
   // Add these updated methods to your existing SupabaseService class
 
 // Check if current user can edit hotel (is the hotel owner)
-Future<bool> canEditHotel(String hotelId) async {
-  try {
-    final adminEmail = await getCurrentUserEmail();
-    if (adminEmail == null) {
-      return false;
-    }
+// Future<bool> canEditHotel(String hotelId) async {
+//   try {
+//     final adminEmail = await getCurrentUserEmail();
+//     if (adminEmail == null) {
+//       return false;
+//     }
 
-    final response = await _client
-        .from('hotels')
-        .select('adminemail')
-        .eq('hotel_id', hotelId) // Use hotel_id instead of id
-        .single();
+//     final response = await _client
+//         .from('hotels')
+//         .select('adminemail')
+//         .eq('hotel_id', hotelId) // Use hotel_id instead of id
+//         .single();
 
-    return response['adminemail'] == adminEmail;
-  } catch (e) {
-    print('Error checking hotel edit permission: $e');
-    return false;
-  }
-}
+//     return response['adminemail'] == adminEmail;
+//   } catch (e) {
+//     print('Error checking hotel edit permission: $e');
+//     return false;
+//   }
+// }
 
 // Update hotel - only allow name and address updates for basic info
 Future<Hotel?> updateHotelBasicInfo(String hotelId, String name, String address) async {
@@ -342,25 +317,25 @@ Future<Hotel?> updateHotelBasicInfo(String hotelId, String name, String address)
 }
 
 // Delete hotel
-Future<bool> deleteHotel(String hotelId) async {
-  try {
-    // First check if user can edit this hotel
-    final canEdit = await canEditHotel(hotelId);
-    if (!canEdit) {
-      print('Permission denied: You can only delete hotels you created');
-      return false;
-    }
+// Future<bool> deleteHotel(String hotelId) async {
+//   try {
+//     // First check if user can edit this hotel
+//     final canEdit = await canEditHotel(hotelId);
+//     if (!canEdit) {
+//       print('Permission denied: You can only delete hotels you created');
+//       return false;
+//     }
 
-    await _client
-        .from('hotels')
-        .delete()
-        .eq('hotel_id', hotelId); // Use hotel_id instead of id
-    return true;
-  } catch (e) {
-    print('Error deleting hotel: $e');
-    return false;
-  }
-}
+//     await _client
+//         .from('hotels')
+//         .delete()
+//         .eq('hotel_id', hotelId); // Use hotel_id instead of id
+//     return true;
+//   } catch (e) {
+//     print('Error deleting hotel: $e');
+//     return false;
+//   }
+// }
 // Create vendor
 Future<Vendor?> createVendor(Vendor vendor) async {
   try {
@@ -592,4 +567,142 @@ Future<Map<String, dynamic>> getHotelStatus(String hotelId) async {
     'isComplete': counts['managers']! > 0 && counts['locations']! > 0,
   };
 }
+
+
+  /// Get the current user's hotel (compatibility method)
+  Future<Hotel?> getCurrentUserHotel() async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user?.email == null) return null;
+
+      final response = await _client
+          .from('hotels')
+          .select()
+          .eq('adminemail', user!.email!)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return Hotel.fromJson(response);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get hotel by ID (compatibility method)
+  Future<Hotel?> getHotelById(String hotelId) async {
+    try {
+      final response = await _client
+          .from('hotels')
+          .select()
+          .eq('hotel_id', hotelId)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return Hotel.fromJson(response);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get all hotels for current user
+  Future<List<Hotel>> getHotelsForCurrentUser() async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user?.email == null) return [];
+
+      final response = await _client
+          .from('hotels')
+          .select()
+          .eq('adminemail', user!.email!)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => Hotel.fromJson(json))
+          .toList();
+    } catch (e) {
+      print('Error getting hotels for current user: $e');
+      return [];
+    }
+  }
+
+  /// Create hotel with current user as admin
+  Future<Hotel?> createHotel(String name, String address) async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user?.email == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final hotel = Hotel(
+        name: name,
+        address: address,
+        adminEmail: user!.email!,
+      );
+
+      final response = await _client
+          .from('hotels')
+          .insert(hotel.toJson())
+          .select()
+          .single();
+
+      return Hotel.fromJson(response);
+    } catch (e) {
+      print('Error creating hotel: $e');
+      return null;
+    }
+  }
+
+  /// Update hotel basic information
+  Future<Hotel?> updateHotel(String hotelId, String name, String address) async {
+    try {
+      final response = await _client
+          .from('hotels')
+          .update({
+            'name': name,
+            'address': address,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('hotel_id', hotelId)
+          .select()
+          .single();
+
+      return Hotel.fromJson(response);
+    } catch (e) {
+      print('Error updating hotel: $e');
+      return null;
+    }
+  }
+
+  /// Delete hotel
+  Future<bool> deleteHotel(String hotelId) async {
+    try {
+      await _client
+          .from('hotels')
+          .delete()
+          .eq('hotel_id', hotelId);
+      return true;
+    } catch (e) {
+      print('Error deleting hotel: $e');
+      return false;
+    }
+  }
+
+  /// Check if current user can edit hotel
+  Future<bool> canEditHotel(String hotelId) async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user?.email == null) return false;
+
+      final response = await _client
+          .from('hotels')
+          .select('adminemail')
+          .eq('hotel_id', hotelId)
+          .single();
+
+      return response['adminemail'] == user!.email!;
+    } catch (e) {
+      return false;
+    }
+  }
+
 }

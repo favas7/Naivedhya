@@ -14,8 +14,8 @@ import 'package:naivedhya/screens/admin/pos/pos_integration_screen.dart';
 import 'package:naivedhya/screens/admin/settings/settings_screen.dart';
 import 'package:naivedhya/screens/admin/vendors/vendors_screen.dart';
 import 'package:naivedhya/screens/auth/login/login_screen.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:provider/provider.dart';
-import '../../../constants/colors.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});

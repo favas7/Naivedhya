@@ -1,6 +1,7 @@
-// screens/orders_screen.dart (Updated with proper error handling)
+// screens/orders_screen.dart (Updated with Add Order button)
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:naivedhya/providers/order_provider.dart';
+import 'package:naivedhya/screens/admin/order/add_order_screen/add_order_screen.dart';
 import 'package:naivedhya/screens/admin/order/widget/loading_error.dart';
 import 'package:naivedhya/screens/admin/order/widget/order_desktop_table.dart';
 import 'package:naivedhya/screens/admin/order/widget/order_details.dart';
@@ -64,6 +65,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
         ),
       );
     }
+  }
+
+  void _navigateToAddOrder() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AddOrderScreen(),
+      ),
+    );
   }
 
   Future<void> _assignDeliveryPersonnel(String orderId, String deliveryPersonId) async {
@@ -137,7 +146,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                 ),
               ),
-              // Quick stats or actions could be added here
+              // Add Order Button
+              ElevatedButton.icon(
+                onPressed: _navigateToAddOrder,
+                icon: const Icon(Icons.add),
+                label: Text(isDesktop ? 'Add Order' : 'Add'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[600],
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isDesktop ? 20 : 16,
+                    vertical: isDesktop ? 12 : 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Quick stats
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

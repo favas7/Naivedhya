@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_hotel_dialogue.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/hotel_card.dart';

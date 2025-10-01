@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naivedhya/constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/services/menu_service.dart';
 

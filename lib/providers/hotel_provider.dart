@@ -146,40 +146,34 @@ class HotelProvider with ChangeNotifier {
     }
   }
 
-  // Update hotel with location ID
-  Future<bool> updateHotelLocation(String hotelId, String locationId) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+// Update hotel with location ID
+Future<bool> updateHotelLocation(String hotelId, String locationId) async {
+  _isLoading = true;
+  _error = null;
+  notifyListeners();
 
-    try {
-      // Find the hotel to update
+  try {
+    final updatedHotel = await _supabaseService.updateHotelLocation(hotelId, locationId);
+    if (updatedHotel != null) {
       final hotelIndex = _hotels.indexWhere((h) => h.id == hotelId);
-      if (hotelIndex == -1) {
-        _error = 'Hotel not found';
-        return false;
-      }
-
-      final currentHotel = _hotels[hotelIndex];
-      final updatedHotel = currentHotel.copyWith(locationId: locationId);
-      
-      final success = await _supabaseService.updateHotel(hotelId, updatedHotel);
-      if (success != null) {
+      if (hotelIndex != -1) {
         _hotels[hotelIndex] = updatedHotel;
         notifyListeners();
         return true;
-      } else {
-        _error = 'Failed to update hotel location';
-        return false;
       }
-    } catch (e) {
-      _error = 'Failed to update hotel location: $e';
+      return true; // Hotel updated successfully but not in local list
+    } else {
+      _error = 'Failed to update hotel location';
       return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
     }
+  } catch (e) {
+    _error = 'Failed to update hotel location: $e';
+    return false;
+  } finally {
+    _isLoading = false;
+    notifyListeners();
   }
+}
 
   // Get hotel by ID
   Hotel? getHotelById(String hotelId) {

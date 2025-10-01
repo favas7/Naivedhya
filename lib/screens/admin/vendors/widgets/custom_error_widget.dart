@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 
 class CustomErrorWidget extends StatelessWidget {
   final String message;

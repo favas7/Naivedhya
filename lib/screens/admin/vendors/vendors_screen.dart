@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/constants/colors.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
 import 'package:naivedhya/screens/admin/hotel/widgets/add_hotel_dialogue.dart';
@@ -7,6 +6,7 @@ import 'package:naivedhya/screens/admin/vendors/widgets/add_ventor_dialogue.dart
 import 'package:naivedhya/screens/admin/vendors/widgets/custom_error_widget.dart';
 import 'package:naivedhya/screens/admin/vendors/widgets/loading_widget.dart';
 import 'package:naivedhya/services/ventor_Service.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:provider/provider.dart';
 import '../../../models/hotel.dart';
 import '../../../providers/hotel_provider.dart';

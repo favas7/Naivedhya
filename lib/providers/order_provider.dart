@@ -1,13 +1,13 @@
-// providers/order_provider.dart (Updated)
+// lib/providers/order_provider.dart (Updated with createOrderWithItems method)
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/order_model.dart';
-import 'package:naivedhya/services/delivery_person_service.dart';
+import 'package:naivedhya/models/order_item_model.dart';
+import 'package:naivedhya/services/order_item_service.dart';
 import '../services/order_service.dart';
 
 class OrderProvider extends ChangeNotifier {
   final OrderService _orderService = OrderService();
-  // ignore: unused_field
-  final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
+  final OrderItemService _orderItemService = OrderItemService();
 
   List<Order> _orders = [];
   List<Order> _filteredOrders = [];
@@ -130,6 +130,33 @@ class OrderProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Original method for creating orders without items
+  Future<void> createOrder(Order order) async {
+    try {
+      final createdOrder = await _orderService.createOrder(order);
+      
+      // Add the new order to the beginning of the list
+      _orders.insert(0, createdOrder);
+      _applyFilters();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+
+  // Method to get order items for a specific order
+  Future<List<OrderItem>> getOrderItems(String orderId) async {
+    try {
+      return await _orderItemService.getOrderItems(orderId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   Future<void> updateOrder(Order order) async {
     try {
       final updatedOrder = await _orderService.updateOrder(order);
@@ -159,7 +186,6 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // New method for assigning delivery personnel
   Future<void> assignDeliveryPersonnel(String orderId, String deliveryPersonId) async {
     try {
       final success = await _orderService.assignDeliveryPersonnel(orderId, deliveryPersonId);
@@ -183,7 +209,6 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // New method for unassigning delivery personnel
   Future<void> unassignDeliveryPersonnel(String orderId) async {
     try {
       final order = _orders.firstWhere((o) => o.orderId == orderId);
@@ -211,7 +236,6 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // New method for updating order status with delivery tracking
   Future<void> updateOrderStatus(
     String orderId, 
     String status, {
@@ -252,7 +276,6 @@ class OrderProvider extends ChangeNotifier {
     await loadOrders();
   }
 
-  // Helper method to get order by ID
   Order? getOrderById(String orderId) {
     try {
       return _orders.firstWhere((order) => order.orderId == orderId);
@@ -261,9 +284,125 @@ class OrderProvider extends ChangeNotifier {
     }
   }
 
-  // Helper method to check if order has delivery person assigned
   bool hasDeliveryPersonAssigned(String orderId) {
     final order = getOrderById(orderId);
     return order?.deliveryPersonId != null;
   }
+
+  /// Enhanced method for creating orders with items (replaces the existing one)
+Future<void> createOrderWithItems(Order order, List<OrderItem> orderItems) async {
+  try {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    // Create the order first
+    final createdOrder = await _orderService.createOrder(order);
+    
+    // Create order items if any
+    if (orderItems.isNotEmpty) {
+      // Update order items with the actual order ID from database
+      final updatedOrderItems = orderItems.map((item) => 
+        item.copyWith(orderId: createdOrder.orderId)
+      ).toList();
+      
+      await _orderItemService.createOrderItems(updatedOrderItems);
+    }
+    
+    // Add the new order to the beginning of the list
+    _orders.insert(0, createdOrder);
+    _applyFilters();
+    
+    _isLoading = false;
+    notifyListeners();
+  } catch (e) {
+    _error = e.toString();
+    _isLoading = false;
+    notifyListeners();
+    rethrow;
+  }
+}
+
+/// Get order items with detailed information
+Future<List<OrderItem>> getOrderItemsDetailed(String orderId) async {
+  try {
+    return await _orderItemService.getOrderItems(orderId);
+  } catch (e) {
+    _error = e.toString();
+    notifyListeners();
+    rethrow;
+  }
+}
+
+/// Calculate total for order items
+Future<double> calculateOrderItemsTotal(String orderId) async {
+  try {
+    return await _orderItemService.calculateOrderTotal(orderId);
+  } catch (e) {
+    _error = e.toString();
+    notifyListeners();
+    return 0.0;
+  }
+}
+
+/// Update order items for an existing order
+Future<void> updateOrderItems(String orderId, List<OrderItem> orderItems) async {
+  try {
+    _isLoading = true;
+    notifyListeners();
+
+    // First delete existing order items
+    await _orderItemService.deleteOrderItems(orderId);
+    
+    // Then create new order items
+    if (orderItems.isNotEmpty) {
+      final updatedOrderItems = orderItems.map((item) => 
+        item.copyWith(orderId: orderId)
+      ).toList();
+      
+      await _orderItemService.createOrderItems(updatedOrderItems);
+    }
+
+    // Recalculate order total if needed
+    final newTotal = await _orderItemService.calculateOrderTotal(orderId);
+    
+    // Update the order in local list with new total
+    final orderIndex = _orders.indexWhere((order) => order.orderId == orderId);
+    if (orderIndex != -1) {
+      _orders[orderIndex] = _orders[orderIndex].copyWith(
+        totalAmount: newTotal,
+        updatedAt: DateTime.now(),
+      );
+      _applyFilters();
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  } catch (e) {
+    _error = e.toString();
+    _isLoading = false;
+    notifyListeners();
+    rethrow;
+  }
+}
+
+/// Delete order with its items
+Future<void> deleteOrderWithItems(String orderId) async {
+  try {
+    // Delete order items first (due to foreign key constraint)
+    await _orderItemService.deleteOrderItems(orderId);
+    
+    // Then delete the order
+    await _orderService.deleteOrder(orderId);
+    
+    // Remove from local lists
+    _orders.removeWhere((order) => order.orderId == orderId);
+    _applyFilters();
+  } catch (e) {
+    _error = e.toString();
+    notifyListeners();
+    rethrow;
+  }
+}
+
 }

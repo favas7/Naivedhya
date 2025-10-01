@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 
 class ListScreen extends StatelessWidget {
   const ListScreen({super.key});

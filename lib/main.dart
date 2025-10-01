@@ -9,12 +9,12 @@ import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
 import 'package:naivedhya/providers/location_provider.dart';
 import 'package:naivedhya/providers/manager_provider.dart';
 import 'package:naivedhya/providers/order_provider.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/user/splash_screen.dart';
 import 'providers/auth_provider.dart';
-import 'constants/colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -2,10 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:naivedhya/bottom_navigator/bottom_navigator.dart';
+import 'package:naivedhya/screens/bottom_navigator/bottom_navigator.dart';
 import 'package:naivedhya/screens/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
-import '../../../constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_text_field.dart';

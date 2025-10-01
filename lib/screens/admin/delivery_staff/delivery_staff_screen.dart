@@ -3,9 +3,8 @@ import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/screens/admin/delivery_staff/widgets/delivery_staff_list.dart';
 import 'package:naivedhya/screens/admin/delivery_staff/widgets/dialogue_components.dart';
 import 'package:naivedhya/screens/admin/delivery_staff/widgets/header_widget.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:provider/provider.dart';
-import '../../../constants/colors.dart';
-
 class DeliveryStaffScreen extends StatefulWidget {
   const DeliveryStaffScreen({super.key});
 

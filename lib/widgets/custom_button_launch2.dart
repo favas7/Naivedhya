@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 
 class CustomButtonLaunch2 extends StatelessWidget {
   final String text;

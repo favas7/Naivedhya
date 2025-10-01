@@ -1,4 +1,4 @@
-// services/order_service.dart (Updated)
+// services/order_service.dart (Updated with createOrder method)
 import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/services/delivery_person_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -41,6 +41,39 @@ class OrderService {
       return Order.fromJson(response);
     } catch (e) {
       throw Exception('Failed to fetch order: ${e.toString()}');
+    }
+  }
+
+  // New method for creating orders
+  Future<Order> createOrder(Order order) async {
+    try {
+      final orderData = {
+        'order_id': order.orderId,
+        'customer_id': order.customerId,
+        'vendor_id': order.vendorId,
+        'hotel_id': order.hotelId,
+        'order_number': order.orderNumber,
+        'total_amount': order.totalAmount,
+        'status': order.status,
+        'customer_name': order.customerName,
+        'delivery_status': order.deliveryStatus,
+        'delivery_person_id': order.deliveryPersonId,
+        'proposed_delivery_time': order.proposedDeliveryTime?.toIso8601String(),
+        'pickup_time': order.pickupTime?.toIso8601String(),
+        'delivery_time': order.deliveryTime?.toIso8601String(),
+        'created_at': order.createdAt.toIso8601String(),
+        'updated_at': order.updatedAt.toIso8601String(),
+      };
+
+      final response = await _supabase
+          .from('orders')
+          .insert(orderData)
+          .select()
+          .single();
+
+      return Order.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to create order: ${e.toString()}');
     }
   }
 

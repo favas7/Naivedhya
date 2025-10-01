@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:provider/provider.dart';
-import '../../../../constants/colors.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

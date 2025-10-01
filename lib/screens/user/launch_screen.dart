@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/widgets/custom_button_launch1.dart';
 import 'package:naivedhya/widgets/custom_button_launch2.dart';
-import '../../constants/colors.dart';
 import '../auth/login/login_screen.dart';
 import '../auth/sign_up/signup_screen.dart';
 

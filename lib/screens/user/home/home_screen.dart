@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../constants/colors.dart';
+import 'package:naivedhya/utils/constants/colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../auth/login/login_screen.dart';
 import '../../../widgets/custom_button.dart';
