@@ -1,6 +1,6 @@
 // lib/screens/admin/order/add_order_screen.dart
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/models/simple_delivery_person_model.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/providers/order_provider.dart';
@@ -436,7 +436,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         orderId: orderId,
         customerId: _selectedCustomer!.id,
         vendorId: _vendorId!,
-        RestaurantId: _restaurantId!,
+        restaurantId: _restaurantId!,
         orderNumber: orderNumber,
         totalAmount: _totalAmount,
         status: _selectedStatus,

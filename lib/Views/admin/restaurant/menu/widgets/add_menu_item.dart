@@ -5,13 +5,13 @@ import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/services/menu_service.dart';
 
 class AddEditMenuItemDialog extends StatefulWidget {
-  final String RestaurantId;
+  final String restaurantId;
   final MenuItem? menuItem; // null for add, MenuItem for edit
   final VoidCallback? onSuccess;
 
   const AddEditMenuItemDialog({
     super.key,
-    required this.RestaurantId,
+    required this.restaurantId,
     this.menuItem,
     this.onSuccess, required List<String> categories,
   });
@@ -84,7 +84,7 @@ class _AddEditMenuItemDialogState extends State<AddEditMenuItemDialog> {
     try {
       final menuItem = MenuItem(
         itemId: _isEditMode ? widget.menuItem!.itemId : null,
-        RestaurantId: widget.RestaurantId,
+        restaurantId: widget.restaurantId,
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim().isEmpty 
             ? null 

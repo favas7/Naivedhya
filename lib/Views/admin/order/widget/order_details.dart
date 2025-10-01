@@ -106,7 +106,7 @@ class _OrderDetailsDialogState extends State<OrderDetailsDialog> {
                 _buildDetailRow('Customer:', widget.order.customerName ?? 'Unknown'),
                 _buildDetailRow('Customer ID:', widget.order.customerId),
                 _buildDetailRow('Vendor ID:', widget.order.vendorId),
-                _buildDetailRow('Restaurant ID:', widget.order.RestaurantId),
+                _buildDetailRow('Restaurant ID:', widget.order.restaurantId),
               ]),
               const SizedBox(height: 16),
 

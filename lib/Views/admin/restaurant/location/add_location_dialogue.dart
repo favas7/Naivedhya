@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/location.dart';
 import 'package:naivedhya/providers/location_provider.dart'; // Changed import
@@ -48,7 +48,7 @@ class _AddLocationDialogState extends State<AddLocationDialog> {
         state: _stateController.text.trim(),
         country: _countryController.text.trim(),
         postalCode: _postalCodeController.text.trim(),
-        Restaurantid: widget.restaurant.id,
+        restaurantid: widget.restaurant.id,
       );
 
       final locationId = await provider.addLocation(location); // Updated method call

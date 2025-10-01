@@ -3,7 +3,7 @@ class Manager {
   final String name;
   final String email;
   final String phone;
-  final String? Restaurantid;
+  final String? restaurantid;
   final String? imageUrl; // New field for profile image
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -13,7 +13,7 @@ class Manager {
     required this.name,
     required this.email,
     required this.phone,
-    this.Restaurantid,
+    this.restaurantid,
     this.imageUrl,
     this.createdAt,
     this.updatedAt,
@@ -25,7 +25,7 @@ class Manager {
       name: json['name'],
       email: json['email'],
       phone: json['phone'],
-      Restaurantid: json['Restaurant_id'],
+      restaurantid: json['hotel_id'],
       imageUrl: json['image_url'], // Map from database
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
@@ -41,7 +41,7 @@ class Manager {
       'name': name,
       'email': email,
       'phone': phone,
-      'Restaurant_id': Restaurantid,
+      'hotel_id': restaurantid,
       'image_url': imageUrl, // Include image URL
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -52,7 +52,7 @@ class Manager {
       'name': name,
       'email': email,
       'phone': phone,
-      'Restaurant_id': Restaurantid,
+      'hotel_id': restaurantid,
       'image_url': imageUrl, // Include image URL
       'updated_at': DateTime.now().toIso8601String(),
     };
@@ -63,7 +63,7 @@ class Manager {
     String? name,
     String? email,
     String? phone,
-    String? Restaurantid,
+    String? restaurantid,
     String? imageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -73,7 +73,7 @@ class Manager {
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
-      Restaurantid: Restaurantid ?? this.Restaurantid,
+      restaurantid: restaurantid ?? this.restaurantid,
       imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

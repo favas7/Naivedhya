@@ -10,7 +10,7 @@ import 'package:naivedhya/Views/admin/restaurant/widgets/hotel_card_expanded.dar
 import 'package:naivedhya/Views/admin/restaurant/widgets/hotel_card_header.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/hotel_card_meta_info.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/hotel_card_status_row.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/models/location.dart';
 import 'package:naivedhya/services/hotel_service.dart';
@@ -255,7 +255,7 @@ class _ExpandableRestaurantCardState extends State<ExpandableRestaurantCard>
           final result = await showDialog<bool>(
             context: context,
             builder: (context) => AddEditMenuItemDialog(
-              RestaurantId: widget.restaurant.id!,
+              restaurantId: widget.restaurant.id!,
               onSuccess: _refreshData, 
               categories: [],
             ),

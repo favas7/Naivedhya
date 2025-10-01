@@ -38,9 +38,9 @@ class LocationProvider extends ChangeNotifier {
       final locationId = await _locationService.addLocation(location);
       
       // Update Restaurant table with the new location_id
-      if (location.Restaurantid != null) {
+      if (location.restaurantid != null) {
         final updatedRestaurant = await _supabaseService.updateRestaurantLocation(
-          location.Restaurantid!, 
+          location.restaurantid!, 
           locationId!
         );
         
@@ -91,9 +91,9 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  Future<Location?> getLocationByRestaurantId(String RestaurantId) async {
+  Future<Location?> getLocationByRestaurantId(String restaurantId) async {
     try {
-      return await _locationService.getLocationByrestaurantId(RestaurantId);
+      return await _locationService.getLocationByrestaurantId(restaurantId);
     } catch (e) {
       _error = e.toString();
       notifyListeners();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 
 class RestaurantCardBasicInfo extends StatelessWidget {
   final Restaurant restaurant;

@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/manager.dart';
@@ -47,7 +47,7 @@ Future<void> _saveManager() async {
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       phone: _phoneController.text.trim(),
-      Restaurantid: widget.restaurant.id,
+      restaurantid: widget.restaurant.id,
     );
 
     final managerId = await managerProvider.addManager(manager);

@@ -1,5 +1,5 @@
 // ignore_for_file: avoid_print
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,7 +46,7 @@ class SupabaseService {
   Future<List<Restaurant>> getRestaurants() async {
     try {
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .select()
           .order('created_at', ascending: false);
 
@@ -97,7 +97,7 @@ class SupabaseService {
       final response = await _client
           .from('locations')
           .select()
-          .eq('Hotel_id', restaurantId);
+          .eq('hotel_id', restaurantId);
 
       return (response as List)
           .map((json) => Location.fromJson(json))
@@ -114,7 +114,7 @@ class SupabaseService {
       final response = await _client
           .from('managers')
           .select()
-          .eq('Hotel_id', restaurantId);
+          .eq('hotel_id', restaurantId);
 
       return (response as List)
           .map((json) => Manager.fromJson(json))
@@ -169,7 +169,7 @@ class SupabaseService {
       final response = await _client
           .from('managers')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .maybeSingle();
 
       if (response != null) {
@@ -188,7 +188,7 @@ class SupabaseService {
       final response = await _client
           .from('locations')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .maybeSingle();
 
       if (response != null) {
@@ -211,7 +211,7 @@ class SupabaseService {
       }
 
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .update({
             'name': name,
             'address': address,
@@ -250,7 +250,7 @@ class SupabaseService {
       final response = await _client
           .from('vendors')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -283,7 +283,7 @@ class SupabaseService {
   Future<Restaurant?> updateRestaurantManager(String restaurantId, String managerId) async {
     try {
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .update({
             'manager_id': managerId,
             'updated_at': DateTime.now().toIso8601String(),
@@ -305,7 +305,7 @@ class SupabaseService {
       final response = await _client
           .from('managers')
           .update({
-            'Hotel_id': restaurantId,
+            'hotel_id': restaurantId,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('manager_id', managerId)
@@ -323,7 +323,7 @@ class SupabaseService {
   Future<String?> createManagerAndUpdateRestaurant(Manager manager, String restaurantId) async {
     try {
       final managerData = manager.toJson();
-      managerData.remove('Hotel_id');
+      managerData.remove('hotel_id');
       
       final managerResponse = await _client
           .from('managers')
@@ -334,7 +334,7 @@ class SupabaseService {
       final managerId = managerResponse['manager_id'] as String;
 
       await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .update({
             'manager_id': managerId,
             'updated_at': DateTime.now().toIso8601String(),
@@ -346,7 +346,7 @@ class SupabaseService {
       await _client
           .from('managers')
           .update({
-            'Hotel_id': restaurantId,
+            'hotel_id': restaurantId,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('manager_id', managerId);
@@ -362,7 +362,7 @@ class SupabaseService {
   Future<Restaurant?> updateRestaurantLocation(String restaurantId, String locationId) async {
     try {
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .update({
             'location_id': locationId,
             'updated_at': DateTime.now().toIso8601String(),
@@ -384,7 +384,7 @@ class SupabaseService {
       final response = await _client
           .from('managers')
           .select('manager_id')
-          .eq('Hotel_id', restaurantId);
+          .eq('hotel_id', restaurantId);
       
       return (response as List).length;
     } catch (e) {
@@ -399,7 +399,7 @@ class SupabaseService {
       final response = await _client
           .from('locations')
           .select('location_id')
-          .eq('Hotel_id', restaurantId);
+          .eq('hotel_id', restaurantId);
       
       return (response as List).length;
     } catch (e) {
@@ -461,7 +461,7 @@ class SupabaseService {
       if (user?.email == null) return null;
 
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .select()
           .eq('adminemail', user!.email!)
           .maybeSingle();
@@ -477,7 +477,7 @@ class SupabaseService {
   Future<Restaurant?> getRestaurantById(String restaurantId) async {
     try {
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .select()
           .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
           .maybeSingle();
@@ -496,7 +496,7 @@ class SupabaseService {
       if (user?.email == null) return [];
 
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .select()
           .eq('adminemail', user!.email!)
           .order('created_at', ascending: false);
@@ -525,7 +525,7 @@ class SupabaseService {
       );
 
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .insert(restaurant.toJson())
           .select()
           .single();
@@ -541,7 +541,7 @@ class SupabaseService {
   Future<Restaurant?> updateRestaurant(String restaurantId, String name, String address) async {
     try {
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .update({
             'name': name,
             'address': address,
@@ -562,7 +562,7 @@ class SupabaseService {
   Future<bool> deleteRestaurant(String restaurantId) async {
     try {
       await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .delete()
           .eq('hotel_id', restaurantId);  // FIXED: Lowercase column name
       return true;
@@ -579,7 +579,7 @@ class SupabaseService {
       if (user?.email == null) return false;
 
       final response = await _client
-          .from('Restaurent')  // FIXED: Correct table name
+          .from('restaurant')  // FIXED: Correct table name
           .select('adminemail')
           .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
           .single();

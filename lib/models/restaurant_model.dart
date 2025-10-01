@@ -23,7 +23,7 @@ class Restaurant {
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
     return Restaurant(
-      id: json['Restaurant_id'], // Map from database column Restaurant_id
+      id: json['hotel_id'], // FIXED: Match database column name
       name: json['name'],
       address: json['address'],
       enterpriseId: json['enterprise_id'],
@@ -41,21 +41,13 @@ class Restaurant {
 
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'hotel_id': id, // Include ID for updates
       'name': name,
       'address': address,
-      'enterprise_id': enterpriseId,
-      'location_id': locationId,
-      'manager_id': managerId,
-      'adminemail': adminEmail,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-  }
-
-  // For updates - only include fields that can be updated
-  Map<String, dynamic> toUpdateJson() {
-    return {
-      'name': name,
-      'address': address,
+      if (enterpriseId != null) 'enterprise_id': enterpriseId,
+      if (locationId != null) 'location_id': locationId,
+      if (managerId != null) 'manager_id': managerId,
+      if (adminEmail != null) 'adminemail': adminEmail,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }

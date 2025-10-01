@@ -6,10 +6,9 @@ import 'package:naivedhya/providers/dashboard_provider.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
-
 import 'package:naivedhya/providers/location_provider.dart';
 import 'package:naivedhya/providers/manager_provider.dart';
-import 'package:naivedhya/providers/order_provider.dart';
+import 'package:naivedhya/providers/order_provider.dart'; 
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,7 +17,7 @@ import 'Views/user/splash_screen.dart';
 import 'providers/auth_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized(); 
   
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

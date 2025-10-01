@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/ventor_model.dart';
@@ -342,7 +342,7 @@ Future<void> _handleSubmit() async {
       email: _emailController.text.trim(),
       phone: _phoneController.text.trim(),
       serviceType: _serviceTypeController.text.trim(),
-      RestaurantId: _selectedRestaurant!.id,
+      restaurantId: _selectedRestaurant!.id,
     );
 
     await vendorService.createVendor(newVendor);

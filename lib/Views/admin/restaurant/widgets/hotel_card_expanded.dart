@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/location/location_detail.dart';
 import 'package:naivedhya/Views/admin/restaurant/manager/manager_detail.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/models/location.dart';

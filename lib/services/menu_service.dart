@@ -30,11 +30,11 @@ class MenuService {
 
   // Get all menu items for a specific Restaurant
   Future<List<MenuItem>> getMenuItems(String restaurantId) async {
-    try {
+    try { 
       final response = await _client
           .from('menu_items')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -52,7 +52,7 @@ class MenuService {
       final response = await _client
           .from('menu_items')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .eq('category', category)
           .order('name', ascending: true);
 
@@ -71,7 +71,7 @@ class MenuService {
       final response = await _client
           .from('menu_items')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .eq('is_available', true)
           .order('name', ascending: true);
 
@@ -109,7 +109,7 @@ class MenuService {
       final response = await _client
           .from('menu_items')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .eq('is_available', true)
           .ilike('name', '%$query%')
           .order('name', ascending: true);
@@ -123,7 +123,7 @@ class MenuService {
         final response = await _client
             .from('menu_items')
             .select()
-            .eq('Hotel_id', restaurantId)
+            .eq('hotel_id', restaurantId)
             .eq('is_available', true)
             .or('name.ilike.%$query%,description.ilike.%$query%')
             .order('name', ascending: true);
@@ -195,7 +195,7 @@ class MenuService {
       final response = await _client
           .from('menu_items')
           .select('item_id')
-          .eq('Hotel_id', restaurantId);
+          .eq('hotel_id', restaurantId);
       
       return (response as List).length;
     } catch (e) {
@@ -210,7 +210,7 @@ class MenuService {
       final response = await _client
           .from('menu_items')
           .select('item_id')
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .eq('is_available', true);
       
       return (response as List).length;
@@ -226,7 +226,7 @@ class MenuService {
       final response = await _client
           .from('menu_items')
           .select('category')
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .not('category', 'is', null);
 
       final categories = (response as List)

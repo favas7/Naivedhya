@@ -3,7 +3,7 @@ class Order {
   final String orderId;
   final String customerId;
   final String vendorId;
-  final String RestaurantId;
+  final String restaurantId;
   final String orderNumber;
   final double totalAmount;
   final String status;
@@ -20,7 +20,7 @@ class Order {
     required this.orderId,
     required this.customerId,
     required this.vendorId,
-    required this.RestaurantId,
+    required this.restaurantId,
     required this.orderNumber,
     required this.totalAmount,
     required this.status,
@@ -39,7 +39,7 @@ class Order {
       orderId: json['order_id'],
       customerId: json['customer_id'],
       vendorId: json['vendor_id'],
-      RestaurantId: json['Restaurant_id'],
+      restaurantId: json['hotel_id'],
       orderNumber: json['order_number'],
       totalAmount: (json['total_amount'] as num).toDouble(),
       status: json['status'] ?? 'Pending',
@@ -65,7 +65,7 @@ class Order {
       'order_id': orderId,
       'customer_id': customerId,
       'vendor_id': vendorId,
-      'Restaurant_id': RestaurantId,
+      'hotel_id': restaurantId,
       'order_number': orderNumber,
       'total_amount': totalAmount,
       'status': status,
@@ -84,7 +84,7 @@ class Order {
     String? orderId,
     String? customerId,
     String? vendorId,
-    String? RestaurantId,
+    String? restaurantId,
     String? orderNumber,
     double? totalAmount,
     String? status,
@@ -101,7 +101,7 @@ class Order {
       orderId: orderId ?? this.orderId,
       customerId: customerId ?? this.customerId,
       vendorId: vendorId ?? this.vendorId,
-      RestaurantId: RestaurantId ?? this.RestaurantId,
+      restaurantId: restaurantId ?? this.restaurantId,
       orderNumber: orderNumber ?? this.orderNumber,
       totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,

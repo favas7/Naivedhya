@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/menu/widgets/add_menu_item.dart';
 import 'package:naivedhya/Views/admin/restaurant/menu/widgets/menu_item_card.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/services/menu_service.dart';
@@ -124,7 +124,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AddEditMenuItemDialog(
-        RestaurantId: widget.restaurant.id!,
+        restaurantId: widget.restaurant.id!,
         categories: _categories.where((c) => c != 'All').toList(),
       ),
     );
@@ -138,7 +138,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AddEditMenuItemDialog(
-        RestaurantId: widget.restaurant.id!,
+        restaurantId: widget.restaurant.id!,
         menuItem: item,
         categories: _categories.where((c) => c != 'All').toList(),
       ),

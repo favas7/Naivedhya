@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:naivedhya/Views/admin/restaurant/manager/add_manager_dialogue.dart';
 import 'package:naivedhya/Views/admin/restaurant/manager/edit_manager.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/services/hotel_service.dart';
 import 'package:naivedhya/utils/constants/colors.dart';
 import 'package:naivedhya/models/manager.dart';

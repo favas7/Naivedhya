@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/add_hotel_dialogue.dart';
-import 'package:naivedhya/models/hotel.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/Views/admin/vendors/widgets/add_ventor_dialogue.dart';
 import 'package:naivedhya/Views/admin/vendors/widgets/custom_error_widget.dart';
