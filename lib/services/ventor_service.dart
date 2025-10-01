@@ -25,7 +25,7 @@ class VendorService {
       final response = await _supabase
           .from(_tableName)
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .eq('is_active', true);
 
       return (response as List<dynamic>)

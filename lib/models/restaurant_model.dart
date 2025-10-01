@@ -10,7 +10,7 @@ class Restaurant {
   final DateTime? updatedAt;
 
   Restaurant({
-    this.id,
+    this.id, 
     required this.name,
     required this.address,
     this.enterpriseId,

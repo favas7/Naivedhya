@@ -43,7 +43,7 @@ class ManagerService {
   Future<String?> addManagerAndUpdateRestaurant(Manager manager, String restaurantId) async {
     try {
       final managerData = manager.toJson();
-      managerData.remove('Hotel_id');
+      managerData.remove('hotel_id');
       
       final managerResponse = await _supabase
           .from('managers')
@@ -54,17 +54,17 @@ class ManagerService {
       final managerId = managerResponse['manager_id'] as String;
 
       await _supabase
-          .from('Restaurants')
+          .from('restaurant')
           .update({
             'manager_id': managerId,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('Hotel_id', restaurantId);
+          .eq('hotel_id', restaurantId);
 
       await _supabase
           .from('managers')
           .update({
-            'Hotel_id': restaurantId,
+            'hotel_id': restaurantId,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('manager_id', managerId);
@@ -140,7 +140,7 @@ class ManagerService {
       final response = await _supabase
           .from('managers')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .maybeSingle();
       
       if (response != null) {

@@ -84,8 +84,8 @@ class DashboardProvider extends ChangeNotifier {
   Future<int> _fetchActiveRestaurants() async {
     try {
       final response = await _supabaseService.client
-          .from('Restaurants')
-          .select('Restaurant_id');
+          .from('restaurant')
+          .select('hotel_id');
       return response.length;
     } catch (e) {
       print('Error fetching active Restaurants: $e');

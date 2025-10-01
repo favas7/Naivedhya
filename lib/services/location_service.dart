@@ -88,7 +88,7 @@ Future<void> updateLocation(Location location) async {
       final response = await _supabase
           .from('locations')
           .select()
-          .eq('Hotel_id', restaurantId)
+          .eq('hotel_id', restaurantId)
           .maybeSingle();
       
       if (response != null) {

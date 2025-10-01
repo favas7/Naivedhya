@@ -6,13 +6,13 @@ import 'package:naivedhya/services/hotel_service.dart';
 class VendorRestaurantProvider with ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
   
-  List<Restaurant> _Restaurants = [];
+  List<Restaurant> _restaurants = [];
   Restaurant? _selectedRestaurant;
   bool _isLoading = false;
   String? _error;
 
   // Getters
-  List<Restaurant> get Restaurants => _Restaurants;
+  List<Restaurant> get restaurants => _restaurants;
   Restaurant? get selectedRestaurant => _selectedRestaurant;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -23,7 +23,7 @@ class VendorRestaurantProvider with ChangeNotifier {
     _clearError();
     
     try {
-      _Restaurants = await _supabaseService.getRestaurantsForCurrentUser();
+      _restaurants = await _supabaseService.getRestaurantsForCurrentUser();
       notifyListeners();
     } catch (e) {
       _setError('Failed to load Restaurants: ${e.toString()}');
@@ -38,7 +38,7 @@ class VendorRestaurantProvider with ChangeNotifier {
     _clearError();
     
     try {
-      _Restaurants = await _supabaseService.getRestaurants();
+      _restaurants = await _supabaseService.getRestaurants();
       notifyListeners();
     } catch (e) {
       _setError('Failed to load Restaurants: ${e.toString()}');
@@ -55,7 +55,7 @@ class VendorRestaurantProvider with ChangeNotifier {
     try {
       final Restaurant = await _supabaseService.createRestaurant(name, address);
       if (Restaurant != null) {
-        _Restaurants.insert(0, Restaurant); // Add to beginning of list
+        _restaurants.insert(0, Restaurant); // Add to beginning of list
         notifyListeners();
         return true;
       } else {
@@ -71,17 +71,17 @@ class VendorRestaurantProvider with ChangeNotifier {
   }
 
   // Update Restaurant
-  Future<bool> updateRestaurant(String RestaurantId, String name, String address) async {
+  Future<bool> updateRestaurant(String restaurantId, String name, String address) async {
     _setLoading(true);
     _clearError();
     
     try {
-      final updatedRestaurant = await _supabaseService.updateRestaurantBasicInfo(RestaurantId, name, address);
+      final updatedRestaurant = await _supabaseService.updateRestaurantBasicInfo(restaurantId, name, address);
       if (updatedRestaurant != null) {
         // Update the Restaurant in the list
-        final index = _Restaurants.indexWhere((h) => h.id == RestaurantId);
+        final index = _restaurants.indexWhere((h) => h.id == restaurantId);
         if (index != -1) {
-          _Restaurants[index] = updatedRestaurant;
+          _restaurants[index] = updatedRestaurant;
           notifyListeners();
         }
         return true;
@@ -105,7 +105,7 @@ class VendorRestaurantProvider with ChangeNotifier {
     try {
       final success = await _supabaseService.deleteRestaurant(RestaurantId);
       if (success) {
-        _Restaurants.removeWhere((h) => h.id == RestaurantId);
+        _restaurants.removeWhere((h) => h.id == RestaurantId);
         if (_selectedRestaurant?.id == RestaurantId) {
           _selectedRestaurant = null;
         }
@@ -147,7 +147,7 @@ class VendorRestaurantProvider with ChangeNotifier {
   // Get Restaurant by ID
   Restaurant? getRestaurantById(String RestaurantId) {
     try {
-      return _Restaurants.firstWhere((h) => h.id == RestaurantId);
+      return _restaurants.firstWhere((h) => h.id == RestaurantId);
     } catch (e) {
       return null;
     }
@@ -175,7 +175,7 @@ class VendorRestaurantProvider with ChangeNotifier {
 
   // Clear all data (useful for logout)
   void clearData() {
-    _Restaurants.clear();
+    _restaurants.clear();
     _selectedRestaurant = null;
     _error = null;
     _isLoading = false;
@@ -183,36 +183,36 @@ class VendorRestaurantProvider with ChangeNotifier {
   }
 
   // Get Restaurants count
-  int get RestaurantsCount => _Restaurants.length;
+  int get restaurantsCount => _restaurants.length;
 
   // Check if user has any Restaurants
-  bool get hasRestaurants => _Restaurants.isNotEmpty;
+  bool get hasRestaurants => _restaurants.isNotEmpty;
 
   // Get user's Restaurants summary
   Map<String, dynamic> get RestaurantsSummary {
     return {
-      'total_Restaurants': _Restaurants.length,
-      'latest_Restaurant': _Restaurants.isNotEmpty ? _Restaurants.first : null,
-      'has_Restaurants': _Restaurants.isNotEmpty,
+      'total_Restaurants': _restaurants.length,
+      'latest_Restaurant': _restaurants.isNotEmpty ? _restaurants.first : null,
+      'has_Restaurants': _restaurants.isNotEmpty,
     };
   }
   // Add this method to your existing VendorRestaurantProvider class
 
 // Update Restaurant location
-Future<bool> updateRestaurantLocation(String RestaurantId, String locationId) async {
+Future<bool> updateRestaurantLocation(String restaurantId, String locationId) async {
   _setLoading(true);
   _clearError();
   
   try {
-    final updatedRestaurant = await _supabaseService.updateRestaurantLocation(RestaurantId, locationId);
+    final updatedRestaurant = await _supabaseService.updateRestaurantLocation(restaurantId, locationId);
     if (updatedRestaurant != null) {
       // Update the Restaurant in the list
-      final index = _Restaurants.indexWhere((h) => h.id == RestaurantId);
+      final index = _restaurants.indexWhere((h) => h.id == restaurantId);
       if (index != -1) {
-        _Restaurants[index] = updatedRestaurant;
+        _restaurants[index] = updatedRestaurant;
         
         // Also update selected Restaurant if it's the same one
-        if (_selectedRestaurant?.id == RestaurantId) {
+        if (_selectedRestaurant?.id == restaurantId) {
           _selectedRestaurant = updatedRestaurant;
         }
         

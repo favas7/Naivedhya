@@ -152,11 +152,11 @@ class _VendorScreenState extends State<VendorScreen> {
           );
         }
 
-        if (vendorRestaurantProvider.Restaurants.isEmpty) {
+        if (vendorRestaurantProvider.restaurants.isEmpty) {
           return _buildEmptyState();
         }
 
-        return _buildRestaurantsList(vendorRestaurantProvider.Restaurants, isDesktop);
+        return _buildRestaurantsList(vendorRestaurantProvider.restaurants, isDesktop);
       },
     );
   }
