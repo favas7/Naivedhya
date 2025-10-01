@@ -20,12 +20,12 @@ class VendorService {
     }
   }
 
-  Future<List<Vendor>> getVendorsByHotel(String hotelId) async {
+  Future<List<Vendor>> getVendorsByRestaurant(String restaurantId) async {
     try {
       final response = await _supabase
           .from(_tableName)
           .select()
-          .eq('hotel_id', hotelId)
+          .eq('Hotel_id', restaurantId)
           .eq('is_active', true);
 
       return (response as List<dynamic>)

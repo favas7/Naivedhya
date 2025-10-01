@@ -47,14 +47,14 @@ class ManagerProvider extends ChangeNotifier {
     }
   }
 
-  // New method to handle both manager creation and hotel update
-  Future<String?> addManagerAndUpdateHotel(Manager manager, String hotelId) async {
+  // New method to handle both manager creation and Restaurant update
+  Future<String?> addManagerAndUpdateRestaurant(Manager manager, String RestaurantId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final managerId = await _managerService.addManagerAndUpdateHotel(manager, hotelId);
+      final managerId = await _managerService.addManagerAndUpdateRestaurant(manager, RestaurantId);
       await loadManagers(); // Refresh the list
       return managerId;
     } catch (e) {
@@ -98,9 +98,9 @@ class ManagerProvider extends ChangeNotifier {
     }
   }
 
-  Future<Manager?> getManagerByHotelId(String hotelId) async {
+  Future<Manager?> getManagerByRestaurantId(String RestaurantId) async {
     try {
-      return await _managerService.getManagerByHotelId(hotelId);
+      return await _managerService.getManagerByrestaurantId(RestaurantId);
     } catch (e) {
       _error = e.toString();
       notifyListeners();

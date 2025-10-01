@@ -51,7 +51,7 @@ class OrderService {
         'order_id': order.orderId,
         'customer_id': order.customerId,
         'vendor_id': order.vendorId,
-        'hotel_id': order.hotelId,
+        'Hotel_id': order.RestaurantId,
         'order_number': order.orderNumber,
         'total_amount': order.totalAmount,
         'status': order.status,

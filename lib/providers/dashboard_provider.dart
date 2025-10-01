@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/hotel_service.dart';
+import 'package:naivedhya/services/hotel_service.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
@@ -7,7 +7,7 @@ class DashboardProvider extends ChangeNotifier {
   // Dashboard stats
   int _totalUsers = 0;
   int _totalOrders = 0;
-  int _activeHotels = 0;
+  int _activeRestaurants = 0;
   int _deliveryStaff = 0;
   int _totalVendors = 0;
   
@@ -17,7 +17,7 @@ class DashboardProvider extends ChangeNotifier {
   // Getters
   int get totalUsers => _totalUsers;
   int get totalOrders => _totalOrders;
-  int get activeHotels => _activeHotels;
+  int get activeRestaurants => _activeRestaurants;
   int get deliveryStaff => _deliveryStaff;
   int get totalVendors => _totalVendors;
   bool get isLoading => _isLoading;
@@ -34,14 +34,14 @@ class DashboardProvider extends ChangeNotifier {
       final results = await Future.wait([
         _fetchTotalUsers(),
         _fetchTotalOrders(),
-        _fetchActiveHotels(),
+        _fetchActiveRestaurants(),
         _fetchDeliveryStaff(),
         _fetchTotalVendors(),
       ]);
 
       _totalUsers = results[0];
       _totalOrders = results[1];
-      _activeHotels = results[2];
+      _activeRestaurants = results[2];
       _deliveryStaff = results[3];
       _totalVendors = results[4];
 
@@ -80,15 +80,15 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
-  // Fetch active hotels count
-  Future<int> _fetchActiveHotels() async {
+  // Fetch active Restaurants count
+  Future<int> _fetchActiveRestaurants() async {
     try {
       final response = await _supabaseService.client
-          .from('hotels')
-          .select('hotel_id');
+          .from('Restaurants')
+          .select('Restaurant_id');
       return response.length;
     } catch (e) {
-      print('Error fetching active hotels: $e');
+      print('Error fetching active Restaurants: $e');
       return 0;
     }
   }

@@ -4,7 +4,7 @@ class Vendor {
   final String email;
   final String phone;
   final String serviceType;
-  final String? hotelId;
+  final String? RestaurantId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -14,7 +14,7 @@ class Vendor {
     required this.email,
     required this.phone,
     required this.serviceType,
-    required this.hotelId,
+    required this.RestaurantId,
     this.createdAt,
     this.updatedAt,
   });
@@ -26,7 +26,7 @@ class Vendor {
       email: json['email'],
       phone: json['phone'],
       serviceType: json['service_type'],
-      hotelId: json['hotel_id'],
+      RestaurantId: json['Restaurant_id'],
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
@@ -42,7 +42,7 @@ class Vendor {
       'email': email,
       'phone': phone,
       'service_type': serviceType,
-      'hotel_id': hotelId,
+      'Restaurant_id': RestaurantId,
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     };

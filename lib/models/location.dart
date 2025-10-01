@@ -4,7 +4,7 @@ class Location {
   final String state;
   final String country;
   final String postalCode;
-  final String? hotelid;
+  final String? Restaurantid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -14,7 +14,7 @@ class Location {
     required this.state,
     required this.country,
     required this.postalCode,
-    this.hotelid,
+    this.Restaurantid,
     this.createdAt,
     this.updatedAt,
   });
@@ -26,7 +26,7 @@ class Location {
       state: json['state'],
       country: json['country'],
       postalCode: json['postal_code'],
-      hotelid: json['hotel_id'], // ✅ Maps from 'hotel_id' UUID column
+      Restaurantid: json['Restaurant_id'], // ✅ Maps from 'Restaurant_id' UUID column
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at']) 
           : null,
@@ -42,7 +42,7 @@ class Location {
       'state': state,
       'country': country,
       'postal_code': postalCode,
-      'hotel_id': hotelid, // ✅ Maps to 'hotel_id' UUID column
+      'Restaurant_id': Restaurantid, // ✅ Maps to 'Restaurant_id' UUID column
     };
   }
 
@@ -53,7 +53,7 @@ class Location {
       'state': state,
       'country': country,
       'postal_code': postalCode,
-      'hotel_id': hotelid, // ✅ Maps to 'hotel_id' UUID column
+      'Restaurant_id': Restaurantid, // ✅ Maps to 'Restaurant_id' UUID column
     };
   }
 
@@ -63,7 +63,7 @@ class Location {
     String? state,
     String? country,
     String? postalCode,
-    String? hotelid,
+    String? Restaurantid,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -73,7 +73,7 @@ class Location {
       state: state ?? this.state,
       country: country ?? this.country,
       postalCode: postalCode ?? this.postalCode,
-      hotelid: hotelid ?? this.hotelid,
+      Restaurantid: Restaurantid ?? this.Restaurantid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

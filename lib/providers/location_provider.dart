@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/location.dart';
+import 'package:naivedhya/services/hotel_service.dart';
 import 'package:naivedhya/services/location_service.dart';
-import 'package:naivedhya/services/hotel_service.dart'; // Import your SupabaseService
 
 class LocationProvider extends ChangeNotifier {
   final LocationService _locationService = LocationService();
@@ -31,22 +31,22 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  // Updated addLocation method to also update hotel table
+  // Updated addLocation method to also update Restaurant table
   Future<String?> addLocation(Location location) async {
     try {
       _error = null;
       final locationId = await _locationService.addLocation(location);
       
-      // Update hotel table with the new location_id
-      if (location.hotelid != null) {
-        final updatedHotel = await _supabaseService.updateHotelLocation(
-          location.hotelid!, 
+      // Update Restaurant table with the new location_id
+      if (location.Restaurantid != null) {
+        final updatedRestaurant = await _supabaseService.updateRestaurantLocation(
+          location.Restaurantid!, 
           locationId!
         );
         
-        if (updatedHotel == null) {
+        if (updatedRestaurant == null) {
           // Log warning but don't fail the entire operation
-          print('Warning: Location created but hotel update failed');
+          print('Warning: Location created but Restaurant update failed');
         }
       }
       
@@ -91,9 +91,9 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  Future<Location?> getLocationByHotelId(String hotelId) async {
+  Future<Location?> getLocationByRestaurantId(String RestaurantId) async {
     try {
-      return await _locationService.getLocationByHotelId(hotelId);
+      return await _locationService.getLocationByrestaurantId(RestaurantId);
     } catch (e) {
       _error = e.toString();
       notifyListeners();

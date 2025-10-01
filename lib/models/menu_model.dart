@@ -1,6 +1,6 @@
 class MenuItem {
   final String? itemId;
-  final String hotelId;
+  final String RestaurantId;
   final String name;
   final String? description;
   final double price;
@@ -11,7 +11,7 @@ class MenuItem {
 
   MenuItem({
     this.itemId,
-    required this.hotelId,
+    required this.RestaurantId,
     required this.name,
     this.description,
     required this.price,
@@ -25,7 +25,7 @@ class MenuItem {
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     return MenuItem(
       itemId: json['item_id'],
-      hotelId: json['hotel_id'],
+      RestaurantId: json['Restaurant_id'],
       name: json['name'],
       description: json['description'],
       price: (json['price'] ?? 0.0).toDouble(),
@@ -43,7 +43,7 @@ class MenuItem {
   // Convert MenuItem to JSON
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
-      'hotel_id': hotelId,
+      'Restaurant_id': RestaurantId,
       'name': name,
       'description': description,
       'price': price,
@@ -62,7 +62,7 @@ class MenuItem {
   // Copy with method for easy updates
   MenuItem copyWith({
     String? itemId,
-    String? hotelId,
+    String? RestaurantId,
     String? name,
     String? description,
     double? price,
@@ -73,7 +73,7 @@ class MenuItem {
   }) {
     return MenuItem(
       itemId: itemId ?? this.itemId,
-      hotelId: hotelId ?? this.hotelId,
+      RestaurantId: RestaurantId ?? this.RestaurantId,
       name: name ?? this.name,
       description: description ?? this.description,
       price: price ?? this.price,
@@ -86,7 +86,7 @@ class MenuItem {
 
   @override
   String toString() {
-    return 'MenuItem{itemId: $itemId, hotelId: $hotelId, name: $name, description: $description, price: $price, isAvailable: $isAvailable, category: $category}';
+    return 'MenuItem{itemId: $itemId, RestaurantId: $RestaurantId, name: $name, description: $description, price: $price, isAvailable: $isAvailable, category: $category}';
   }
 
   @override
@@ -95,7 +95,7 @@ class MenuItem {
     
     return other is MenuItem &&
         other.itemId == itemId &&
-        other.hotelId == hotelId &&
+        other.RestaurantId == RestaurantId &&
         other.name == name &&
         other.description == description &&
         other.price == price &&
@@ -106,7 +106,7 @@ class MenuItem {
   @override
   int get hashCode {
     return itemId.hashCode ^
-        hotelId.hashCode ^
+        RestaurantId.hashCode ^
         name.hashCode ^
         description.hashCode ^
         price.hashCode ^

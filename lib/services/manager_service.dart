@@ -40,10 +40,10 @@ class ManagerService {
     }
   }
 
-  Future<String?> addManagerAndUpdateHotel(Manager manager, String hotelId) async {
+  Future<String?> addManagerAndUpdateRestaurant(Manager manager, String restaurantId) async {
     try {
       final managerData = manager.toJson();
-      managerData.remove('hotel_id');
+      managerData.remove('Hotel_id');
       
       final managerResponse = await _supabase
           .from('managers')
@@ -54,24 +54,24 @@ class ManagerService {
       final managerId = managerResponse['manager_id'] as String;
 
       await _supabase
-          .from('hotels')
+          .from('Restaurants')
           .update({
             'manager_id': managerId,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('hotel_id', hotelId);
+          .eq('Hotel_id', restaurantId);
 
       await _supabase
           .from('managers')
           .update({
-            'hotel_id': hotelId,
+            'Hotel_id': restaurantId,
             'updated_at': DateTime.now().toIso8601String(),
           })
           .eq('manager_id', managerId);
 
       return managerId;
     } catch (e) {
-      throw Exception('Failed to add manager and update hotel: $e');
+      throw Exception('Failed to add manager and update Restaurant: $e');
     }
   }
 
@@ -135,12 +135,12 @@ class ManagerService {
     }
   }
 
-  Future<Manager?> getManagerByHotelId(String hotelId) async {
+  Future<Manager?> getManagerByrestaurantId(String restaurantId) async {
     try {
       final response = await _supabase
           .from('managers')
           .select()
-          .eq('hotel_id', hotelId)
+          .eq('Hotel_id', restaurantId)
           .maybeSingle();
       
       if (response != null) {
@@ -148,7 +148,7 @@ class ManagerService {
       }
       return null;
     } catch (e) {
-      throw Exception('Failed to get manager by hotel ID: $e');
+      throw Exception('Failed to get manager by Restaurant ID: $e');
     }
   }
 

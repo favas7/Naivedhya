@@ -1,4 +1,4 @@
-class Hotel {
+class Restaurant {
   final String? id;
   final String name;
   final String address;
@@ -9,7 +9,7 @@ class Hotel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  Hotel({
+  Restaurant({
     this.id,
     required this.name,
     required this.address,
@@ -21,9 +21,9 @@ class Hotel {
     this.updatedAt,
   });
 
-  factory Hotel.fromJson(Map<String, dynamic> json) {
-    return Hotel(
-      id: json['hotel_id'], // Map from database column hotel_id
+  factory Restaurant.fromJson(Map<String, dynamic> json) {
+    return Restaurant(
+      id: json['Restaurant_id'], // Map from database column Restaurant_id
       name: json['name'],
       address: json['address'],
       enterpriseId: json['enterprise_id'],
@@ -60,7 +60,7 @@ class Hotel {
     };
   }
 
-  Hotel copyWith({
+  Restaurant copyWith({
     String? id,
     String? name,
     String? address,
@@ -71,7 +71,7 @@ class Hotel {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return Hotel(
+    return Restaurant(
       id: id ?? this.id,
       name: name ?? this.name,
       address: address ?? this.address,

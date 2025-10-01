@@ -83,12 +83,12 @@ Future<void> updateLocation(Location location) async {
     }
   }
 
-  Future<Location?> getLocationByHotelId(String hotelId) async {
+  Future<Location?> getLocationByrestaurantId(String restaurantId) async {
     try {
       final response = await _supabase
           .from('locations')
           .select()
-          .eq('hotel_id', hotelId)
+          .eq('Hotel_id', restaurantId)
           .maybeSingle();
       
       if (response != null) {
@@ -96,7 +96,7 @@ Future<void> updateLocation(Location location) async {
       }
       return null;
     } catch (e) {
-      throw Exception('Failed to get location by hotel ID: $e');
+      throw Exception('Failed to get location by Restaurant ID: $e');
     }
   }
 }

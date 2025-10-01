@@ -1,8 +1,8 @@
 // ignore_for_file: avoid_print
+import 'package:naivedhya/models/hotel.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/hotel.dart';
 import '../models/location.dart';
 import '../models/manager.dart';
 
@@ -11,7 +11,7 @@ class SupabaseService {
   final SupabaseClient client = Supabase.instance.client;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  // Get current user's email from profiles table
+  // FIXED: Get current Firebase user's email
   Future<String?> getCurrentUserEmail() async {
     try {
       final currentUser = _firebaseAuth.currentUser;
@@ -19,25 +19,16 @@ class SupabaseService {
         print('No authenticated user found');
         return null;
       }
-
-      final response = await _client
-          .from('profiles')
-          .select('email')
-          .eq('id', currentUser.uid)
-          .single();
-
-      return response['email']; 
+      return currentUser.email;
     } catch (e) {
       print('Error getting current user email: $e');
       return null;
     }
   }
 
-  // Get enterprise ID (you might want to pass this from auth or context)
+  // Get enterprise ID
   Future<String?> getEnterpriseId() async {
     try {
-      // Replace this with your actual logic to get enterprise_id
-      // This could be from user session, auth context, or passed as parameter
       final response = await _client
           .from('enterprises')
           .select('enterprise_id')
@@ -51,81 +42,24 @@ class SupabaseService {
     }
   }
 
-  // Create hotel with current user's email as admin
-  // Future<Hotel?> createHotel(String name, String address) async {
-  //   try {
-  //     final enterpriseId = await getEnterpriseId();
-  //     if (enterpriseId == null) {
-  //       throw Exception('Enterprise ID not found');
-  //     }
-
-  //     // Get current user's email
-  //     final adminEmail = await getCurrentUserEmail();
-  //     if (adminEmail == null) {
-  //       throw Exception('User email not found');
-  //     }
-
-  //     final hotel = Hotel(
-  //       name: name,
-  //       address: address,
-  //       enterpriseId: enterpriseId,
-  //       locationId: null, // Will be added later
-  //       managerId: null,  // Will be added later
-  //       adminEmail: adminEmail, // Set current user's email
-  //     );
-
-  //     final response = await _client
-  //         .from('hotels')
-  //         .insert(hotel.toJson())
-  //         .select()
-  //         .single();
-
-  //     return Hotel.fromJson(response);
-  //   } catch (e) {
-  //     print('Error creating hotel: $e');
-  //     return null;
-  //   }
-  // }
-
-  // Get all hotels
-  Future<List<Hotel>> getHotels() async {
+  // FIXED: Get all Restaurants - corrected table name
+  Future<List<Restaurant>> getRestaurants() async {
     try {
       final response = await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .select()
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => Hotel.fromJson(json))
+          .map((json) => Restaurant.fromJson(json))
           .toList();
     } catch (e) {
-      print('Error getting hotels: $e');
+      print('Error getting Restaurants: $e');
       return [];
     }
   }
 
-
-
-
-  // Update hotel
-  // Future<Hotel?> updateHotel(String id, Hotel hotel) async {
-  //   try {
-  //     final response = await _client
-  //         .from('hotels')
-  //         .update(hotel.toJson())
-  //         .eq('id', id)
-  //         .select()
-  //         .single();
-
-  //     return Hotel.fromJson(response);
-  //   } catch (e) {
-  //     print('Error updating hotel: $e');
-  //     return null;
-  //   }
-  // }
-
-
-  // Create location for hotel
+  // Create location for Restaurant
   Future<Location?> createLocation(Location location) async {
     try {
       final response = await _client
@@ -141,7 +75,7 @@ class SupabaseService {
     }
   }
 
-  // Create manager for hotel
+  // Create manager for Restaurant
   Future<Manager?> createManager(Manager manager) async {
     try {
       final response = await _client
@@ -157,13 +91,13 @@ class SupabaseService {
     }
   }
 
-  // Get locations for hotel
-  Future<List<Location>> getLocations(String hotelId) async {
+  // Get locations for Restaurant
+  Future<List<Location>> getLocations(String restaurantId) async {
     try {
       final response = await _client
           .from('locations')
           .select()
-          .eq('hotel_id', hotelId);
+          .eq('Hotel_id', restaurantId);
 
       return (response as List)
           .map((json) => Location.fromJson(json))
@@ -174,13 +108,13 @@ class SupabaseService {
     }
   }
 
-  // Get managers for hotel
-  Future<List<Manager>> getManagers(String hotelId) async {
+  // Get managers for Restaurant
+  Future<List<Manager>> getManagers(String restaurantId) async {
     try {
       final response = await _client
           .from('managers')
           .select()
-          .eq('hotel_id', hotelId);
+          .eq('Hotel_id', restaurantId);
 
       return (response as List)
           .map((json) => Manager.fromJson(json))
@@ -229,13 +163,13 @@ class SupabaseService {
     }
   }
 
-  // Get manager by hotel ID
-  Future<Manager?> getManagerByHotelId(String hotelId) async {
+  // Get manager by Restaurant ID
+  Future<Manager?> getManagerByrestaurantId(String restaurantId) async {
     try {
       final response = await _client
           .from('managers')
           .select()
-          .eq('hotel_id', hotelId)
+          .eq('Hotel_id', restaurantId)
           .maybeSingle();
 
       if (response != null) {
@@ -243,18 +177,18 @@ class SupabaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting manager by hotel ID: $e');
+      print('Error getting manager by Restaurant ID: $e');
       return null;
     }
   }
 
-  // Get location by hotel ID
-  Future<Location?> getLocationByHotelId(String hotelId) async {
+  // Get location by Restaurant ID
+  Future<Location?> getLocationByrestaurantId(String restaurantId) async {
     try {
       final response = await _client
           .from('locations')
           .select()
-          .eq('hotel_id', hotelId)
+          .eq('Hotel_id', restaurantId)
           .maybeSingle();
 
       if (response != null) {
@@ -262,441 +196,392 @@ class SupabaseService {
       }
       return null;
     } catch (e) {
-      print('Error getting location by hotel ID: $e');
+      print('Error getting location by Restaurant ID: $e');
       return null;
     }
   }
-  // Add these updated methods to your existing SupabaseService class
 
-// Check if current user can edit hotel (is the hotel owner)
-// Future<bool> canEditHotel(String hotelId) async {
-//   try {
-//     final adminEmail = await getCurrentUserEmail();
-//     if (adminEmail == null) {
-//       return false;
-//     }
-
-//     final response = await _client
-//         .from('hotels')
-//         .select('adminemail')
-//         .eq('hotel_id', hotelId) // Use hotel_id instead of id
-//         .single();
-
-//     return response['adminemail'] == adminEmail;
-//   } catch (e) {
-//     print('Error checking hotel edit permission: $e');
-//     return false;
-//   }
-// }
-
-// Update hotel - only allow name and address updates for basic info
-Future<Hotel?> updateHotelBasicInfo(String hotelId, String name, String address) async {
-  try {
-    // First check if user can edit this hotel
-    final canEdit = await canEditHotel(hotelId);
-    if (!canEdit) {
-      throw Exception('Permission denied: You can only edit hotels you created');
-    }
-
-    final response = await _client
-        .from('hotels')
-        .update({
-          'name': name,
-          'address': address,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('hotel_id', hotelId) // Use hotel_id instead of id
-        .select()
-        .single();
-
-    return Hotel.fromJson(response);
-  } catch (e) {
-    print('Error updating hotel: $e');
-    return null;
-  }
-}
-
-// Delete hotel
-// Future<bool> deleteHotel(String hotelId) async {
-//   try {
-//     // First check if user can edit this hotel
-//     final canEdit = await canEditHotel(hotelId);
-//     if (!canEdit) {
-//       print('Permission denied: You can only delete hotels you created');
-//       return false;
-//     }
-
-//     await _client
-//         .from('hotels')
-//         .delete()
-//         .eq('hotel_id', hotelId); // Use hotel_id instead of id
-//     return true;
-//   } catch (e) {
-//     print('Error deleting hotel: $e');
-//     return false;
-//   }
-// }
-// Create vendor
-Future<Vendor?> createVendor(Vendor vendor) async {
-  try {
-    final response = await _client
-        .from('vendors')
-        .insert(vendor.toJson())
-        .select()
-        .single();
-
-    return Vendor.fromJson(response);
-  } catch (e) {
-    print('Error creating vendor: $e');
-    return null;
-  }
-}
-
-// Get vendors by hotel ID
-Future<List<Vendor>> getVendorsByHotelId(String hotelId) async {
-  try {
-    final response = await _client
-        .from('vendors')
-        .select()
-        .eq('hotel_id', hotelId)
-        .order('created_at', ascending: false);
-
-    return (response as List)
-        .map((json) => Vendor.fromJson(json))
-        .toList();
-  } catch (e) {
-    print('Error getting vendors: $e');
-    return [];
-  }
-}
-
-
-// Update delivery personnel location
-Future<bool> updateDeliveryPersonnelLocation(String userId, Map<String, dynamic> location) async {
-  try {
-    await _client
-        .from('delivery_personnel')
-        .update({
-          'current_location': location,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('user_id', userId);
-    return true;
-  } catch (e) {
-    print('Error updating delivery personnel location: $e');
-    return false;
-  }
-}
-// Add these methods to your existing SupabaseService class
-
-// Update hotel with manager ID
-Future<Hotel?> updateHotelManager(String hotelId, String managerId) async {
-  try {
-    final response = await _client
-        .from('hotels')
-        .update({
-          'manager_id': managerId,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('hotel_id', hotelId) // Use hotel_id instead of id
-        .select()
-        .single();
-
-    return Hotel.fromJson(response);
-  } catch (e) {
-    print('Error updating hotel manager: $e');
-    return null;
-  }
-}
-
-// Update manager with hotel ID
-Future<Manager?> updateManagerHotel(String managerId, String hotelId) async {
-  try {
-    final response = await _client
-        .from('managers')
-        .update({
-          'hotel_id': hotelId,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('manager_id', managerId) // Use manager_id instead of id
-        .select()
-        .single();
-
-    return Manager.fromJson(response);
-  } catch (e) {
-    print('Error updating manager hotel: $e');
-    return null;
-  }
-}
-
-// Create manager and update hotel (transactional approach)
-Future<String?> createManagerAndUpdateHotel(Manager manager, String hotelId) async {
-  try {
-    // Step 1: Create manager without hotel_id first
-    final managerData = manager.toJson();
-    managerData.remove('hotel_id'); // Remove hotel_id for initial creation
-    
-    final managerResponse = await _client
-        .from('managers')
-        .insert(managerData)
-        .select()
-        .single();
-
-    final managerId = managerResponse['manager_id'] as String;
-
-    // Step 2: Update hotel with manager_id
-    // ignore: unused_local_variable
-    final hotelUpdateResponse = await _client
-        .from('hotels')
-        .update({
-          'manager_id': managerId,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('hotel_id', hotelId)
-        .select()
-        .single();
-
-    // Step 3: Update manager with hotel_id to complete the relationship
-    await _client
-        .from('managers')
-        .update({
-          'hotel_id': hotelId,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('manager_id', managerId);
-
-    return managerId;
-  } catch (e) {
-    print('Error creating manager and updating hotel: $e');
-    return null;
-  }
-}
-Future<Hotel?> updateHotelLocation(String hotelId, String locationId) async {
-  try {
-    final response = await _client
-        .from('hotels')
-        .update({
-          'location_id': locationId,
-          'updated_at': DateTime.now().toIso8601String(),
-        })
-        .eq('hotel_id', hotelId) // Use hotel_id as per your database schema
-        .select()
-        .single();
-
-    return Hotel.fromJson(response);
-  } catch (e) {
-    print('Error updating hotel location: $e');
-    return null;
-  }
-}
-// Add these methods to your existing SupabaseService class in services/hotel_service.dart
-
-// Get manager count for a hotel
-Future<int> getManagerCount(String hotelId) async {
-  try {
-    final response = await _client
-        .from('managers')
-        .select('manager_id')
-        .eq('hotel_id', hotelId);
-    
-    return (response as List).length;
-  } catch (e) {
-    print('Error getting manager count: $e');
-    return 0;
-  }
-}
-
-// Get location count for a hotel
-Future<int> getLocationCount(String hotelId) async {
-  try {
-    final response = await _client
-        .from('locations')
-        .select('location_id')
-        .eq('hotel_id', hotelId);
-    
-    return (response as List).length;
-  } catch (e) {
-    print('Error getting location count: $e');
-    return 0;
-  }
-}
-
-// Get both manager and location counts in a single call
-Future<Map<String, int>> getHotelCounts(String hotelId) async {
-  try {
-    // Execute both queries in parallel for better performance
-    final results = await Future.wait([
-      getManagerCount(hotelId),
-      getLocationCount(hotelId),
-    ]);
-    
-    return {
-      'managers': results[0],
-      'locations': results[1],
-    };
-  } catch (e) {
-    print('Error getting hotel counts: $e');
-    return {
-      'managers': 0,
-      'locations': 0,
-    };
-  }
-}
-
-// Check if hotel has manager
-Future<bool> hasManager(String hotelId) async {
-  final count = await getManagerCount(hotelId);
-  return count > 0;
-}
-
-// Check if hotel has location
-Future<bool> hasLocation(String hotelId) async {
-  final count = await getLocationCount(hotelId);
-  return count > 0;
-}
-
-// Get hotel status (for more detailed status if needed)
-Future<Map<String, dynamic>> getHotelStatus(String hotelId) async {
-  final counts = await getHotelCounts(hotelId);
-  
-  return {
-    'managerCount': counts['managers'],
-    'locationCount': counts['locations'],
-    'hasManager': counts['managers']! > 0,
-    'hasLocation': counts['locations']! > 0,
-    'isComplete': counts['managers']! > 0 && counts['locations']! > 0,
-  };
-}
-
-
-  /// Get the current user's hotel (compatibility method)
-  Future<Hotel?> getCurrentUserHotel() async {
+  // FIXED: Update Restaurant - only allow name and address updates for basic info
+  Future<Restaurant?> updateRestaurantBasicInfo(String restaurantId, String name, String address) async {
     try {
-      final user = _client.auth.currentUser;
+      // FIXED: Use Firebase Auth instead of Supabase auth
+      final canEdit = await canEditRestaurant(restaurantId);
+      if (!canEdit) {
+        throw Exception('Permission denied: You can only edit Restaurants you created');
+      }
+
+      final response = await _client
+          .from('Restaurent')  // FIXED: Correct table name
+          .update({
+            'name': name,
+            'address': address,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
+          .select()
+          .single();
+
+      return Restaurant.fromJson(response);
+    } catch (e) {
+      print('Error updating Restaurant: $e');
+      return null;
+    }
+  }
+
+  // Create vendor
+  Future<Vendor?> createVendor(Vendor vendor) async {
+    try {
+      final response = await _client
+          .from('vendors')
+          .insert(vendor.toJson())
+          .select()
+          .single();
+
+      return Vendor.fromJson(response);
+    } catch (e) {
+      print('Error creating vendor: $e');
+      return null;
+    }
+  }
+
+  // Get vendors by Restaurant ID
+  Future<List<Vendor>> getVendorsByrestaurantId(String restaurantId) async {
+    try {
+      final response = await _client
+          .from('vendors')
+          .select()
+          .eq('Hotel_id', restaurantId)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((json) => Vendor.fromJson(json))
+          .toList();
+    } catch (e) {
+      print('Error getting vendors: $e');
+      return [];
+    }
+  }
+
+  // Update delivery personnel location
+  Future<bool> updateDeliveryPersonnelLocation(String userId, Map<String, dynamic> location) async {
+    try {
+      await _client
+          .from('delivery_personnel')
+          .update({
+            'current_location': location,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('user_id', userId);
+      return true;
+    } catch (e) {
+      print('Error updating delivery personnel location: $e');
+      return false;
+    }
+  }
+
+  // FIXED: Update Restaurant with manager ID
+  Future<Restaurant?> updateRestaurantManager(String restaurantId, String managerId) async {
+    try {
+      final response = await _client
+          .from('Restaurent')  // FIXED: Correct table name
+          .update({
+            'manager_id': managerId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
+          .select()
+          .single();
+
+      return Restaurant.fromJson(response);
+    } catch (e) {
+      print('Error updating Restaurant manager: $e');
+      return null;
+    }
+  }
+
+  // Update manager with Restaurant ID
+  Future<Manager?> updateManagerRestaurant(String managerId, String restaurantId) async {
+    try {
+      final response = await _client
+          .from('managers')
+          .update({
+            'Hotel_id': restaurantId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('manager_id', managerId)
+          .select()
+          .single();
+
+      return Manager.fromJson(response);
+    } catch (e) {
+      print('Error updating manager Restaurant: $e');
+      return null;
+    }
+  }
+
+  // Create manager and update Restaurant (transactional approach)
+  Future<String?> createManagerAndUpdateRestaurant(Manager manager, String restaurantId) async {
+    try {
+      final managerData = manager.toJson();
+      managerData.remove('Hotel_id');
+      
+      final managerResponse = await _client
+          .from('managers')
+          .insert(managerData)
+          .select()
+          .single();
+
+      final managerId = managerResponse['manager_id'] as String;
+
+      await _client
+          .from('Restaurent')  // FIXED: Correct table name
+          .update({
+            'manager_id': managerId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
+          .select()
+          .single();
+
+      await _client
+          .from('managers')
+          .update({
+            'Hotel_id': restaurantId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('manager_id', managerId);
+
+      return managerId;
+    } catch (e) {
+      print('Error creating manager and updating Restaurant: $e');
+      return null;
+    }
+  }
+
+  // FIXED: Update Restaurant location
+  Future<Restaurant?> updateRestaurantLocation(String restaurantId, String locationId) async {
+    try {
+      final response = await _client
+          .from('Restaurent')  // FIXED: Correct table name
+          .update({
+            'location_id': locationId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
+          .select()
+          .single();
+
+      return Restaurant.fromJson(response);
+    } catch (e) {
+      print('Error updating Restaurant location: $e');
+      return null;
+    }
+  }
+
+  // Get manager count for a Restaurant
+  Future<int> getManagerCount(String restaurantId) async {
+    try {
+      final response = await _client
+          .from('managers')
+          .select('manager_id')
+          .eq('Hotel_id', restaurantId);
+      
+      return (response as List).length;
+    } catch (e) {
+      print('Error getting manager count: $e');
+      return 0;
+    }
+  }
+
+  // Get location count for a Restaurant
+  Future<int> getLocationCount(String restaurantId) async {
+    try {
+      final response = await _client
+          .from('locations')
+          .select('location_id')
+          .eq('Hotel_id', restaurantId);
+      
+      return (response as List).length;
+    } catch (e) {
+      print('Error getting location count: $e');
+      return 0;
+    }
+  }
+
+  // Get both manager and location counts in a single call
+  Future<Map<String, int>> getRestaurantCounts(String restaurantId) async {
+    try {
+      final results = await Future.wait([
+        getManagerCount(restaurantId),
+        getLocationCount(restaurantId),
+      ]);
+      
+      return {
+        'managers': results[0],
+        'locations': results[1],
+      };
+    } catch (e) {
+      print('Error getting Restaurant counts: $e');
+      return {
+        'managers': 0,
+        'locations': 0,
+      };
+    }
+  }
+
+  // Check if Restaurant has manager
+  Future<bool> hasManager(String restaurantId) async {
+    final count = await getManagerCount(restaurantId);
+    return count > 0;
+  }
+
+  // Check if Restaurant has location
+  Future<bool> hasLocation(String restaurantId) async {
+    final count = await getLocationCount(restaurantId);
+    return count > 0;
+  }
+
+  // Get Restaurant status
+  Future<Map<String, dynamic>> getRestaurantStatus(String restaurantId) async {
+    final counts = await getRestaurantCounts(restaurantId);
+    
+    return {
+      'managerCount': counts['managers'],
+      'locationCount': counts['locations'],
+      'hasManager': counts['managers']! > 0,
+      'hasLocation': counts['locations']! > 0,
+      'isComplete': counts['managers']! > 0 && counts['locations']! > 0,
+    };
+  }
+
+  // FIXED: Get the current user's Restaurant (using Firebase Auth)
+  Future<Restaurant?> getCurrentUserRestaurant() async {
+    try {
+      final user = _firebaseAuth.currentUser;
       if (user?.email == null) return null;
 
       final response = await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .select()
           .eq('adminemail', user!.email!)
           .maybeSingle();
 
       if (response == null) return null;
-      return Hotel.fromJson(response);
+      return Restaurant.fromJson(response);
     } catch (e) {
       return null;
     }
   }
 
-  /// Get hotel by ID (compatibility method)
-  Future<Hotel?> getHotelById(String hotelId) async {
+  // FIXED: Get Restaurant by ID
+  Future<Restaurant?> getRestaurantById(String restaurantId) async {
     try {
       final response = await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .select()
-          .eq('hotel_id', hotelId)
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
           .maybeSingle();
 
       if (response == null) return null;
-      return Hotel.fromJson(response);
+      return Restaurant.fromJson(response);
     } catch (e) {
       return null;
     }
   }
 
-  /// Get all hotels for current user
-  Future<List<Hotel>> getHotelsForCurrentUser() async {
+  // FIXED: Get all Restaurants for current user (using Firebase Auth)
+  Future<List<Restaurant>> getRestaurantsForCurrentUser() async {
     try {
-      final user = _client.auth.currentUser;
+      final user = _firebaseAuth.currentUser;
       if (user?.email == null) return [];
 
       final response = await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .select()
           .eq('adminemail', user!.email!)
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => Hotel.fromJson(json))
+          .map((json) => Restaurant.fromJson(json))
           .toList();
     } catch (e) {
-      print('Error getting hotels for current user: $e');
+      print('Error getting Restaurants for current user: $e');
       return [];
     }
   }
 
-  /// Create hotel with current user as admin
-  Future<Hotel?> createHotel(String name, String address) async {
+  // FIXED: Create Restaurant with current user as admin (using Firebase Auth)
+  Future<Restaurant?> createRestaurant(String name, String address) async {
     try {
-      final user = _client.auth.currentUser;
+      final user = _firebaseAuth.currentUser;
       if (user?.email == null) {
         throw Exception('User not authenticated');
       }
 
-      final hotel = Hotel(
+      final restaurant = Restaurant(
         name: name,
         address: address,
         adminEmail: user!.email!,
       );
 
       final response = await _client
-          .from('hotels')
-          .insert(hotel.toJson())
+          .from('Restaurent')  // FIXED: Correct table name
+          .insert(restaurant.toJson())
           .select()
           .single();
 
-      return Hotel.fromJson(response);
+      return Restaurant.fromJson(response);
     } catch (e) {
-      print('Error creating hotel: $e');
-      return null;
+      print('Error creating Restaurant: $e');
+      rethrow;
     }
   }
 
-  /// Update hotel basic information
-  Future<Hotel?> updateHotel(String hotelId, String name, String address) async {
+  // FIXED: Update Restaurant basic information
+  Future<Restaurant?> updateRestaurant(String restaurantId, String name, String address) async {
     try {
       final response = await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .update({
             'name': name,
             'address': address,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('hotel_id', hotelId)
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
           .select()
           .single();
 
-      return Hotel.fromJson(response);
+      return Restaurant.fromJson(response);
     } catch (e) {
-      print('Error updating hotel: $e');
+      print('Error updating Restaurant: $e');
       return null;
     }
   }
 
-  /// Delete hotel
-  Future<bool> deleteHotel(String hotelId) async {
+  // FIXED: Delete Restaurant
+  Future<bool> deleteRestaurant(String restaurantId) async {
     try {
       await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .delete()
-          .eq('hotel_id', hotelId);
+          .eq('hotel_id', restaurantId);  // FIXED: Lowercase column name
       return true;
     } catch (e) {
-      print('Error deleting hotel: $e');
+      print('Error deleting Restaurant: $e');
       return false;
     }
   }
 
-  /// Check if current user can edit hotel
-  Future<bool> canEditHotel(String hotelId) async {
+  // FIXED: Check if current user can edit Restaurant (using Firebase Auth)
+  Future<bool> canEditRestaurant(String restaurantId) async {
     try {
-      final user = _client.auth.currentUser;
+      final user = _firebaseAuth.currentUser;
       if (user?.email == null) return false;
 
       final response = await _client
-          .from('hotels')
+          .from('Restaurent')  // FIXED: Correct table name
           .select('adminemail')
-          .eq('hotel_id', hotelId)
+          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
           .single();
 
       return response['adminemail'] == user!.email!;
@@ -704,5 +589,4 @@ Future<Map<String, dynamic>> getHotelStatus(String hotelId) async {
       return false;
     }
   }
-
 }
