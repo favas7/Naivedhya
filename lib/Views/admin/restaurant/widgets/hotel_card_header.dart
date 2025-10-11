@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class RestaurantCardHeader extends StatelessWidget {
   final Restaurant restaurant;
@@ -25,12 +25,12 @@ class RestaurantCardHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha(30),
+            color: AppTheme.primary.withAlpha(30),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             Icons.restaurant,
-            color: AppColors.primary,
+            color: AppTheme.primary,
             size: 24,
           ),
         ),
@@ -79,7 +79,7 @@ class RestaurantCardHeader extends StatelessWidget {
               angle: rotationAnimation.value * 3.14159,
               child: Icon(
                 Icons.expand_more,
-                color: AppColors.primary,
+                color: AppTheme.primary,
               ),
             );
           },

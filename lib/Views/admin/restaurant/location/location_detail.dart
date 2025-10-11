@@ -3,7 +3,7 @@ import 'package:naivedhya/Views/admin/restaurant/location/add_location_dialogue.
 import 'package:naivedhya/Views/admin/restaurant/location/edit_location.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/services/hotel_service.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/location.dart';
 
 class LocationDetailScreen extends StatefulWidget {
@@ -141,7 +141,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.restaurant.name} - Locations'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -155,7 +155,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddLocationDialog,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         tooltip: 'Add Location',
         child: const Icon(Icons.add),
@@ -200,7 +200,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
             ElevatedButton(
               onPressed: _refreshLocations,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Retry'),
@@ -244,7 +244,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Add Location'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -259,7 +259,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
 
     return RefreshIndicator(
       onRefresh: _refreshLocations,
-      color: AppColors.primary,
+      color: AppTheme.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _locations.length,
@@ -286,7 +286,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                   child: const Icon(Icons.location_on),
                 ),
@@ -412,8 +412,8 @@ class _LocationDetailScreenState extends State<LocationDetailScreen> {
                     icon: const Icon(Icons.edit, size: 16),
                     label: const Text('Edit'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppTheme.primary,
+                      side: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                 ),

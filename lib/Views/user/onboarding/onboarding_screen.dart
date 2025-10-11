@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/bottom_navigator/bottom_navigator.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import '../../../utils/widgets/custom_button.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/theme_provider.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -42,7 +44,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -60,10 +67,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   return Column(
                     children: [
                       Image.asset(
-                      _onboardingData[index]['image']!,
-                      height: screenHeight * 0.6,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                        _onboardingData[index]['image']!,
+                        height: screenHeight * 0.6,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
                       ),
                     ],
                   );
@@ -72,20 +79,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             Expanded(
               child: Container(
-                color: AppColors.white,
+                color: isDark ? AppTheme.darkSurface : AppTheme.surface,
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       _onboardingData[_currentPage]['title']!,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        color: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       _onboardingData[_currentPage]['description']!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     if (_currentPage < _onboardingData.length - 1)
@@ -98,6 +109,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               MaterialPageRoute(builder: (_) => const BottomNavigator()),
                             );
                           },
+                          style: TextButton.styleFrom(
+                            foregroundColor: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+                          ),
                           child: const Text('Skip'),
                         ),
                       ),
@@ -112,7 +126,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           height: 8,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _currentPage == index ? AppColors.primary : Colors.grey,
+                            color: _currentPage == index 
+                              ? (isDark ? AppTheme.darkPrimary : AppTheme.primary)
+                              : (isDark ? AppTheme.darkTextHint : AppTheme.textHint),
                           ),
                         ),
                       ),

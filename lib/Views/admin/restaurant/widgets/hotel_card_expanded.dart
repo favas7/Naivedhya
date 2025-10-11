@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/location/location_detail.dart';
 import 'package:naivedhya/Views/admin/restaurant/manager/manager_detail.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/models/location.dart';
 
@@ -144,7 +144,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Add Item'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppTheme.primary,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -153,7 +153,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                     icon: const Icon(Icons.settings, size: 16),
                     label: const Text('Manage'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppTheme.primary,
                     ),
                   ),
                 ],
@@ -190,7 +190,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
               children: [
                 Icon(
                   Icons.restaurant_menu,
-                  color: AppColors.primary,
+                  color: AppTheme.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -222,7 +222,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                     icon: Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: AppColors.primary,
+                      color: AppTheme.primary,
                     ),
                     tooltip: 'Manage Menu',
                   ),
@@ -286,7 +286,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Add'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppTheme.primary,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -295,7 +295,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('View All'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppTheme.primary,
                     ),
                   ),
                 ],
@@ -327,7 +327,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                       icon: const Icon(Icons.person_add, size: 16),
                       label: const Text('Manage Managers'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(0, 32),
                       ),
@@ -347,23 +347,23 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary.withAlpha(100)),
+                    border: Border.all(color: AppTheme.primary.withAlpha(100)),
                     borderRadius: BorderRadius.circular(8),
-                    color: AppColors.primary.withAlpha(20),
+                    color: AppTheme.primary.withAlpha(20),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         Icons.visibility,
-                        color: AppColors.primary,
+                        color: AppTheme.primary,
                         size: 16,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'View ${managers.length - 2} more managers',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: AppTheme.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -390,7 +390,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
         children: [
           Icon(
             Icons.person,
-            color: AppColors.primary,
+            color: AppTheme.primary,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -450,7 +450,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                   //   icon: const Icon(Icons.add, size: 16),
                   //   label: const Text('Add'),
                   //   style: TextButton.styleFrom(
-                  //     foregroundColor: AppColors.primary,
+                  //     foregroundColor: AppTheme.primary,
                   //   ),
                   // ),
                   const SizedBox(width: 8),
@@ -459,7 +459,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                     icon: const Icon(Icons.visibility, size: 16),
                     label: const Text('View All'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppTheme.primary,
                     ),
                   ),
                 ],
@@ -491,7 +491,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                       icon: const Icon(Icons.location_on, size: 16),
                       label: const Text('Manage Locations'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(0, 32),
                       ),
@@ -511,23 +511,23 @@ class RestaurantCardExpandedContent extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary.withAlpha(100)),
+                    border: Border.all(color: AppTheme.primary.withAlpha(100)),
                     borderRadius: BorderRadius.circular(8),
-                    color: AppColors.primary.withAlpha(20),
+                    color: AppTheme.primary.withAlpha(20),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         Icons.visibility,
-                        color: AppColors.primary,
+                        color: AppTheme.primary,
                         size: 16,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'View ${locations.length - 2} more locations',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: AppTheme.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -554,7 +554,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
         children: [
           Icon(
             Icons.location_on,
-            color: AppColors.primary,
+            color: AppTheme.primary,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -650,7 +650,7 @@ class RestaurantCardExpandedContent extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primary),
+          border: Border.all(color: AppTheme.primary),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -659,14 +659,14 @@ class RestaurantCardExpandedContent extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: AppColors.primary,
+              color: AppTheme.primary,
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.primary,
+                color: AppTheme.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),

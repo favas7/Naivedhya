@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 
 class AddRestaurantDialog extends StatefulWidget {
@@ -184,7 +184,7 @@ class _AddRestaurantDialogState extends State<AddRestaurantDialog> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _saveRestaurant,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: _isLoading

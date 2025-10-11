@@ -3,7 +3,7 @@ import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/widgets/delivery_staff_list.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/widgets/dialogue_components.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/widgets/header_widget.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 class DeliveryStaffScreen extends StatefulWidget {
   const DeliveryStaffScreen({super.key});
@@ -97,8 +97,8 @@ class _DeliveryStaffScreenState extends State<DeliveryStaffScreen> {
           OutlinedButton.icon(
             onPressed: () => context.read<DeliveryPersonnelProvider>().searchDeliveryPersonnel(isVerified: true),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary),
+              foregroundColor: AppTheme.primary,
+              side: BorderSide(color: AppTheme.primary),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             icon: const Icon(Icons.verified),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/menu/widgets/add_menu_item.dart';
 import 'package:naivedhya/Views/admin/restaurant/menu/widgets/menu_item_card.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/services/menu_service.dart';
 
@@ -216,7 +216,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.restaurant.name} - Menu'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -326,7 +326,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddItemDialog,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
@@ -373,7 +373,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text('Add Menu Item'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -385,7 +385,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadMenuData,
-      color: AppColors.primary,
+      color: AppTheme.primary,
       child: Column(
         children: [
           // Statistics Bar
@@ -432,7 +432,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.primary,
+            color: AppTheme.primary,
           ),
         ),
         Text(

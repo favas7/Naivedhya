@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/location.dart';
 import 'package:naivedhya/services/location_service.dart'; // Changed from Restaurant_service
 
@@ -126,7 +126,7 @@ Future<void> _updateLocation() async {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.edit, color: AppColors.primary),
+                      const Icon(Icons.edit, color: AppTheme.primary),
                       const SizedBox(width: 8),
                       const Text(
                         'Edit Location',
@@ -150,7 +150,7 @@ Future<void> _updateLocation() async {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(20),
+                  color: AppTheme.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -290,7 +290,7 @@ Future<void> _updateLocation() async {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _updateLocation,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: _isLoading

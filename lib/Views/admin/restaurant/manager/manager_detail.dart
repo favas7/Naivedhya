@@ -5,7 +5,7 @@ import 'package:naivedhya/Views/admin/restaurant/manager/add_manager_dialogue.da
 import 'package:naivedhya/Views/admin/restaurant/manager/edit_manager.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/services/hotel_service.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/services/manager_service.dart';
 
@@ -234,7 +234,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 32, color: AppColors.primary),
+            Icon(icon, size: 32, color: AppTheme.primary),
             const SizedBox(height: 8),
             Text(
               label,
@@ -378,7 +378,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.restaurant.name} - Managers'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -392,7 +392,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddManagerDialog,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         tooltip: 'Add Manager',
         child: const Icon(Icons.add),
@@ -437,7 +437,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
             ElevatedButton(
               onPressed: _refreshManagers,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Retry'),
@@ -481,7 +481,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Add Manager'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -496,7 +496,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
 
     return RefreshIndicator(
       onRefresh: _refreshManagers,
-      color: AppColors.primary,
+      color: AppTheme.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _managers.length,
@@ -531,7 +531,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
                       child: manager.imageUrl != null && manager.imageUrl!.isNotEmpty
                           ? CircleAvatar(
                               radius: 30,
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: AppTheme.primary,
                               foregroundColor: Colors.white,
                               backgroundImage: NetworkImage(manager.imageUrl!),
                               onBackgroundImageError: (exception, stackTrace) {
@@ -540,7 +540,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
                             )
                           : CircleAvatar(
                               radius: 30,
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: AppTheme.primary,
                               foregroundColor: Colors.white,
                               child: Text(
                                 manager.name.isNotEmpty 
@@ -582,7 +582,7 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: AppTheme.primary,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.white, width: 2),
                           ),
@@ -697,8 +697,8 @@ class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
                     icon: const Icon(Icons.edit, size: 16),
                     label: const Text('Edit'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
+                      foregroundColor: AppTheme.primary,
+                      side: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                 ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class RestaurantCardStatusRow extends StatelessWidget {
   final bool isLoadingCounts;
@@ -106,9 +106,9 @@ class RestaurantCardStatusRow extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(30),
+                    color: AppTheme.primary.withAlpha(30),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: AppColors.primary.withAlpha(100)),
+                    border: Border.all(color: AppTheme.primary.withAlpha(100)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -116,14 +116,14 @@ class RestaurantCardStatusRow extends StatelessWidget {
                       Icon(
                         Icons.restaurant_menu,
                         size: 14,
-                        color: AppColors.primary,
+                        color: AppTheme.primary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Manage Menu',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.primary,
+                          color: AppTheme.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/utils/widgets/custom_button_launch1.dart';
 import 'package:naivedhya/utils/widgets/custom_button_launch2.dart';
 import '../auth/login/login_screen.dart';
@@ -30,7 +30,7 @@ class LaunchScreen extends StatelessWidget {
       (screenHeight * 0.08).clamp(30.0, 80.0);
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppTheme.primary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

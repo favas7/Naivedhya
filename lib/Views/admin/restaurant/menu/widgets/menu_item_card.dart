@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/menu_model.dart';
 
 class MenuItemCard extends StatelessWidget {
@@ -45,14 +45,14 @@ class MenuItemCard extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: menuItem.isAvailable 
-                          ? AppColors.primary.withAlpha(0)
+                          ? AppTheme.primary.withAlpha(0)
                           : Colors.grey.withAlpha(0),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.restaurant_menu,
                       color: menuItem.isAvailable 
-                          ? AppColors.primary
+                          ? AppTheme.primary
                           : Colors.grey,
                       size: 20,
                     ),
@@ -89,7 +89,7 @@ class MenuItemCard extends StatelessWidget {
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: menuItem.isAvailable 
-                                    ? AppColors.primary
+                                    ? AppTheme.primary
                                     : Colors.grey[600],
                               ),
                             ),

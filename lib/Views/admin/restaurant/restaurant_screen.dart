@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/add_hotel_dialogue.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/hotel_card.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 
 class RestaurantScreen extends StatelessWidget {
@@ -55,7 +55,7 @@ class _RestaurantScreenContentState extends State<RestaurantScreenContent> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Restaurants'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         // Removed the leading property to hide the back button
@@ -107,7 +107,7 @@ class _RestaurantScreenContentState extends State<RestaurantScreenContent> {
                   ElevatedButton(
                     onPressed: () => provider.loadRestaurants(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: const Text('Retry'),
@@ -151,7 +151,7 @@ class _RestaurantScreenContentState extends State<RestaurantScreenContent> {
                     icon: const Icon(Icons.add),
                     label: const Text('Add Restaurant'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -166,7 +166,7 @@ class _RestaurantScreenContentState extends State<RestaurantScreenContent> {
 
           return RefreshIndicator(
             onRefresh: () async => provider.loadRestaurants(),
-            color: AppColors.primary,
+            color: AppTheme.primary,
             child: Stack(
               children: [
                 ListView.builder(
@@ -191,7 +191,7 @@ class _RestaurantScreenContentState extends State<RestaurantScreenContent> {
                       height: 3,
                       child: const LinearProgressIndicator(
                         backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
                       ),
                     ),
                   ),
@@ -202,7 +202,7 @@ class _RestaurantScreenContentState extends State<RestaurantScreenContent> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddRestaurantDialog,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         tooltip: 'Add Restaurant',
         child: const Icon(Icons.add),

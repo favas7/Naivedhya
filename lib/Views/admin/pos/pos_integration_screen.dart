@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class POSIntegrationScreen extends StatelessWidget {
   const POSIntegrationScreen({super.key});
@@ -44,7 +44,7 @@ class POSIntegrationScreen extends StatelessWidget {
                       child: ListView.builder(
                         itemCount: 5,
                         itemBuilder: (context, index) => ListTile(
-                          leading: Icon(Icons.devices, color: AppColors.primary),
+                          leading: Icon(Icons.devices, color: AppTheme.primary),
                           title: Text('POS System ${index + 1}'),
                           subtitle: Text('Status: Connected'),
                           trailing: IconButton(
@@ -57,7 +57,7 @@ class POSIntegrationScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Add New POS System'),

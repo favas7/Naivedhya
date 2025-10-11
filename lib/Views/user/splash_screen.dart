@@ -4,9 +4,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:naivedhya/Views/bottom_navigator/bottom_navigator.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import 'launch_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -61,8 +62,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28.0),

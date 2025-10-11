@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/providers/manager_provider.dart'; // Changed import
 import 'package:provider/provider.dart';
@@ -115,7 +115,7 @@ Future<void> _saveManager() async {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.person, color: AppColors.primary),
+                      const Icon(Icons.person, color: AppTheme.primary),
                       const SizedBox(width: 8),
                       const Text(
                         'Add Manager',
@@ -139,7 +139,7 @@ Future<void> _saveManager() async {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(0),
+                  color: AppTheme.primary.withAlpha(0),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -236,7 +236,7 @@ Future<void> _saveManager() async {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _saveManager,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: _isLoading

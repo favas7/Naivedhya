@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/services/ventor_Service.dart';
 import 'package:provider/provider.dart';
 
-// Assuming AppColors is not imported, adding a simple color definition
+// Assuming AppTheme is not imported, adding a simple color definition
 
 class AddVendorDialog extends StatefulWidget {
   final Restaurant? restaurant; // If provided, vendor will be added to this specific Restaurant
@@ -69,7 +69,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.primary),
+                            borderSide: const BorderSide(color: AppTheme.primary),
                           ),
                         ),
                         items: RestaurantProvider.restaurants.map((restaurant) {
@@ -132,7 +132,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                   validator: (value) {
@@ -160,7 +160,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -189,7 +189,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                   keyboardType: TextInputType.phone,
@@ -218,7 +218,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                   validator: (value) {
@@ -243,7 +243,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppTheme.primary),
                     ),
                   ),
                   validator: (value) {
@@ -297,7 +297,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
         ElevatedButton(
           onPressed: _isLoading ? null : _handleSubmit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppTheme.primary,
             foregroundColor: Colors.white,
           ),
           child: _isLoading

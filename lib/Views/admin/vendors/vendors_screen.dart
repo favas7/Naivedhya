@@ -8,7 +8,7 @@ import 'package:naivedhya/Views/admin/vendors/widgets/loading_widget.dart';
 import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
 import 'package:naivedhya/services/ventor_Service.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 
 class VendorScreen extends StatefulWidget {
@@ -369,7 +369,7 @@ class _VendorScreenState extends State<VendorScreen> {
       decoration: BoxDecoration(
         color: Colors.blue[50],
         borderRadius: BorderRadius.circular(8), 
-        border: Border.all(color: AppColors.primary),
+        border: Border.all(color: AppTheme.primary),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

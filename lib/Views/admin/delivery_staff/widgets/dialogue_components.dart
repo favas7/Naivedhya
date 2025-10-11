@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/models/simple_delivery_person_model.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class DeliveryStaffDialogs {
   static void showSearchDialog(BuildContext context) {
@@ -266,7 +266,7 @@ class DeliveryStaffDialogs {
           ElevatedButton(
             onPressed: onSubmit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDestructive ? Colors.red : AppColors.primary,
+              backgroundColor: isDestructive ? Colors.red : AppTheme.primary,
               foregroundColor: Colors.white,
             ),
             child: Text(submitText),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/simple_delivery_person_model.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class DeliveryStaffTile extends StatelessWidget {
   final SimpleDeliveryPersonnel staff;
@@ -19,7 +19,7 @@ class DeliveryStaffTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: staff.isAvailable ? AppColors.primary : Colors.grey,
+          backgroundColor: staff.isAvailable ? AppTheme.primary : Colors.grey,
           child: Text(
             staff.name.isNotEmpty ? staff.name[0].toUpperCase() : 'S',
             style: const TextStyle(

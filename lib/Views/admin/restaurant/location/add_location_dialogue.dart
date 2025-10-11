@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/location.dart';
 import 'package:naivedhya/providers/location_provider.dart'; // Changed import
 import 'package:provider/provider.dart';
@@ -105,7 +105,7 @@ class _AddLocationDialogState extends State<AddLocationDialog> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.location_on, color: AppColors.primary),
+                      const Icon(Icons.location_on, color: AppTheme.primary),
                       const SizedBox(width: 8),
                       const Text(
                         'Add Location',
@@ -129,7 +129,7 @@ class _AddLocationDialogState extends State<AddLocationDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(0),
+                  color: AppTheme.primary.withAlpha(0),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -247,7 +247,7 @@ class _AddLocationDialogState extends State<AddLocationDialog> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _saveLocation,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     child: _isLoading

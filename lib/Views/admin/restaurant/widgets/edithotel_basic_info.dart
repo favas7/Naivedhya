@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/services/hotel_service.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class EditRestaurantBasicInfoDialog extends StatefulWidget {
   final Restaurant restaurant;
@@ -77,17 +77,17 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                 decoration: InputDecoration(
                   labelText: 'Restaurant Name',
                   hintText: 'Enter Restaurant name',
-                  prefixIcon: const Icon(Icons.restaurant, color: AppColors.primary),
+                  prefixIcon: const Icon(Icons.restaurant, color: AppTheme.primary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderSide: const BorderSide(color: AppTheme.primary),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                   ),
                   filled: true,
-                  fillColor: AppColors.textfield,
+                  fillColor: AppTheme.textfield,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -109,17 +109,17 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                 decoration: InputDecoration(
                   labelText: 'Restaurant Address',
                   hintText: 'Enter complete Restaurant address',
-                  prefixIcon: const Icon(Icons.location_on, color: AppColors.primary),
+                  prefixIcon: const Icon(Icons.location_on, color: AppTheme.primary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderSide: const BorderSide(color: AppTheme.primary),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                   ),
                   filled: true,
-                  fillColor: AppColors.textfield,
+                  fillColor: AppTheme.textfield,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -141,7 +141,7 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                     child: OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.primary),
+                        side: const BorderSide(color: AppTheme.primary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -149,7 +149,7 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                       ),
                       child: const Text(
                         'Cancel',
-                        style: TextStyle(color: AppColors.primary),
+                        style: TextStyle(color: AppTheme.primary),
                       ),
                     ),
                   ),
@@ -158,7 +158,7 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _updateRestaurant,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

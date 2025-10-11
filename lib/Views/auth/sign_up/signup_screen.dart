@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:naivedhya/Views/bottom_navigator/bottom_navigator.dart';
 import 'package:provider/provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import '../../../models/user_model.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/theme_provider.dart';
 import '../../../utils/widgets/custom_button.dart';
 import '../../../utils/widgets/custom_text_field.dart';
 import '../../../utils/validator.dart';
@@ -50,11 +51,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _selectDate() async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDarkMode;
+    
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+              onPrimary: Colors.white,
+              surface: isDark ? AppTheme.darkSurface : AppTheme.surface,
+              onSurface: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
@@ -95,6 +112,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
       body: GestureDetector(
         onTap: () {
@@ -105,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           children: [
             Container(
               height: screenHeight * 0.3,
-              color: AppColors.background,
+              color: isDark ? AppTheme.darkPrimary : AppTheme.background,
               child: Padding(
                 padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
                 child: Row(
@@ -141,9 +161,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkBackground : Colors.white,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(25),
                     topRight: Radius.circular(25),
                   ),
@@ -186,23 +206,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onTap: _selectDate,
                             ),
                             const SizedBox(height: 20),
-                            const Text(
+                            Text(
                               'By continuing, you agree to\nTerms of Use and Privacy Policy.',
                               textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isDark 
+                                    ? AppTheme.darkTextSecondary 
+                                    : AppTheme.textSecondary,
+                              ),
                             ),
                             const SizedBox(height: 20),
                             authProvider.isLoading
-                                ? const CircularProgressIndicator()
+                                ? CircularProgressIndicator(
+                                    color: isDark 
+                                        ? AppTheme.darkPrimary 
+                                        : AppTheme.primary,
+                                  )
                                 : CustomButton(
                                     text: '    Sign Up    ',
                                     onPressed: _handleSignUp, 
                                   ),
                             const SizedBox(height: 15),
-                            const Text(
+                            Text(
                               'or',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: isDark 
+                                    ? AppTheme.darkTextHint 
+                                    : Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 15),
@@ -223,7 +254,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     );
                                   }
                                 },
-                                child: Image.asset('assets/Google_Logo/google-logo.png', height: 40),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isDark 
+                                        ? AppTheme.darkSurface 
+                                        : Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isDark 
+                                          ? AppTheme.darkBorder 
+                                          : AppTheme.border,
+                                    ),
+                                  ),
+                                  child: Image.asset(
+                                    'assets/Google_Logo/google-logo.png', 
+                                    height: 40,
+                                  ),
+                                ),
                               ),
                             const SizedBox(height: 20),
                           ],

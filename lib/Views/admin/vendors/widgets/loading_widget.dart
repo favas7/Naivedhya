@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class LoadingWidget extends StatelessWidget {
   final String? message;
@@ -21,7 +21,7 @@ class LoadingWidget extends StatelessWidget {
             width: size,
             height: size,
             child: const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
               strokeWidth: 3.0,
             ),
           ),

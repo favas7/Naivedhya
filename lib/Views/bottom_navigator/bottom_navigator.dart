@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/Views/user/home/customer_care_screen.dart';
 import 'package:naivedhya/Views/user/home/favorites_screen.dart';
 import 'package:naivedhya/Views/user/home/food_screen.dart';
 import 'package:naivedhya/Views/user/home/home_screen.dart';
 import 'package:naivedhya/Views/user/home/list_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/theme_provider.dart';
 
 class BottomNavigator extends StatefulWidget {
   const BottomNavigator({super.key});
@@ -33,6 +35,9 @@ class _BottomNavigatorState extends State<BottomNavigator> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -44,10 +49,13 @@ class _BottomNavigatorState extends State<BottomNavigator> {
           BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: 'Support'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+        unselectedItemColor: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
+        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
         onTap: _onItemTapped,
-        backgroundColor: AppColors.white,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     );
   }

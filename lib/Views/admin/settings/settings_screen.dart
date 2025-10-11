@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -48,7 +48,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildSettingItem(String title, IconData icon, BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
+      leading: Icon(icon, color: AppTheme.primary),
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios),
       onTap: () {},

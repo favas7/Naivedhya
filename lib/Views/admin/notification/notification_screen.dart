@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -27,7 +27,7 @@ class NotificationScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppTheme.primary,
               foregroundColor: Colors.white,
             ),
             child: const Text('Send New Notification'),
@@ -41,7 +41,7 @@ class NotificationScreen extends StatelessWidget {
                 child: ListView.builder(
                   itemCount: 10,
                   itemBuilder: (context, index) => ListTile(
-                    leading: Icon(Icons.notifications, color: AppColors.primary),
+                    leading: Icon(Icons.notifications, color: AppTheme.primary),
                     title: Text('Notification ${index + 1}'),
                     subtitle: Text('Sent on 2025-07-${14 - index}'),
                     trailing: IconButton(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class CustomButtonLaunch2 extends StatelessWidget {
   final String text;
@@ -19,7 +19,7 @@ class CustomButtonLaunch2 extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 20, color: AppColors.primary,fontWeight: FontWeight.w500),
+        style: const TextStyle(fontSize: 20, color: AppTheme.primary,fontWeight: FontWeight.w500),
       ),
     );
   }

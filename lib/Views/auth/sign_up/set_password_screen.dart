@@ -2,9 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import '../../../models/user_model.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/theme_provider.dart';
 import '../../../utils/widgets/custom_button.dart';
 import '../../../utils/widgets/custom_text_field.dart';
 import '../../../utils/validator.dart';
@@ -78,6 +79,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
       body: GestureDetector(
         onTap: () {
@@ -88,7 +92,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           children: [
             Container(
               height: screenHeight * 0.3,
-              color: AppColors.background,
+              color: isDark ? AppTheme.darkPrimary : AppTheme.background,
               child: Padding(
                 padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
                 child: Row(
@@ -124,9 +128,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
             ),
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkBackground : Colors.white,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(25),
                     topRight: Radius.circular(25),
                   ),
@@ -145,27 +149,35 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppColors.background.withValues(alpha: 0.1),
+                                color: isDark 
+                                    ? AppTheme.darkPrimary.withOpacity(0.15)
+                                    : AppTheme.background.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.background.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: isDark 
+                                      ? AppTheme.darkPrimary.withOpacity(0.3)
+                                      : AppTheme.background.withOpacity(0.3),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Password Requirements:',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.background,
+                                      color: isDark 
+                                          ? AppTheme.darkPrimary 
+                                          : AppTheme.background,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-                                  _buildRequirement('At least 8 characters'),
-                                  _buildRequirement('One uppercase letter'),
-                                  _buildRequirement('One lowercase letter'),
-                                  _buildRequirement('One number'),
-                                  _buildRequirement('One special character'),
+                                  _buildRequirement('At least 8 characters', isDark),
+                                  _buildRequirement('One uppercase letter', isDark),
+                                  _buildRequirement('One lowercase letter', isDark),
+                                  _buildRequirement('One number', isDark),
+                                  _buildRequirement('One special character', isDark),
                                 ],
                               ),
                             ),
@@ -178,7 +190,8 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                               validator: Validator.validatePassword,
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility : Icons.visibility_off,color: AppColors.primary
+                                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                  color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -196,7 +209,8 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                               validator: Validator.validatePassword,
                               suffixIcon: IconButton( 
                                 icon: Icon(
-                                  _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,color: AppColors.primary,
+                                  _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                                  color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -211,24 +225,30 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.1),
+                                color: isDark
+                                    ? AppTheme.darkSuccess.withOpacity(0.15)
+                                    : AppTheme.success.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppTheme.darkSuccess.withOpacity(0.3)
+                                      : AppTheme.success.withOpacity(0.3),
+                                ),
                               ),
-                              child: const Row(
+                              child: Row(
                                 children: [
                                   Icon(
                                     Icons.security,
-                                    color: Colors.green,
+                                    color: isDark ? AppTheme.darkSuccess : AppTheme.success,
                                     size: 16,
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       'Your password is encrypted and stored securely',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.green,
+                                        color: isDark ? AppTheme.darkSuccess : AppTheme.success,
                                       ),
                                     ),
                                   ),
@@ -238,7 +258,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                             const SizedBox(height: 30),
                             
                             authProvider.isLoading
-                                ? const CircularProgressIndicator()
+                                ? CircularProgressIndicator(
+                                    color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+                                  )
                                 : CustomButton(
                                     text: 'Create Password',
                                     onPressed: _createPassword,
@@ -258,22 +280,22 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     );
   }
 
-  Widget _buildRequirement(String requirement) {
+  Widget _buildRequirement(String requirement, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_outline,
             size: 16,
-            color: Colors.grey,
+            color: isDark ? AppTheme.darkTextSecondary : Colors.grey,
           ),
           const SizedBox(width: 8),
           Text(
             requirement,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Colors.grey,
+              color: isDark ? AppTheme.darkTextSecondary : Colors.grey,
             ),
           ),
         ],

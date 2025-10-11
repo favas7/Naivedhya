@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/services/menu_service.dart';
 
@@ -167,7 +167,7 @@ class _AddEditMenuItemDialogState extends State<AddEditMenuItemDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: AppTheme.primary,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -372,7 +372,7 @@ class _AddEditMenuItemDialogState extends State<AddEditMenuItemDialog> {
                                   _isAvailable = value;
                                 });
                               },
-                              activeColor: AppColors.primary,
+                              activeColor: AppTheme.primary,
                             ),
                           ],
                         ),
@@ -419,7 +419,7 @@ class _AddEditMenuItemDialogState extends State<AddEditMenuItemDialog> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _saveMenuItem,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -478,7 +478,7 @@ class _AddEditMenuItemDialogState extends State<AddEditMenuItemDialog> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: AppColors.primary, width: 2),
+        borderSide: BorderSide(color: AppTheme.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

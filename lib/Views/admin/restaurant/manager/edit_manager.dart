@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/services/manager_service.dart';
 
@@ -161,7 +161,7 @@ class _EditManagerDialogState extends State<EditManagerDialog> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.edit, color: AppColors.primary),
+                        const Icon(Icons.edit, color: AppTheme.primary),
                         const SizedBox(width: 8),
                         const Text(
                           'Edit Manager',
@@ -185,7 +185,7 @@ class _EditManagerDialogState extends State<EditManagerDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(0), 
+                    color: AppTheme.primary.withAlpha(0), 
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -295,7 +295,7 @@ class _EditManagerDialogState extends State<EditManagerDialog> {
                     ElevatedButton(
                       onPressed: (_isLoading || _hasNavigated) ? null : _updateManager,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
                       ),
                       child: _isLoading

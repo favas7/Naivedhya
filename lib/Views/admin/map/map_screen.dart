@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -169,7 +169,7 @@ class _MapScreenState extends State<MapScreen> {
                 showDeliveryStaff = value;
               });
             },
-            activeColor: AppColors.primary,
+            activeColor: AppTheme.primary,
           ),
           
           SwitchListTile(
@@ -181,7 +181,7 @@ class _MapScreenState extends State<MapScreen> {
                 showCustomers = value;
               });
             },
-            activeColor: AppColors.primary,
+            activeColor: AppTheme.primary,
           ),
           
           SwitchListTile(
@@ -193,7 +193,7 @@ class _MapScreenState extends State<MapScreen> {
                 showRestaurants = value;
               });
             },
-            activeColor: AppColors.primary,
+            activeColor: AppTheme.primary,
           ),
           
           const SizedBox(height: 20),
@@ -208,7 +208,7 @@ class _MapScreenState extends State<MapScreen> {
               icon: const Icon(Icons.refresh),
               label: const Text('Refresh Map'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -430,10 +430,10 @@ class _MapScreenState extends State<MapScreen> {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withAlpha(0),
+                  backgroundColor: AppTheme.primary.withAlpha(0),
                   child: Icon(
                     Icons.location_on,
-                    color: AppColors.primary,
+                    color: AppTheme.primary,
                   ),
                 ),
                 title: Text('Delivery Staff #${index + 1} location updated'),

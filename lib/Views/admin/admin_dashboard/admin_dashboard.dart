@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:naivedhya/Views/admin/restaurant/restaurant_screen.dart';
 import 'package:naivedhya/providers/auth_provider.dart';
+import 'package:naivedhya/providers/theme_provider.dart';
 import 'package:naivedhya/Views/admin/analytics/analatics_screen.dart';
 import 'package:naivedhya/Views/admin/customer/customer_screen.dart';
 import 'package:naivedhya/Views/admin/dashboard/dashboard.dart';
@@ -14,7 +15,7 @@ import 'package:naivedhya/Views/admin/pos/pos_integration_screen.dart';
 import 'package:naivedhya/Views/admin/settings/settings_screen.dart';
 import 'package:naivedhya/Views/admin/vendors/vendors_screen.dart';
 import 'package:naivedhya/Views/auth/login/login_screen.dart';
-import 'package:naivedhya/utils/constants/colors.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -48,16 +49,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final _ = kIsWeb;
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 768;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.grey[100],
-      drawer: !isDesktop ? _buildDrawer() : null,
+      backgroundColor: isDark ? AppTheme.darkBackground : Colors.grey[100],
+      drawer: !isDesktop ? _buildDrawer(isDark) : null,
       body: SafeArea(
         child: Row(
           children: [
             // Sidebar for desktop
-            if (isDesktop) _buildSidebar(),
+            if (isDesktop) _buildSidebar(isDark),
             // Main Content
             Expanded(
               child: Column(
@@ -65,33 +68,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   // Top Bar
                   Container(
                     height: 60,
-                    color: Colors.white,
+                    color: isDark ? AppTheme.darkSurface : Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
                         if (!isDesktop)
                           IconButton(
-                            icon: const Icon(Icons.menu),
+                            icon: Icon(
+                              Icons.menu,
+                              color: isDark ? AppTheme.darkTextPrimary : Colors.black87,
+                            ),
                             onPressed: () {
                               _scaffoldKey.currentState?.openDrawer();
                             },
                           ),
                         Text(
                           _menuItems[_selectedIndex],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: isDark ? AppTheme.darkTextPrimary : Colors.black87,
                           ),
                         ),
                         const Spacer(),
                         IconButton(
-                          icon: const Icon(Icons.notifications),
+                          icon: Icon(
+                            Icons.notifications,
+                            color: isDark ? AppTheme.darkTextPrimary : Colors.black87,
+                          ),
                           onPressed: () {},
                         ),
                         const SizedBox(width: 10),
                         CircleAvatar(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: isDark ? AppTheme.darkPrimary : AppTheme.primary,
                           child: const Icon(
                             Icons.person,
                             color: Colors.white,
@@ -116,10 +125,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildSidebar() {
+  Widget _buildSidebar(bool isDark) {
     return Container(
       width: 250,
-      color: AppColors.primary,
+      color: isDark ? AppTheme.darkSurface : AppTheme.primary,
       child: Column(
         children: [
           // Header
@@ -131,7 +140,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   backgroundColor: Colors.white,
                   child: Icon(
                     Icons.admin_panel_settings,
-                    color: AppColors.primary,
+                    color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -146,7 +155,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
           ),
-          const Divider(color: Colors.white24),
+          Divider(color: isDark ? AppTheme.darkDivider : Colors.white24),
           // Menu Items
           Expanded(
             child: ListView.builder(
@@ -156,7 +165,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.white.withValues(alpha: 0.1) : null,
+                    color: isSelected 
+                        ? (isDark ? AppTheme.darkPrimary.withOpacity(0.3) : Colors.white.withOpacity(0.1))
+                        : null,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: ListTile(
@@ -188,10 +199,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _logout();
+                  _logout(isDark);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: isDark ? AppTheme.darkError : Colors.red,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -204,10 +215,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildDrawer() {
+  Widget _buildDrawer(bool isDark) {
     return Drawer(
       child: Container(
-        color: AppColors.primary,
+        color: isDark ? AppTheme.darkSurface : AppTheme.primary,
         child: Column(
           children: [
             // Header
@@ -220,7 +231,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     backgroundColor: Colors.white,
                     child: Icon(
                       Icons.admin_panel_settings,
-                      color: AppColors.primary,
+                      color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -235,7 +246,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ],
               ),
             ),
-            const Divider(color: Colors.white24),
+            Divider(color: isDark ? AppTheme.darkDivider : Colors.white24),
             // Menu Items
             Expanded(
               child: ListView.builder(
@@ -245,7 +256,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white.withValues(alpha: 0.1) : null,
+                      color: isSelected 
+                          ? (isDark ? AppTheme.darkPrimary.withOpacity(0.3) : Colors.white.withOpacity(0.1))
+                          : null,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListTile(
@@ -279,10 +292,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context); // Close drawer first
-                    _logout();
+                    _logout(isDark);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: isDark ? AppTheme.darkError : Colors.red,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -358,27 +371,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  void _logout() {
+  void _logout(bool isDark) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+        title: Text(
+          'Logout',
+          style: TextStyle(
+            color: isDark ? AppTheme.darkTextPrimary : Colors.black87,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(
+            color: isDark ? AppTheme.darkTextSecondary : Colors.black54,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () async {
-            await Provider.of<AuthProvider>(context, listen: false).logout();
-            Navigator.pushReplacement(
-              // ignore: use_build_context_synchronously
-              context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-            );
-          },
-            child: const Text('Logout'),
+              await Provider.of<AuthProvider>(context, listen: false).logout();
+              Navigator.pushReplacement(
+                // ignore: use_build_context_synchronously
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+            child: Text(
+              'Logout',
+              style: TextStyle(
+                color: isDark ? AppTheme.darkError : Colors.red,
+              ),
+            ),
           ),
         ],
       ),
