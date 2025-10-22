@@ -87,7 +87,7 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                     borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                   ),
                   filled: true,
-                  fillColor: AppTheme.textfield,
+                  fillColor: AppTheme.textPrimary,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -119,7 +119,7 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                     borderSide: const BorderSide(color: AppTheme.primary, width: 2),
                   ),
                   filled: true,
-                  fillColor: AppTheme.textfield,
+                  fillColor: AppTheme.textPrimary,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

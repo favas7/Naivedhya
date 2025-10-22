@@ -66,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final isDark = themeProvider.isDarkMode;
     
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.background,
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.accent,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28.0),

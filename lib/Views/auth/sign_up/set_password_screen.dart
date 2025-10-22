@@ -92,7 +92,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           children: [
             Container(
               height: screenHeight * 0.3,
-              color: isDark ? AppTheme.darkPrimary : AppTheme.background,
+              color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
               child: Padding(
                 padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
                 child: Row(
@@ -151,12 +151,12 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                               decoration: BoxDecoration(
                                 color: isDark 
                                     ? AppTheme.darkPrimary.withOpacity(0.15)
-                                    : AppTheme.background.withOpacity(0.1),
+                                    : AppTheme.primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isDark 
                                       ? AppTheme.darkPrimary.withOpacity(0.3)
-                                      : AppTheme.background.withOpacity(0.3),
+                                      : AppTheme.accent .withOpacity(0.3),
                                 ),
                               ),
                               child: Column(
@@ -169,7 +169,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                                       fontWeight: FontWeight.bold,
                                       color: isDark 
                                           ? AppTheme.darkPrimary 
-                                          : AppTheme.background,
+                                          : AppTheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 8),

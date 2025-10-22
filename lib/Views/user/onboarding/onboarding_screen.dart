@@ -49,7 +49,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isDark = themeProvider.isDarkMode;
     
     return Scaffold(
-      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.background,
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.accent,
       body: SafeArea(
         child: Column(
           children: [
@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             Expanded(
               child: Container(
-                color: isDark ? AppTheme.darkSurface : AppTheme.surface,
+                color: isDark ? AppTheme.darkSurface : AppTheme.accent,
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

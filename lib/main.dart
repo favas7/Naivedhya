@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:naivedhya/config/supabase_config.dart';
+import 'package:naivedhya/config/supabase_config.dart'; 
 import 'package:naivedhya/firebase_options.dart';
 import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
@@ -61,8 +61,8 @@ class MyApp extends StatelessWidget {
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
                 title: 'Naivedhya',
-                theme: AppTheme.light,      // Fixed: changed from lightTheme to light
-                darkTheme: AppTheme.dark,   // Fixed: changed from darkTheme to dark
+                theme: AppTheme.lightTheme,      // Fixed: changed from lightTheme to light
+                darkTheme: AppTheme.darkTheme,   // Fixed: changed from darkTheme to dark
                 themeMode: themeProvider.themeMode,
                 home: const SplashScreen(),
               );

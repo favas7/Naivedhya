@@ -30,6 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 768;
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = AppTheme.of(context);
 
     return Consumer<DashboardProvider>(
       builder: (context, dashboardProvider, child) {
@@ -38,6 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             await dashboardProvider.refreshDashboard();
             await context.read<ActivityProvider>().refresh();
           },
+          color: colors.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20),
@@ -52,6 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'Dashboard Overview',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
                           ),
                     ),
                     Row(
@@ -60,7 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         IconButton(
                           icon: Icon(
                             Icons.refresh,
-                            color: AppTheme.primary,
+                            color: colors.primary,
                           ),
                           onPressed: () async {
                             await dashboardProvider.refreshDashboard();
@@ -72,14 +75,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         // Theme Toggle Button
                         Container(
                           decoration: BoxDecoration(
-                            color: themeProvider.isDarkMode
-                                ? AppTheme.darkCardBackground
-                                : Colors.white,
+                            color: colors.surface,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: themeProvider.isDarkMode
-                                  ? AppTheme.darkBorder
-                                  : AppTheme.border,
+                              color: colors.textSecondary.withOpacity(0.2),
                             ),
                           ),
                           child: Row(
@@ -88,8 +87,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 icon: Icon(
                                   Icons.light_mode,
                                   color: !themeProvider.isDarkMode
-                                      ? AppTheme.primary
-                                      : AppTheme.darkTextSecondary,
+                                      ? colors.primary
+                                      : colors.textSecondary,
                                 ),
                                 onPressed: () => themeProvider.setLightMode(),
                                 tooltip: 'Light Mode',
@@ -98,8 +97,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 icon: Icon(
                                   Icons.dark_mode,
                                   color: themeProvider.isDarkMode
-                                      ? AppTheme.darkPrimary
-                                      : AppTheme.textSecondary,
+                                      ? colors.primary
+                                      : colors.textSecondary,
                                 ),
                                 onPressed: () => themeProvider.setDarkMode(),
                                 tooltip: 'Dark Mode',
@@ -120,23 +119,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     margin: const EdgeInsets.only(bottom: 20),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.error.withOpacity(0.1),
+                      color: colors.error.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.error),
+                      border: Border.all(color: colors.error.withOpacity(0.5)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: AppTheme.error),
+                        Icon(
+                          Icons.error_outline,
+                          color: colors.error,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             dashboardProvider.error!,
-                            style: TextStyle(color: AppTheme.error),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: colors.error,
+                                ),
                           ),
                         ),
                         IconButton(
                           onPressed: dashboardProvider.clearError,
-                          icon: Icon(Icons.close, color: AppTheme.error),
+                          icon: Icon(
+                            Icons.close,
+                            color: colors.error,
+                          ),
                         ),
                       ],
                     ),
@@ -158,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? '...'
                           : '${dashboardProvider.totalUsers}',
                       Icons.people,
-                      AppTheme.info,
+                      colors.info,
                       dashboardProvider.isLoading,
                     ),
                     _buildStatCard(
@@ -168,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? '...'
                           : '${dashboardProvider.totalOrders}',
                       Icons.shopping_cart,
-                      AppTheme.success,
+                      colors.success,
                       dashboardProvider.isLoading,
                     ),
                     _buildStatCard(
@@ -178,7 +185,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? '...'
                           : '${dashboardProvider.activeRestaurants}',
                       Icons.restaurant,
-                      AppTheme.primary,
+                      colors.primary,
                       dashboardProvider.isLoading,
                     ),
                     _buildStatCard(
@@ -188,7 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ? '...'
                           : '${dashboardProvider.deliveryStaff}',
                       Icons.delivery_dining,
-                      AppTheme.orderDelivering,
+                      colors.warning,
                       dashboardProvider.isLoading,
                     ),
                   ],
@@ -204,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ? '...'
                       : '${dashboardProvider.totalVendors}',
                   Icons.store,
-                  Colors.teal,
+                  colors.info,
                   dashboardProvider.isLoading,
                   isFullWidth: true,
                 ),
@@ -246,21 +253,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isLoading, {
     bool isFullWidth = false,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppTheme.darkCardBackground : Colors.white;
-    final textColor = isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary;
-    final secondaryTextColor =
-        isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary;
+    final colors = AppTheme.of(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? AppTheme.darkShadow
-                : Colors.grey.withOpacity(0.1),
+            color: colors.textPrimary.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 3),
@@ -274,12 +275,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 24),
+              Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: isLoading
@@ -288,7 +293,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: color,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
                         ),
                       )
                     : Icon(
@@ -302,19 +307,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 10),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
           ),
           const SizedBox(height: 5),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 14,
-              color: secondaryTextColor,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.textSecondary,
+                ),
           ),
         ],
       ),

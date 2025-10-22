@@ -65,7 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             colorScheme: ColorScheme.light(
               primary: isDark ? AppTheme.darkPrimary : AppTheme.primary,
               onPrimary: Colors.white,
-              surface: isDark ? AppTheme.darkSurface : AppTheme.surface,
+              surface: isDark ? AppTheme.darkSurface : AppTheme.accent,
               onSurface: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
             ),
           ),
@@ -125,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           children: [
             Container(
               height: screenHeight * 0.3,
-              color: isDark ? AppTheme.darkPrimary : AppTheme.background,
+              color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
               child: Padding(
                 padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
                 child: Row(
@@ -263,8 +263,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: isDark 
-                                          ? AppTheme.darkBorder 
-                                          : AppTheme.border,
+                                          ? AppTheme.darkSurface 
+                                          : AppTheme.darkSurface,
                                     ),
                                   ),
                                   child: Image.asset(

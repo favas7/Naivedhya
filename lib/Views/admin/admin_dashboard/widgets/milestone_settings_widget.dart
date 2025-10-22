@@ -10,7 +10,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
 
     return Consumer<ActivityProvider>(
       builder: (context, provider, child) {
@@ -20,13 +20,11 @@ class MilestoneSettingsWidget extends StatelessWidget {
 
         return Container(
           decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkCardBackground : Colors.white,
+            color: colors.surface,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? AppTheme.darkShadow
-                    : Colors.grey.withOpacity(0.1),
+                color: colors.textPrimary.withOpacity(0.08),
                 spreadRadius: 1,
                 blurRadius: 5,
                 offset: const Offset(0, 3),
@@ -41,7 +39,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.flag,
-                    color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+                    color: colors.primary,
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -49,6 +47,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
                     'Revenue Milestones',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
                         ),
                   ),
                   const Spacer(),
@@ -57,9 +56,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
                     child: Icon(
                       Icons.info_outline,
                       size: 20,
-                      color: isDark
-                          ? AppTheme.darkTextSecondary
-                          : AppTheme.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],
@@ -125,6 +122,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
     RevenueMilestone milestone,
     double newAmount,
   ) async {
+    final colors = AppTheme.of(context);
     try {
       await provider.updateMilestone(milestone.id, newAmount);
       if (context.mounted) {
@@ -133,7 +131,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
             content: Text(
               '${_getMilestoneLabel(milestone.milestoneType)} milestone updated to ₹${newAmount.toStringAsFixed(2)}!',
             ),
-            backgroundColor: AppTheme.success,
+            backgroundColor: colors.success,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -143,7 +141,7 @@ class MilestoneSettingsWidget extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update milestone: $e'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: colors.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -175,10 +173,8 @@ class MilestoneTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppTheme.darkBackground.withOpacity(0.5)
-        : AppTheme.background.withOpacity(0.3);
+    final colors = AppTheme.of(context);
+    final backgroundColor = colors.primary.withOpacity(0.08);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -186,7 +182,7 @@ class MilestoneTile extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? AppTheme.darkBorder : AppTheme.border,
+          color: colors.primary.withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -197,12 +193,12 @@ class MilestoneTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _getMilestoneColor(isDark).withOpacity(0.1),
+                  color: colors.primary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   _getMilestoneIcon(milestone.milestoneType),
-                  color: _getMilestoneColor(isDark),
+                  color: colors.primary,
                   size: 20,
                 ),
               ),
@@ -210,20 +206,17 @@ class MilestoneTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   _getMilestoneLabel(milestone.milestoneType),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: isDark
-                        ? AppTheme.darkTextPrimary
-                        : AppTheme.textPrimary,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
                 ),
               ),
               IconButton(
                 icon: Icon(
                   Icons.edit,
                   size: 18,
-                  color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+                  color: colors.primary,
                 ),
                 onPressed: () => _showEditDialog(context),
                 tooltip: 'Edit target',
@@ -236,28 +229,24 @@ class MilestoneTile extends StatelessWidget {
               Icon(
                 Icons.currency_rupee,
                 size: 20,
-                color: isDark ? AppTheme.darkSuccess : AppTheme.success,
+                color: colors.success,
               ),
               const SizedBox(width: 4),
               Text(
                 milestone.targetAmount.toStringAsFixed(2),
-                style: TextStyle(
-                  fontSize: 20,
-                  color: isDark ? AppTheme.darkSuccess : AppTheme.success,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colors.success,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             'Target goal',
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark
-                  ? AppTheme.darkTextSecondary
-                  : AppTheme.textSecondary,
-            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary,
+                ),
           ),
         ],
       ),
@@ -268,23 +257,20 @@ class MilestoneTile extends StatelessWidget {
     final controller = TextEditingController(
       text: milestone.targetAmount.toStringAsFixed(2),
     );
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor:
-            isDark ? AppTheme.darkCardBackground : Colors.white,
+        backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
           'Edit ${_getMilestoneLabel(milestone.milestoneType)} Target',
-          style: TextStyle(
-            color: isDark
-                ? AppTheme.darkTextPrimary
-                : AppTheme.textPrimary,
-          ),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: colors.textPrimary,
+              ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -292,12 +278,9 @@ class MilestoneTile extends StatelessWidget {
           children: [
             Text(
               'Set your ${_getMilestoneLabel(milestone.milestoneType).toLowerCase()} revenue target:',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark
-                    ? AppTheme.darkTextSecondary
-                    : AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colors.textSecondary,
+                  ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -309,33 +292,32 @@ class MilestoneTile extends StatelessWidget {
               ],
               decoration: InputDecoration(
                 labelText: 'Target Amount',
+                labelStyle: TextStyle(color: colors.textSecondary),
                 prefixText: '₹ ',
                 prefixStyle: TextStyle(
-                  color: isDark
-                      ? AppTheme.darkTextPrimary
-                      : AppTheme.textPrimary,
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.textSecondary.withOpacity(0.3)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colors.textSecondary.withOpacity(0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                    color: isDark
-                        ? AppTheme.darkPrimary
-                        : AppTheme.primary,
+                    color: colors.primary,
                     width: 2,
                   ),
                 ),
               ),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark
-                    ? AppTheme.darkTextPrimary
-                    : AppTheme.textPrimary,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ],
         ),
@@ -345,9 +327,7 @@ class MilestoneTile extends StatelessWidget {
             child: Text(
               'Cancel',
               style: TextStyle(
-                color: isDark
-                    ? AppTheme.darkTextSecondary
-                    : AppTheme.textSecondary,
+                color: colors.textSecondary,
               ),
             ),
           ),
@@ -361,15 +341,14 @@ class MilestoneTile extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Please enter a valid amount'),
-                    backgroundColor: AppTheme.error,
+                    backgroundColor: colors.error,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  isDark ? AppTheme.darkPrimary : AppTheme.primary,
+              backgroundColor: colors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -401,9 +380,5 @@ class MilestoneTile extends StatelessWidget {
       case MilestoneType.monthly:
         return Icons.calendar_month;
     }
-  }
-
-  Color _getMilestoneColor(bool isDark) {
-    return isDark ? AppTheme.darkPrimary : AppTheme.primary;
   }
 }

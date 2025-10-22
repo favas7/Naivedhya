@@ -8,6 +8,9 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?) validator;
   final TextEditingController controller;
   final Widget? suffixIcon;
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final Icon? prefixIcon;
 
   const CustomTextField({
     super.key,
@@ -16,25 +19,85 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     required this.validator,
     required this.controller,
-    this.suffixIcon,  bool? readOnly,  void Function()? onTap,  Icon? prefixIcon,
+    this.suffixIcon,
+    this.readOnly = false,
+    this.onTap,
+    this.prefixIcon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppTheme.of(context);
+
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      readOnly: readOnly,
+      onTap: onTap,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: TextStyle(
+          color: colors.textSecondary,
+          fontSize: 14,
+        ),
         filled: true,
-        fillColor: AppTheme.textfield,
+        fillColor: colors.primary.withOpacity(0.06),
+        prefixIcon: prefixIcon != null
+            ? IconTheme(
+                data: IconThemeData(color: colors.textSecondary),
+                child: prefixIcon!,
+              )
+            : null,
+        suffixIcon: suffixIcon != null
+            ? IconTheme(
+                data: IconThemeData(color: colors.textSecondary),
+                child: suffixIcon!,
+              )
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: colors.textSecondary.withOpacity(0.2),
+          ),
         ),
-        suffixIcon: suffixIcon,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: colors.textSecondary.withOpacity(0.2),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: colors.primary,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: colors.error,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: colors.error,
+            width: 2,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        hintStyle: TextStyle(
+          color: colors.textSecondary.withOpacity(0.6),
+        ),
       ),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: colors.textPrimary,
+          ),
       validator: validator,
     );
   }

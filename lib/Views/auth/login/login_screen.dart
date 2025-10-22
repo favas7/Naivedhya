@@ -125,10 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   colors: isDark 
                     ? [
                         AppTheme.darkPrimary,
-                        AppTheme.darkPrimaryDark,
+                        AppTheme.darkBackground,
                       ]
                     : [
-                        AppTheme.background,
+                        AppTheme.accent,
                         AppTheme.primary.withOpacity(0.8),
                       ],
                 ),

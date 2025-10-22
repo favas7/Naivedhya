@@ -9,15 +9,17 @@ class ActivityFeedWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
 
     return Consumer<ActivityProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading && provider.activities.isEmpty) {
           return _buildCard(
             context,
-            child: const Center(
-              child: CircularProgressIndicator(),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+              ),
             ),
           );
         }
@@ -29,11 +31,17 @@ class ActivityFeedWidget extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: colors.error,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Failed to load activities',
-                    style: TextStyle(color: AppTheme.error),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: colors.error,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
@@ -56,19 +64,14 @@ class ActivityFeedWidget extends StatelessWidget {
                   Icon(
                     Icons.notifications_none,
                     size: 64,
-                    color: isDark
-                        ? AppTheme.darkTextSecondary
-                        : AppTheme.textSecondary,
+                    color: colors.textSecondary,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No activities yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isDark
-                          ? AppTheme.darkTextSecondary
-                          : AppTheme.textSecondary,
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: colors.textSecondary,
+                        ),
                   ),
                 ],
               ),
@@ -88,7 +91,7 @@ class ActivityFeedWidget extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.access_time,
-                      color: isDark ? AppTheme.darkPrimary : AppTheme.primary,
+                      color: colors.primary,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -96,6 +99,7 @@ class ActivityFeedWidget extends StatelessWidget {
                       'Recent Activity',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
                           ),
                     ),
                     const Spacer(),
@@ -106,13 +110,13 @@ class ActivityFeedWidget extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.error,
+                          color: colors.error,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${provider.unreadCount}',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.white,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -122,9 +126,7 @@ class ActivityFeedWidget extends StatelessWidget {
                     PopupMenuButton<String>(
                       icon: Icon(
                         Icons.more_vert,
-                        color: isDark
-                            ? AppTheme.darkTextPrimary
-                            : AppTheme.textPrimary,
+                        color: colors.textPrimary,
                       ),
                       onSelected: (value) {
                         if (value == 'mark_all_read') {
@@ -134,23 +136,37 @@ class ActivityFeedWidget extends StatelessWidget {
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'mark_all_read',
                           child: Row(
                             children: [
-                              Icon(Icons.done_all, size: 20),
-                              SizedBox(width: 8),
-                              Text('Mark all as read'),
+                              Icon(
+                                Icons.done_all,
+                                size: 20,
+                                color: colors.textPrimary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Mark all as read',
+                                style: TextStyle(color: colors.textPrimary),
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'refresh',
                           child: Row(
                             children: [
-                              Icon(Icons.refresh, size: 20),
-                              SizedBox(width: 8),
-                              Text('Refresh'),
+                              Icon(
+                                Icons.refresh,
+                                size: 20,
+                                color: colors.textPrimary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Refresh',
+                                style: TextStyle(color: colors.textPrimary),
+                              ),
                             ],
                           ),
                         ),
@@ -161,7 +177,7 @@ class ActivityFeedWidget extends StatelessWidget {
               ),
               Divider(
                 height: 1,
-                color: isDark ? AppTheme.darkDivider : AppTheme.divider,
+                color: colors.textSecondary.withOpacity(0.2),
               ),
 
               // Activity List
@@ -191,7 +207,7 @@ class ActivityFeedWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border(
                       top: BorderSide(
-                        color: isDark ? AppTheme.darkDivider : AppTheme.divider,
+                        color: colors.textSecondary.withOpacity(0.2),
                       ),
                     ),
                   ),
@@ -199,7 +215,10 @@ class ActivityFeedWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.chevron_left),
+                        icon: Icon(
+                          Icons.chevron_left,
+                          color: colors.textSecondary,
+                        ),
                         onPressed: provider.hasPreviousPage
                             ? () => provider.previousPage()
                             : null,
@@ -207,11 +226,16 @@ class ActivityFeedWidget extends StatelessWidget {
                       const SizedBox(width: 16),
                       Text(
                         'Page ${provider.currentPage} of ${provider.totalPages}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colors.textPrimary,
+                            ),
                       ),
                       const SizedBox(width: 16),
                       IconButton(
-                        icon: const Icon(Icons.chevron_right),
+                        icon: Icon(
+                          Icons.chevron_right,
+                          color: colors.textSecondary,
+                        ),
                         onPressed: provider.hasNextPage
                             ? () => provider.nextPage()
                             : null,
@@ -226,21 +250,17 @@ class ActivityFeedWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCard(BuildContext context, {required Widget child}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  static Widget _buildCard(BuildContext context, {required Widget child}) {
+    final colors = AppTheme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkCardBackground : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? AppTheme.darkShadow
-                : Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+            color: colors.textPrimary.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -248,83 +268,150 @@ class ActivityFeedWidget extends StatelessWidget {
     );
   }
 
-  void _handleActivityTap(BuildContext context, ActivityModel activity) {
-    // Navigate to appropriate screen based on activity type
-    switch (activity.activityType) {
-      case ActivityType.newOrder:
-      case ActivityType.deliveryStatus:
-        if (activity.orderId != null) {
-          // TODO: Navigate to order details
-          print('Navigate to order: ${activity.orderId}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Order ID: ${activity.orderId}'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-        break;
-      case ActivityType.newCustomer:
-        if (activity.customerId != null) {
-          // TODO: Navigate to customer details
-          print('Navigate to customer: ${activity.customerId}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Customer ID: ${activity.customerId}'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-        break;
-      case ActivityType.revenueMilestone:
-        _showMilestoneDialog(context, activity);
-        break;
-    }
-  }
+  static void _handleActivityTap(
+      BuildContext context, ActivityModel activity) {
+    final colors = AppTheme.of(context);
 
-  void _showMilestoneDialog(BuildContext context, ActivityModel activity) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(activity.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(activity.description ?? ''),
-            if (activity.metadata != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
-              _buildMetadataRow('Target', '₹${activity.metadata!['target']}'),
-              _buildMetadataRow(
-                  'Achieved', '₹${activity.metadata!['achieved']}'),
-              _buildMetadataRow(
-                  'Type', activity.metadata!['milestone_type']),
+        backgroundColor: colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          activity.title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: colors.textPrimary,
+              ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (activity.description != null) ...[
+                Text(
+                  activity.description!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (activity.metadata != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Details',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._buildMetadataDetails(
+                        context, activity, colors),
+                  ],
+                ),
             ],
-          ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: TextStyle(color: colors.primary),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetadataRow(String label, String value) {
+  static List<Widget> _buildMetadataDetails(
+      BuildContext context, ActivityModel activity, AppThemeColors colors) {
+    final metadata = activity.metadata;
+    if (metadata == null) return [];
+
+    final widgets = <Widget>[];
+
+    switch (activity.activityType) {
+      case ActivityType.newOrder:
+        if (metadata.containsKey('order_id')) {
+          widgets.add(_buildMetadataRow(
+              context, 'Order ID', metadata['order_id'] as String, colors));
+        }
+        if (metadata.containsKey('total')) {
+          widgets.add(_buildMetadataRow(context, 'Total',
+              '₹${metadata['total']}', colors));
+        }
+        break;
+
+      case ActivityType.deliveryStatus:
+        if (metadata.containsKey('status')) {
+          widgets.add(_buildMetadataRow(
+              context, 'Status', metadata['status'] as String, colors));
+        }
+        if (metadata.containsKey('location')) {
+          widgets.add(_buildMetadataRow(context, 'Location',
+              metadata['location'] as String, colors));
+        }
+        break;
+
+      case ActivityType.newCustomer:
+        if (metadata.containsKey('customer_name')) {
+          widgets.add(_buildMetadataRow(context, 'Customer',
+              metadata['customer_name'] as String, colors));
+        }
+        if (metadata.containsKey('total_orders')) {
+          widgets.add(_buildMetadataRow(context, 'Total Orders',
+              metadata['total_orders'].toString(), colors));
+        }
+        break;
+
+      case ActivityType.revenueMilestone:
+        if (metadata.containsKey('target')) {
+          widgets.add(_buildMetadataRow(context, 'Target',
+              '₹${metadata['target']}', colors));
+        }
+        if (metadata.containsKey('achieved')) {
+          widgets.add(_buildMetadataRow(context, 'Achieved',
+              '₹${metadata['achieved']}', colors));
+        }
+        if (metadata.containsKey('milestone_type')) {
+          widgets.add(_buildMetadataRow(context, 'Type',
+              metadata['milestone_type'] as String, colors));
+        }
+        break;
+    }
+
+    return widgets;
+  }
+
+  static Widget _buildMetadataRow(BuildContext context, String label,
+      String value, AppThemeColors colors) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             '$label:',
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: colors.textSecondary,
+                ),
           ),
-          Text(value),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+          ),
         ],
       ),
     );
@@ -343,7 +430,7 @@ class ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppTheme.of(context);
 
     return InkWell(
       onTap: onTap,
@@ -353,16 +440,12 @@ class ActivityTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: activity.isRead
               ? Colors.transparent
-              : (isDark
-                  ? AppTheme.darkPrimary.withOpacity(0.05)
-                  : AppTheme.primary.withOpacity(0.05)),
+              : colors.primary.withOpacity(0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: activity.isRead
-                ? (isDark ? AppTheme.darkDivider : AppTheme.divider)
-                : (isDark
-                    ? AppTheme.darkPrimary.withOpacity(0.2)
-                    : AppTheme.primary.withOpacity(0.2)),
+                ? colors.textSecondary.withOpacity(0.15)
+                : colors.primary.withOpacity(0.25),
             width: 1,
           ),
         ),
@@ -373,13 +456,13 @@ class ActivityTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _getActivityColor(activity.activityType, isDark)
-                    .withOpacity(0.1),
+                color: _getActivityColor(activity.activityType, colors)
+                    .withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 _getActivityIcon(activity.activityType),
-                color: _getActivityColor(activity.activityType, isDark),
+                color: _getActivityColor(activity.activityType, colors),
                 size: 20,
               ),
             ),
@@ -395,15 +478,12 @@ class ActivityTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           activity.title,
-                          style: TextStyle(
-                            fontWeight: activity.isRead
-                                ? FontWeight.normal
-                                : FontWeight.bold,
-                            fontSize: 14,
-                            color: isDark
-                                ? AppTheme.darkTextPrimary
-                                : AppTheme.textPrimary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: activity.isRead
+                                    ? FontWeight.w500
+                                    : FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
                         ),
                       ),
                       if (!activity.isRead)
@@ -411,9 +491,7 @@ class ActivityTile extends StatelessWidget {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? AppTheme.darkPrimary
-                                : AppTheme.primary,
+                            color: colors.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -423,12 +501,9 @@ class ActivityTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       activity.description!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark
-                            ? AppTheme.darkTextSecondary
-                            : AppTheme.textSecondary,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colors.textSecondary,
+                          ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -439,38 +514,28 @@ class ActivityTile extends StatelessWidget {
                       Icon(
                         Icons.access_time,
                         size: 12,
-                        color: isDark
-                            ? AppTheme.darkTextHint
-                            : AppTheme.textHint,
+                        color: colors.textSecondary.withOpacity(0.7),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         activity.getTimeAgo(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppTheme.darkTextHint
-                              : AppTheme.textHint,
-                        ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: colors.textSecondary.withOpacity(0.7),
+                            ),
                       ),
                       if (activity.amount != null) ...[
                         const SizedBox(width: 16),
                         Icon(
                           Icons.currency_rupee,
                           size: 12,
-                          color: isDark
-                              ? AppTheme.darkSuccess
-                              : AppTheme.success,
+                          color: colors.success,
                         ),
                         Text(
                           activity.amount!.toStringAsFixed(2),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark
-                                ? AppTheme.darkSuccess
-                                : AppTheme.success,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: colors.success,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ],
@@ -483,7 +548,7 @@ class ActivityTile extends StatelessWidget {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: isDark ? AppTheme.darkTextHint : AppTheme.textHint,
+              color: colors.textSecondary.withOpacity(0.5),
             ),
           ],
         ),
@@ -504,18 +569,16 @@ class ActivityTile extends StatelessWidget {
     }
   }
 
-  Color _getActivityColor(ActivityType type, bool isDark) {
+  Color _getActivityColor(ActivityType type, AppThemeColors colors) {
     switch (type) {
       case ActivityType.newOrder:
-        return isDark ? AppTheme.darkOrderPending : AppTheme.orderPending;
+        return colors.warning;
       case ActivityType.deliveryStatus:
-        return isDark
-            ? AppTheme.darkOrderDelivering
-            : AppTheme.orderDelivering;
+        return colors.info;
       case ActivityType.newCustomer:
-        return isDark ? AppTheme.darkInfo : AppTheme.info;
+        return colors.info;
       case ActivityType.revenueMilestone:
-        return isDark ? AppTheme.darkSuccess : AppTheme.success;
+        return colors.success;
     }
   }
 }

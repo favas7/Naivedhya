@@ -7,7 +7,7 @@ class FoodScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.accent,
       body: const Center(
         child: Text('Food Screen', style: TextStyle(fontSize: 24)),
       ),
