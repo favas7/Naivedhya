@@ -1,320 +1,509 @@
-// services/order_service.dart (Updated with createOrder method)
-import 'package:naivedhya/models/order_model.dart';
-import 'package:naivedhya/services/delivery_person_service.dart';
+// lib/services/order_service.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+import 'package:naivedhya/models/order_item_model.dart';
 
 class OrderService {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
-  static const int ordersPerPage = 20;
+  final _uuid = const Uuid();
 
-  Future<List<Order>> fetchOrders({
-    int page = 0,
-    int limit = ordersPerPage,
+  /// Create a new order with customizations and guest support
+  Future<String?> createOrder({
+    required String restaurantId,
+    required String vendorId,
+    required String? customerId, // Null for guest orders
+    required String? guestName,
+    required String? guestPhone,
+    required String? deliveryAddress,
+    required List<OrderItem> orderItems,
+    required double totalAmount,
+    required String? proposedDeliveryTime,
+    required String deliveryStatus,
+    required String? deliveryPersonId,
+    required String specialInstructions,
+    required String paymentMethod,
   }) async {
     try {
-      final from = page * limit;
-      final to = from + limit - 1;
+      final orderId = _uuid.v4();
 
-      final response = await _supabase
-          .from('orders')
-          .select()
-          .order('created_at', ascending: false)
-          .range(from, to);
+      // 1. Create order record
+      final orderData = {
+        'order_id': orderId,
+        'customer_id': customerId,
+        'vendor_id': vendorId,
+        'hotel_id': restaurantId,
+        'order_number': await _generateOrderNumber(),
+        'total_amount': totalAmount,
+        'status': 'Pending',
+        'customer_name': guestName ?? 'Customer',
+        'delivery_address': deliveryAddress,
+        'proposed_delivery_time': proposedDeliveryTime,
+        'delivery_status': deliveryStatus,
+        'delivery_person_id': deliveryPersonId,
+        'special_instructions': specialInstructions,
+        'payment_method': paymentMethod,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
-      return (response as List)
-          .map((json) => Order.fromJson(json))
-          .toList();
+      await _supabase.from('orders').insert(orderData);
+
+      // 2. Create order items with customizations
+      for (final orderItem in orderItems) {
+        await _createOrderItem(
+          orderId: orderId,
+          orderItem: orderItem,
+        );
+      }
+
+      return orderId;
     } catch (e) {
-      throw Exception('Failed to fetch orders: ${e.toString()}');
+      print('Error creating order: $e');
+      rethrow;
     }
   }
 
-  Future<Order> fetchOrderById(String orderId) async {
+  /// Create individual order item with customizations
+  Future<void> _createOrderItem({
+    required String orderId,
+    required OrderItem orderItem,
+  }) async {
     try {
-      final response = await _supabase
+      // Create order_items record
+      final orderItemData = {
+        'order_id': orderId,
+        'item_id': orderItem.itemId,
+        'quantity': orderItem.quantity,
+        'price': orderItem.price,
+      };
+
+      await _supabase.from('order_items').insert(orderItemData);
+
+      // Create customization records for this item
+      for (final customization in orderItem.selectedCustomizations) {
+        final customizationData = {
+          'order_customization_id': _uuid.v4(),
+          'order_id': orderId,
+          'item_id': orderItem.itemId,
+          'customization_id': customization.customizationId,
+          'selected_option_id': customization.selectedOptionId,
+          'additional_price': customization.additionalPrice,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+
+        await _supabase
+            .from('order_item_customizations')
+            .insert(customizationData);
+      }
+    } catch (e) {
+      print('Error creating order item: $e');
+      rethrow;
+    }
+  }
+
+  /// Generate unique order number
+  Future<String> _generateOrderNumber() async {
+    try {
+      final count = await _supabase.from('orders').count(CountOption.exact);
+
+      final orderNumber =
+          'ORD-${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}${(count + 1).toString().padLeft(5, '0')}';
+      return orderNumber;
+    } catch (e) {
+      print('Error generating order number: $e');
+      return 'ORD-${DateTime.now().millisecondsSinceEpoch}';
+    }
+  }
+
+  /// Get order with all customizations
+  Future<Map<String, dynamic>?> getOrderWithDetails(String orderId) async {
+    try {
+      // Get order details
+      final orderResponse = await _supabase
           .from('orders')
           .select()
           .eq('order_id', orderId)
           .single();
 
-      return Order.fromJson(response);
-    } catch (e) {
-      throw Exception('Failed to fetch order: ${e.toString()}');
-    }
-  }
-
-  // New method for creating orders
-  Future<Order> createOrder(Order order) async {
-    try {
-      final orderData = {
-        'order_id': order.orderId,
-        'customer_id': order.customerId,
-        'vendor_id': order.vendorId,
-        'hotel_id': order.restaurantId,
-        'order_number': order.orderNumber,
-        'total_amount': order.totalAmount,
-        'status': order.status,
-        'customer_name': order.customerName,
-        'delivery_status': order.deliveryStatus,
-        'delivery_person_id': order.deliveryPersonId,
-        'proposed_delivery_time': order.proposedDeliveryTime?.toIso8601String(),
-        'pickup_time': order.pickupTime?.toIso8601String(),
-        'delivery_time': order.deliveryTime?.toIso8601String(),
-        'created_at': order.createdAt.toIso8601String(),
-        'updated_at': order.updatedAt.toIso8601String(),
-      };
-
-      final response = await _supabase
-          .from('orders')
-          .insert(orderData)
+      // Get order items
+      final itemsResponse = await _supabase
+          .from('order_items')
           .select()
-          .single();
+          .eq('order_id', orderId);
 
-      return Order.fromJson(response);
+      // Get customizations for each item
+      List<Map<String, dynamic>> itemsWithCustomizations = [];
+
+      for (final item in itemsResponse) {
+        final customizationsResponse = await _supabase
+            .from('order_item_customizations')
+            .select()
+            .eq('order_id', orderId)
+            .eq('item_id', item['item_id']);
+
+        itemsWithCustomizations.add({
+          ...item,
+          'customizations': customizationsResponse,
+        });
+      }
+
+      return {
+        ...orderResponse,
+        'items': itemsWithCustomizations,
+      };
     } catch (e) {
-      throw Exception('Failed to create order: ${e.toString()}');
+      print('Error fetching order details: $e');
+      return null;
     }
   }
 
-  Future<Order> updateOrder(Order order) async {
+  /// Update order status
+  Future<bool> updateOrderStatus(
+    String orderId,
+    String newStatus,
+  ) async {
     try {
-      final response = await _supabase
+      await _supabase
           .from('orders')
           .update({
-            'status': order.status,
-            'delivery_status': order.deliveryStatus,
-            'delivery_person_id': order.deliveryPersonId,
-            'proposed_delivery_time': order.proposedDeliveryTime?.toIso8601String(),
-            'pickup_time': order.pickupTime?.toIso8601String(),
-            'delivery_time': order.deliveryTime?.toIso8601String(),
+            'status': newStatus,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('order_id', order.orderId)
-          .select()
-          .single();
+          .eq('order_id', orderId);
 
-      return Order.fromJson(response);
+      return true;
     } catch (e) {
-      throw Exception('Failed to update order: ${e.toString()}');
+      print('Error updating order status: $e');
+      return false;
     }
   }
 
-  Future<void> deleteOrder(String orderId) async {
+  /// Update delivery status
+  Future<bool> updateDeliveryStatus(
+    String orderId,
+    String newStatus,
+  ) async {
     try {
+      await _supabase
+          .from('orders')
+          .update({
+            'delivery_status': newStatus,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderId);
+
+      return true;
+    } catch (e) {
+      print('Error updating delivery status: $e');
+      return false;
+    }
+  }
+
+  /// Get orders by customer
+  Future<List<Map<String, dynamic>>> getOrdersByCustomer(
+      String customerId) async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select()
+          .eq('customer_id', customerId)
+          .order('created_at', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching customer orders: $e');
+      return [];
+    }
+  }
+
+  /// Get orders by restaurant
+  Future<List<Map<String, dynamic>>> getOrdersByRestaurant(
+    String restaurantId, {
+    String? status,
+  }) async {
+    try {
+      var query = _supabase
+          .from('orders')
+          .select()
+          .eq('hotel_id', restaurantId);
+
+      if (status != null) {
+        query = query.eq('status', status);
+      }
+
+      final response =
+          await query.order('created_at', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching restaurant orders: $e');
+      return [];
+    }
+  }
+
+  /// Search orders by order number
+  Future<Map<String, dynamic>?> searchOrderByNumber(String orderNumber) async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select()
+          .eq('order_number', orderNumber)
+          .single();
+
+      return response;
+    } catch (e) {
+      print('Error searching order: $e');
+      return null;
+    }
+  }
+
+  /// Get today's orders
+  Future<List<Map<String, dynamic>>> getTodayOrders(
+      String restaurantId) async {
+    try {
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      final response = await _supabase
+          .from('orders')
+          .select()
+          .eq('hotel_id', restaurantId)
+          .gte('created_at', startOfDay.toIso8601String())
+          .lt('created_at', endOfDay.toIso8601String())
+          .order('created_at', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching today orders: $e');
+      return [];
+    }
+  }
+
+  /// Calculate order statistics
+  Future<Map<String, dynamic>> getOrderStatistics(String restaurantId) async {
+    try {
+      final allOrders = await _supabase
+          .from('orders')
+          .select()
+          .eq('hotel_id', restaurantId);
+
+      final totalOrders = allOrders.length;
+      final totalRevenue = (allOrders as List).fold<double>(
+          0, (sum, order) => sum + (order['total_amount'] ?? 0));
+
+      final deliveredCount = (allOrders as List)
+          .where((o) => o['delivery_status'] == 'Delivered')
+          .length;
+
+      return {
+        'total_orders': totalOrders,
+        'total_revenue': totalRevenue,
+        'delivered_orders': deliveredCount,
+        'pending_orders': totalOrders - deliveredCount,
+        'average_order_value': totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      };
+    } catch (e) {
+      print('Error calculating statistics: $e');
+      return {
+        'total_orders': 0,
+        'total_revenue': 0,
+        'delivered_orders': 0,
+        'pending_orders': 0,
+        'average_order_value': 0,
+      };
+    }
+  }
+
+  /// Get order by ID (simple)
+  Future<Map<String, dynamic>?> getOrder(String orderId) async {
+    try {
+      final response = await _supabase
+          .from('orders')
+          .select()
+          .eq('order_id', orderId)
+          .maybeSingle();
+
+      return response;
+    } catch (e) {
+      print('Error fetching order: $e');
+      return null;
+    }
+  }
+
+  /// Update order
+  Future<bool> updateOrder(String orderId, Map<String, dynamic> data) async {
+    try {
+      data['updated_at'] = DateTime.now().toIso8601String();
+
+      await _supabase
+          .from('orders')
+          .update(data)
+          .eq('order_id', orderId);
+
+      return true;
+    } catch (e) {
+      print('Error updating order: $e');
+      return false;
+    }
+  }
+
+  /// Delete order
+  Future<bool> deleteOrder(String orderId) async {
+    try {
+      // Delete order items customizations first
+      await _supabase
+          .from('order_item_customizations')
+          .delete()
+          .eq('order_id', orderId);
+
+      // Delete order items
+      await _supabase
+          .from('order_items')
+          .delete()
+          .eq('order_id', orderId);
+
+      // Delete order
       await _supabase
           .from('orders')
           .delete()
           .eq('order_id', orderId);
+
+      return true;
     } catch (e) {
-      throw Exception('Failed to delete order: ${e.toString()}');
+      print('Error deleting order: $e');
+      return false;
     }
   }
 
-  // New method for assigning delivery personnel
-  Future<bool> assignDeliveryPersonnel(String orderId, String deliveryPersonId) async {
+  /// Filter orders by status
+  Future<List<Map<String, dynamic>>> getOrdersByStatus(
+    String restaurantId,
+    String status,
+  ) async {
     try {
-      final success = await _deliveryService.assignOrderToDeliveryPersonnel(
-        orderId,
-        deliveryPersonId,
-      );
-      return success;
-    } catch (e) {
-      throw Exception('Failed to assign delivery personnel: ${e.toString()}');
-    }
-  }
-
-  // New method for unassigning delivery personnel
-  Future<bool> unassignDeliveryPersonnel(String orderId, String? currentDeliveryPersonId) async {
-    try {
-      final success = await _deliveryService.unassignOrderFromDeliveryPersonnel(
-        orderId,
-        currentDeliveryPersonId,
-      );
-      return success;
-    } catch (e) {
-      throw Exception('Failed to unassign delivery personnel: ${e.toString()}');
-    }
-  }
-
-  // New method to update order status with delivery tracking
-  Future<Order> updateOrderStatus(String orderId, String status, {
-    String? deliveryStatus,
-    DateTime? proposedDeliveryTime,
-    DateTime? pickupTime,
-    DateTime? deliveryTime,
-  }) async {
-    try {
-      final updateData = <String, dynamic>{
-        'status': status,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
-      if (deliveryStatus != null) {
-        updateData['delivery_status'] = deliveryStatus;
-      }
-
-      if (proposedDeliveryTime != null) {
-        updateData['proposed_delivery_time'] = proposedDeliveryTime.toIso8601String();
-      }
-
-      if (pickupTime != null) {
-        updateData['pickup_time'] = pickupTime.toIso8601String();
-      }
-
-      if (deliveryTime != null) {
-        updateData['delivery_time'] = deliveryTime.toIso8601String();
-      }
-
       final response = await _supabase
           .from('orders')
-          .update(updateData)
-          .eq('order_id', orderId)
           .select()
-          .single();
+          .eq('hotel_id', restaurantId)
+          .eq('status', status)
+          .order('created_at', ascending: false);
 
-      return Order.fromJson(response);
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      throw Exception('Failed to update order status: ${e.toString()}');
+      print('Error fetching orders by status: $e');
+      return [];
     }
   }
 
-  Future<List<Order>> searchOrders({
-    String? searchQuery,
-    String? statusFilter,
-    int page = 0,
-    int limit = ordersPerPage,
-  }) async {
+  /// Filter orders by delivery status
+  Future<List<Map<String, dynamic>>> getOrdersByDeliveryStatus(
+    String restaurantId,
+    String deliveryStatus,
+  ) async {
     try {
-      final from = page * limit;
-      final to = from + limit - 1;
-
-      // Build the base query
-      var query = _supabase
+      final response = await _supabase
           .from('orders')
-          .select();
+          .select()
+          .eq('hotel_id', restaurantId)
+          .eq('delivery_status', deliveryStatus)
+          .order('created_at', ascending: false);
 
-      // Apply status filter first if provided
-      if (statusFilter != null && statusFilter != 'All') {
-        query = query.eq('status', statusFilter);
-      }
-
-      // Apply search filter if provided
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        query = query.or(
-          'order_number.ilike.%$searchQuery%,'
-          'customer_name.ilike.%$searchQuery%,'
-          'status.ilike.%$searchQuery%'
-        );
-      }
-
-      // Apply ordering and pagination
-      final response = await query
-          .order('created_at', ascending: false)
-          .range(from, to);
-
-      return (response as List)
-          .map((json) => Order.fromJson(json))
-          .toList();
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      throw Exception('Failed to search orders: ${e.toString()}');
+      print('Error fetching orders by delivery status: $e');
+      return [];
     }
   }
 
-  // Alternative search method if the above doesn't work
-  Future<List<Order>> searchOrdersAlternative({
-    String? searchQuery,
-    String? statusFilter,
-    int page = 0,
-    int limit = ordersPerPage,
-  }) async {
+  /// Assign delivery person to order
+  Future<bool> assignDeliveryPerson(
+      String orderId, String deliveryPersonId) async {
     try {
-      final from = page * limit;
-      final to = from + limit - 1;
-
-      // If no filters, just fetch normally
-      if ((searchQuery == null || searchQuery.isEmpty) && 
-          (statusFilter == null || statusFilter == 'All')) {
-        return await fetchOrders(page: page, limit: limit);
-      }
-
-      // Build query with filters
-      PostgrestFilterBuilder query = _supabase
+      await _supabase
           .from('orders')
-          .select();
+          .update({
+            'delivery_person_id': deliveryPersonId,
+            'delivery_status': 'Assigned',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderId);
 
-      // Apply status filter
-      if (statusFilter != null && statusFilter != 'All') {
-        query = query.eq('status', statusFilter);
-      }
-
-      // Apply search filter using textSearch or ilike
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        // Try different approaches based on your Supabase version
-        query = query.or('order_number.ilike.%$searchQuery%,customer_name.ilike.%$searchQuery%');
-      }
-
-      final response = await query
-          .order('created_at', ascending: false)
-          .range(from, to);
-
-      return (response as List)
-          .map((json) => Order.fromJson(json))
-          .toList();
+      return true;
     } catch (e) {
-      throw Exception('Failed to search orders: ${e.toString()}');
+      print('Error assigning delivery person: $e');
+      return false;
     }
   }
 
-  // Simplified search method for older Supabase versions
-  Future<List<Order>> searchOrdersSimple({
-    String? searchQuery,
-    String? statusFilter,
-    int page = 0,
-    int limit = ordersPerPage,
-  }) async {
+  /// Mark order as ready
+  Future<bool> markOrderReady(String orderId) async {
     try {
-      final from = page * limit;
-      final _ = from + limit - 1;
+      await _supabase
+          .from('orders')
+          .update({
+            'status': 'Ready',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderId);
 
-      // Fetch all orders first, then filter locally
-      // This is less efficient but more compatible
-      List<Order> allOrders = await fetchOrders(page: page, limit: limit * 2); // Fetch more to account for filtering
-
-      // Apply filters locally
-      List<Order> filteredOrders = allOrders.where((order) {
-        bool matchesSearch = searchQuery == null || 
-            searchQuery.isEmpty ||
-            order.orderNumber.toLowerCase().contains(searchQuery.toLowerCase()) ||
-            (order.customerName?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false) ||
-            order.status.toLowerCase().contains(searchQuery.toLowerCase());
-
-        bool matchesStatus = statusFilter == null || 
-            statusFilter == 'All' || 
-            order.status == statusFilter;
-
-        return matchesSearch && matchesStatus;
-      }).toList();
-
-      // Apply pagination locally
-      final startIndex = page * limit;
-      final endIndex = (startIndex + limit).clamp(0, filteredOrders.length);
-      
-      if (startIndex >= filteredOrders.length) {
-        return [];
-      }
-
-      return filteredOrders.sublist(startIndex, endIndex);
+      return true;
     } catch (e) {
-      throw Exception('Failed to search orders: ${e.toString()}');
+      print('Error marking order ready: $e');
+      return false;
     }
   }
 
-  Stream<List<Order>> getOrdersStream() {
-    return _supabase
-        .from('orders')
-        .stream(primaryKey: ['order_id'])
-        .order('created_at', ascending: false)
-        .map((data) => data.map((json) => Order.fromJson(json)).toList());
+  /// Mark order as delivered
+  Future<bool> markOrderDelivered(String orderId) async {
+    try {
+      await _supabase
+          .from('orders')
+          .update({
+            'delivery_status': 'Delivered',
+            'delivery_time': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderId);
+
+      return true;
+    } catch (e) {
+      print('Error marking order delivered: $e');
+      return false;
+    }
+  }
+
+  /// Calculate total for order with customizations
+  Future<double> calculateOrderTotal(String orderId) async {
+    try {
+      final itemsResponse = await _supabase
+          .from('order_items')
+          .select()
+          .eq('order_id', orderId);
+
+      double total = 0;
+
+      for (final item in itemsResponse) {
+        final customizationsResponse = await _supabase
+            .from('order_item_customizations')
+            .select()
+            .eq('order_id', orderId)
+            .eq('item_id', item['item_id']);
+
+        double customizationTotal = 0;
+        for (final custom in customizationsResponse) {
+          customizationTotal += custom['additional_price'] ?? 0;
+        }
+
+        final itemTotal =
+            (item['price'] + customizationTotal) * item['quantity'];
+        total += itemTotal;
+      }
+
+      return total;
+    } catch (e) {
+      print('Error calculating order total: $e');
+      return 0;
+    }
   }
 }

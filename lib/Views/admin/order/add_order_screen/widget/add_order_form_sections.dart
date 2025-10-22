@@ -18,7 +18,200 @@ class AddOrderFormSections {
     );
   }
 
-  // Restaurant Selection Dropdown
+  // Special Instructions Field (Order-wide, max 300 chars but displayed as 30 per requirements)
+  static Widget buildSpecialInstructionsField({
+    required TextEditingController controller,
+    required Function(String) onChanged,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: 'Special Instructions (Optional)',
+        hintText: 'e.g., Extra spicy, No onions, etc.',
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.notes),
+        counterText: '${controller.text.length}/300',
+        helperText: 'Add any special instructions for this order',
+      ),
+      maxLines: 3,
+      maxLength: 300,
+      onChanged: onChanged,
+    );
+  }
+
+  // Payment Method Selection
+  static Widget buildPaymentMethodField({
+    required String selectedPaymentMethod,
+    required Function(String?) onChanged,
+  }) {
+    final paymentMethods = ['Cash', 'UPI'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Payment Method',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SegmentedButton<String>(
+          segments: paymentMethods.map((method) {
+            return ButtonSegment<String>(
+              value: method,
+              label: Text(method),
+              icon: method == 'Cash'
+                  ? const Icon(Icons.payments)
+                  : const Icon(Icons.mobile_screen_share),
+            );
+          }).toList(),
+          selected: {selectedPaymentMethod},
+          onSelectionChanged: (Set<String> newSelection) {
+            onChanged(newSelection.first);
+          },
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.selected)) {
+                return Colors.blue[600];
+              }
+              return Colors.white;
+            }),
+            foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.selected)) {
+                return Colors.white;
+              }
+              return Colors.black87;
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Customer Info Display
+  static Widget buildCustomerInfo({
+    required Customer customer,
+    required VoidCallback onClear,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle,
+            color: Colors.green[600],
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Customer: ${customer.name}',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                if (customer.phone != null && customer.phone!.isNotEmpty)
+                  Text(
+                    'Mobile: ${customer.phone}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: onClear,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Order Summary
+  static Widget buildOrderSummary({
+    required Restaurant? selectedRestaurant,
+    required Vendor? selectedVendor,
+    required Customer? selectedCustomer,
+    required int orderItemsCount,
+    required double totalAmount,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Order Summary',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          if (selectedRestaurant != null)
+            _buildSummaryRow('Restaurant:', selectedRestaurant.name),
+          if (selectedVendor != null)
+            _buildSummaryRow('Vendor:', selectedVendor.name),
+          if (selectedCustomer != null)
+            _buildSummaryRow('Customer:', selectedCustomer.name),
+          const SizedBox(height: 8),
+          Divider(color: Colors.blue[200]),
+          const SizedBox(height: 8),
+          _buildSummaryRow(
+            'Items:',
+            '$orderItemsCount item${orderItemsCount != 1 ? 's' : ''}',
+            isHighlight: true,
+          ),
+          const SizedBox(height: 8),
+          _buildSummaryRow(
+            'Total Amount:',
+            '₹${totalAmount.toStringAsFixed(2)}',
+            isHighlight: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: isHighlight ? FontWeight.w600 : FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: isHighlight ? FontWeight.w600 : FontWeight.normal,
+          ),
+          textAlign: TextAlign.right,
+        ),
+      ],
+    );
+  }
+
+  // Restaurant Selection
   static Widget buildRestaurantSelection({
     required Restaurant? selectedRestaurant,
     required List<Restaurant> restaurants,
@@ -51,7 +244,7 @@ class AddOrderFormSections {
     );
   }
 
-  // Vendor Selection Dropdown
+  // Vendor Selection
   static Widget buildVendorSelection({
     required Vendor? selectedVendor,
     required List<Vendor> vendors,
@@ -104,7 +297,7 @@ class AddOrderFormSections {
     );
   }
 
-  // Customer Search Field
+  // Customer Search
   static Widget buildCustomerSearch({
     required TextEditingController controller,
     required Function(String) onChanged,
@@ -126,45 +319,6 @@ class AddOrderFormSections {
       ),
       onChanged: onChanged,
       validator: validator,
-    );
-  }
-
-  // Customer Info Display
-  static Widget buildCustomerInfo({
-    required Customer customer,
-    required VoidCallback onClear,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green[200]!),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Customer: ${customer.name}',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                if (customer.phone != null)
-                  Text('Mobile: ${customer.phone}'),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: onClear,
-          ),
-        ],
-      ),
     );
   }
 
@@ -285,87 +439,6 @@ class AddOrderFormSections {
             const Icon(Icons.calendar_today, color: Colors.grey, size: 20),
           ],
         ),
-      ),
-    );
-  }
-
-  // Order Summary Widget
-  static Widget buildOrderSummary({
-    required Restaurant? selectedRestaurant,
-    required Vendor? selectedVendor,
-    required Customer? selectedCustomer,
-    required int orderItemsCount,
-    required double totalAmount,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Order Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          if (selectedRestaurant != null)
-            _buildSummaryRow('Restaurant:', selectedRestaurant.name),
-          if (selectedVendor != null)
-            _buildSummaryRow('Vendor:', selectedVendor.name),
-          if (selectedCustomer != null)
-            _buildSummaryRow('Customer:', selectedCustomer.name),
-          if (orderItemsCount > 0) ...[
-            const Divider(height: 20),
-            _buildSummaryRow('Total Items:', '$orderItemsCount'),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Amount:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  '₹${totalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  static Widget _buildSummaryRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.black87),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
       ),
     );
   }
