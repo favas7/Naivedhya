@@ -52,7 +52,7 @@ class AddOrderListItems {
     );
   }
 
-  // Order Items List Table
+  // Enhanced Order Items List with Customizations
   static Widget buildOrderItemsList({
     required List<OrderItem> orderItems,
     required Function(int) onRemoveItem,
@@ -111,7 +111,7 @@ class AddOrderListItems {
           ...orderItems.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
-            
+
             return _buildOrderItemRow(
               index: index,
               item: item,
@@ -135,35 +135,76 @@ class AddOrderListItems {
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: Colors.grey[300]!)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              item.itemName ?? 'Unknown Item',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(
-            child: Text('₹${item.price.toStringAsFixed(2)}'),
-          ),
-          Expanded(
-            flex: 2,
-            child: _buildQuantityControls(
-              quantity: item.quantity,
-              onDecrement: () => onUpdateQuantity(index, item.quantity - 1),
-              onIncrement: () => onUpdateQuantity(index, item.quantity + 1),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              '₹${(item.price * item.quantity).toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          IconButton(
-            onPressed: () => onRemoveItem(index),
-            icon: const Icon(Icons.delete, color: Colors.red),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.itemName ?? 'Unknown Item',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    // Show customizations if any
+                    if (item.selectedCustomizations.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      ...item.selectedCustomizations.map((custom) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '  • ${custom.customizationName}: ${custom.selectedOptionName}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('₹${item.price.toStringAsFixed(2)}'),
+                    if (item.customizationAdditionalPrice > 0)
+                      Text(
+                        '+₹${item.customizationAdditionalPrice.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: _buildQuantityControls(
+                  quantity: item.quantity,
+                  onDecrement: () => onUpdateQuantity(index, item.quantity - 1),
+                  onIncrement: () => onUpdateQuantity(index, item.quantity + 1),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '₹${item.totalPrice.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => onRemoveItem(index),
+              ),
+            ],
           ),
         ],
       ),
