@@ -2,7 +2,7 @@
 import 'package:naivedhya/models/user_model.dart';
 
 /// Customer class for EditCustomerDialog compatibility
-class Customer {
+class Customer { 
   final String id;
   final String name;
   final String email;

@@ -1,5 +1,5 @@
 class MenuItem {
-  final String? itemId;
+  final String? itemId; 
   final String restaurantId;
   final String name;
   final String? description;
