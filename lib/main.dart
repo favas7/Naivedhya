@@ -9,7 +9,7 @@ import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
 import 'package:naivedhya/providers/location_provider.dart';
 import 'package:naivedhya/providers/manager_provider.dart';
-// import 'package:naivedhya/providers/order_provider.dart';
+import 'package:naivedhya/providers/order_provider.dart';
 import 'package:naivedhya/providers/theme_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => ManagerProvider()),
         ChangeNotifierProvider(create: (_) => VendorRestaurantProvider()),
-        // ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => DeliveryPersonnelProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ActivityProvider()),
