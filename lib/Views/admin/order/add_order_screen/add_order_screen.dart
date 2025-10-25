@@ -13,7 +13,7 @@ import 'package:naivedhya/models/simple_delivery_person_model.dart';
 
 
 class AddOrderScreen extends StatefulWidget {
-  const AddOrderScreen({Key? key}) : super(key: key);
+  const AddOrderScreen({super.key});
 
   @override
   State<AddOrderScreen> createState() => _AddOrderScreenState();

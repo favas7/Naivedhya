@@ -8,6 +8,7 @@ import 'package:naivedhya/models/simple_delivery_person_model.dart';
 class AddOrderFormSections {
   // Section Header
   static Widget buildSectionHeader(String title) {
+    print('🔍 [DEBUG] buildSectionHeader called with title: $title');
     return Text(
       title,
       style: const TextStyle(
@@ -23,6 +24,10 @@ class AddOrderFormSections {
     required TextEditingController controller,
     required Function(String) onChanged,
   }) {
+    print('🔍 [DEBUG] buildSpecialInstructionsField called');
+    print('🔍 [DEBUG] Current text: "${controller.text}"');
+    print('🔍 [DEBUG] Text length: ${controller.text.length}');
+    
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -35,7 +40,11 @@ class AddOrderFormSections {
       ),
       maxLines: 3,
       maxLength: 300,
-      onChanged: onChanged,
+      onChanged: (value) {
+        print('✏️ [DEBUG] Special instructions changed: "$value"');
+        print('✏️ [DEBUG] Length: ${value.length}');
+        onChanged(value);
+      },
     );
   }
 
@@ -44,6 +53,9 @@ class AddOrderFormSections {
     required String selectedPaymentMethod,
     required Function(String?) onChanged,
   }) {
+    print('🔍 [DEBUG] buildPaymentMethodField called');
+    print('🔍 [DEBUG] Selected payment method: $selectedPaymentMethod');
+    
     final paymentMethods = ['Cash', 'UPI'];
 
     return Column(
@@ -70,6 +82,7 @@ class AddOrderFormSections {
           }).toList(),
           selected: {selectedPaymentMethod},
           onSelectionChanged: (Set<String> newSelection) {
+            print('💳 [DEBUG] Payment method selected: ${newSelection.first}');
             onChanged(newSelection.first);
           },
           style: ButtonStyle(
@@ -96,6 +109,9 @@ class AddOrderFormSections {
     required Customer customer,
     required VoidCallback onClear,
   }) {
+    print('🔍 [DEBUG] buildCustomerInfo called');
+    print('🔍 [DEBUG] Customer: ${customer.name}, Phone: ${customer.phone}');
+    
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(12),
@@ -129,7 +145,10 @@ class AddOrderFormSections {
           ),
           IconButton(
             icon: const Icon(Icons.clear),
-            onPressed: onClear,
+            onPressed: () {
+              print('🗑️ [DEBUG] Customer cleared');
+              onClear();
+            },
           ),
         ],
       ),
@@ -144,6 +163,13 @@ class AddOrderFormSections {
     required int orderItemsCount,
     required double totalAmount,
   }) {
+    print('🔍 [DEBUG] buildOrderSummary called');
+    print('🔍 [DEBUG] Restaurant: ${selectedRestaurant?.name}');
+    print('🔍 [DEBUG] Vendor: ${selectedVendor?.name}');
+    print('🔍 [DEBUG] Customer: ${selectedCustomer?.name}');
+    print('🔍 [DEBUG] Items count: $orderItemsCount');
+    print('🔍 [DEBUG] Total amount: $totalAmount');
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -189,6 +215,8 @@ class AddOrderFormSections {
     String value, {
     bool isHighlight = false,
   }) {
+    print('🔍 [DEBUG] _buildSummaryRow: $label -> $value (highlight: $isHighlight)');
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -218,6 +246,11 @@ class AddOrderFormSections {
     required Function(Restaurant?) onChanged,
     required String? Function(Restaurant?)? validator,
   }) {
+    print('🔍 [DEBUG] buildRestaurantSelection called');
+    print('🔍 [DEBUG] Selected restaurant: ${selectedRestaurant?.name}');
+    print('🔍 [DEBUG] Available restaurants count: ${restaurants.length}');
+    print('🔍 [DEBUG] Restaurants: ${restaurants.map((r) => r.name).toList()}');
+    
     return DropdownButtonFormField<Restaurant>(
       value: selectedRestaurant,
       decoration: const InputDecoration(
@@ -229,6 +262,7 @@ class AddOrderFormSections {
       isExpanded: true,
       itemHeight: 60,
       items: restaurants.map((restaurant) {
+        print('🔍 [DEBUG] Adding restaurant to dropdown: ${restaurant.name}');
         return DropdownMenuItem(
           value: restaurant,
           child: Text(
@@ -238,7 +272,10 @@ class AddOrderFormSections {
           ),
         );
       }).toList(),
-      onChanged: onChanged,
+      onChanged: (value) {
+        print('🏪 [DEBUG] Restaurant selected: ${value?.name}');
+        onChanged(value);
+      },
       validator: validator,
       menuMaxHeight: 300,
     );
@@ -251,7 +288,13 @@ class AddOrderFormSections {
     required Function(Vendor?) onChanged,
     required String? Function(Vendor?)? validator,
   }) {
+    print('🔍 [DEBUG] buildVendorSelection called');
+    print('🔍 [DEBUG] Selected vendor: ${selectedVendor?.name}');
+    print('🔍 [DEBUG] Available vendors count: ${vendors.length}');
+    print('🔍 [DEBUG] Vendors: ${vendors.map((v) => v.name).toList()}');
+    
     if (vendors.isEmpty) {
+      print('⚠️ [DEBUG] No vendors available!');
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -284,6 +327,7 @@ class AddOrderFormSections {
       ),
       isExpanded: true,
       items: vendors.map((vendor) {
+        print('🔍 [DEBUG] Adding vendor to dropdown: ${vendor.name}');
         return DropdownMenuItem(
           value: vendor,
           child: Text(
@@ -292,7 +336,10 @@ class AddOrderFormSections {
           ),
         );
       }).toList(),
-      onChanged: onChanged,
+      onChanged: (value) {
+        print('🏢 [DEBUG] Vendor selected: ${value?.name}');
+        onChanged(value);
+      },
       validator: validator,
     );
   }
@@ -304,6 +351,9 @@ class AddOrderFormSections {
     required VoidCallback onAddNewCustomer,
     required String? Function(String?)? validator,
   }) {
+    print('🔍 [DEBUG] buildCustomerSearch called');
+    print('🔍 [DEBUG] Current search: "${controller.text}"');
+    
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -313,11 +363,17 @@ class AddOrderFormSections {
         prefixIcon: const Icon(Icons.search),
         suffixIcon: IconButton(
           icon: const Icon(Icons.add),
-          onPressed: onAddNewCustomer,
+          onPressed: () {
+            print('➕ [DEBUG] Add new customer button pressed');
+            onAddNewCustomer();
+          },
           tooltip: 'Add New Customer',
         ),
       ),
-      onChanged: onChanged,
+      onChanged: (value) {
+        print('🔍 [DEBUG] Customer search changed: "$value"');
+        onChanged(value);
+      },
       validator: validator,
     );
   }
@@ -328,6 +384,10 @@ class AddOrderFormSections {
     required List<String> statusOptions,
     required Function(String?) onChanged,
   }) {
+    print('🔍 [DEBUG] buildDeliveryStatusDropdown called');
+    print('🔍 [DEBUG] Selected status: $selectedStatus');
+    print('🔍 [DEBUG] Status options: $statusOptions');
+    
     return DropdownButtonFormField<String>(
       value: selectedStatus,
       decoration: const InputDecoration(
@@ -338,7 +398,10 @@ class AddOrderFormSections {
       items: statusOptions.map((status) {
         return DropdownMenuItem(value: status, child: Text(status));
       }).toList(),
-      onChanged: onChanged,
+      onChanged: (value) {
+        print('📦 [DEBUG] Delivery status changed: $value');
+        onChanged(value);
+      },
     );
   }
 
@@ -349,6 +412,12 @@ class AddOrderFormSections {
     required bool hasSelectedRestaurant,
     required Function(String?) onChanged,
   }) {
+    print('🔍 [DEBUG] buildDeliveryPersonDropdown called');
+    print('🔍 [DEBUG] Selected person ID: $selectedPersonId');
+    print('🔍 [DEBUG] Available delivery persons count: ${deliveryPersons.length}');
+    print('🔍 [DEBUG] Has selected restaurant: $hasSelectedRestaurant');
+    print('🔍 [DEBUG] Delivery persons: ${deliveryPersons.map((p) => p.displayName).toList()}');
+    
     return DropdownButtonFormField<String>(
       value: selectedPersonId,
       isExpanded: true,
@@ -366,6 +435,7 @@ class AddOrderFormSections {
           child: Text('Select Delivery Partner (Optional)'),
         ),
         ...deliveryPersons.map((person) {
+          print('🔍 [DEBUG] Adding delivery person to dropdown: ${person.displayName} (${person.city}, ${person.state})');
           return DropdownMenuItem(
             value: person.userId,
             child: SizedBox(
@@ -399,7 +469,10 @@ class AddOrderFormSections {
           );
         }),
       ],
-      onChanged: onChanged,
+      onChanged: (value) {
+        print('👤 [DEBUG] Delivery person selected: $value');
+        onChanged(value);
+      },
       menuMaxHeight: 300,
       itemHeight: 56,
     );
@@ -410,8 +483,14 @@ class AddOrderFormSections {
     required DateTime? proposedDeliveryTime,
     required VoidCallback onTap,
   }) {
+    print('🔍 [DEBUG] buildDeliveryTimeField called');
+    print('🔍 [DEBUG] Proposed delivery time: $proposedDeliveryTime');
+    
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        print('⏰ [DEBUG] Delivery time field tapped');
+        onTap();
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
