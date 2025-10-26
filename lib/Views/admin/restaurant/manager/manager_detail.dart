@@ -24,7 +24,7 @@ class ManagerDetailScreen extends StatefulWidget {
 }
 
 class _ManagerDetailScreenState extends State<ManagerDetailScreen> {
-  final SupabaseService _supabaseService = SupabaseService();
+  final RestaurantService _supabaseService = RestaurantService();
   final ManagerService _managerService = ManagerService();
   final ImagePicker _imagePicker = ImagePicker();
   

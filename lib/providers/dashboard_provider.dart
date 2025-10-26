@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/services/restaurant_service.dart';
 
 class DashboardProvider extends ChangeNotifier {
-  final SupabaseService _supabaseService = SupabaseService();
+  final _supabaseService = RestaurantService();
   
   // Dashboard stats
   int _totalUsers = 0;

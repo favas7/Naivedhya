@@ -5,7 +5,7 @@ import 'package:naivedhya/services/location_service.dart';
 
 class LocationProvider extends ChangeNotifier {
   final LocationService _locationService = LocationService();
-  final SupabaseService _supabaseService = SupabaseService(); // Add this
+  final RestaurantService _supabaseService = RestaurantService(); // Add this
   
   List<Location> _locations = [];
   bool _isLoading = false;

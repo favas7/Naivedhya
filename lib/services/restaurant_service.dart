@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/location.dart';
 import '../models/manager.dart';
 
-class SupabaseService {
+class RestaurantService {
   final SupabaseClient _client = Supabase.instance.client;
   final SupabaseClient client = Supabase.instance.client;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;

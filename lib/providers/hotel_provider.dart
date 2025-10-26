@@ -4,7 +4,7 @@ import 'package:naivedhya/services/restaurant_service.dart';
 
 
 class RestaurantProvider with ChangeNotifier {
-  final SupabaseService _supabaseService = SupabaseService();
+  final RestaurantService _supabaseService = RestaurantService();
   
   List<Restaurant> _restaurants = [];
   bool _isLoading = false;

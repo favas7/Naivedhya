@@ -32,7 +32,7 @@ class ExpandableRestaurantCard extends StatefulWidget {
 
 class _ExpandableRestaurantCardState extends State<ExpandableRestaurantCard>
     with TickerProviderStateMixin {
-  final SupabaseService _supabaseService = SupabaseService();
+  final RestaurantService _supabaseService = RestaurantService();
   final MenuService _menuService = MenuService();
   
   bool _isExpanded = false;

@@ -21,7 +21,7 @@ class LocationDetailScreen extends StatefulWidget {
 }
 
 class _LocationDetailScreenState extends State<LocationDetailScreen> {
-  final SupabaseService _supabaseService = SupabaseService();
+  final RestaurantService _supabaseService = RestaurantService();
   List<Location> _locations = [];
   bool _isLoading = true;
   String? _error;

@@ -11,7 +11,7 @@ class OrderService {
   static const String _tableName = 'orders';
   static const int _pageSize = 10;
 
-  final SupabaseService _restaurantService = SupabaseService();
+  final _restaurantService = RestaurantService();
   final VendorService _vendorService = VendorService();
   final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
   final OrderItemService _orderItemService = OrderItemService();

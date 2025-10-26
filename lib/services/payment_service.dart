@@ -9,7 +9,7 @@ class PaymentService {
 
   PaymentService._();
 
-  final SupabaseClient _client = SupabaseService().client;
+  final SupabaseClient _client =  RestaurantService().client;
 
   /// Fetch payments with pagination and search
   Future<List<Payment>> getPayments({

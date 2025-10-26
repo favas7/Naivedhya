@@ -19,7 +19,7 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  late SupabaseService _restaurantService;
+  late RestaurantService _restaurantService;
   late VendorService _vendorService;
   
   Map<String, dynamic>? _restaurantDetails;
@@ -30,7 +30,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _restaurantService = SupabaseService();
+    _restaurantService = RestaurantService();
     _vendorService = VendorService();
     _loadDetails();
   }

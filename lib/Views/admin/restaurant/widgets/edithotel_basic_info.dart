@@ -21,7 +21,7 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
-  final SupabaseService _supabaseService = SupabaseService();
+  final RestaurantService _supabaseService = RestaurantService();
   bool _isLoading = false;
 
   @override
