@@ -34,34 +34,34 @@ class _VendorScreenState extends State<VendorScreen> {
   }
 
   // Fetch vendors for a specific Restaurant
-  Future<void> _loadVendorsForRestaurant(String RestaurantId) async {
-    if (_vendorsCache.containsKey(RestaurantId) || _isLoadingVendors[RestaurantId] == true) return;
+  Future<void> _loadVendorsForRestaurant(String restaurantId) async {
+    if (_vendorsCache.containsKey(restaurantId) || _isLoadingVendors[restaurantId] == true) return;
 
     // Use addPostFrameCallback to ensure setState is called after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {
-          _isLoadingVendors[RestaurantId] = true;
-          _vendorErrors[RestaurantId] = null;
+          _isLoadingVendors[restaurantId] = true;
+          _vendorErrors[restaurantId] = null;
         });
       }
     });
 
     try {
       final vendorService = VendorService();
-      final vendors = await vendorService.getVendorsByRestaurant(RestaurantId);
+      final vendors = await vendorService.getVendorsByRestaurant(restaurantId);
       
       if (mounted) {
         setState(() {
-          _vendorsCache[RestaurantId] = vendors;
-          _isLoadingVendors[RestaurantId] = false;
+          _vendorsCache[restaurantId] = vendors;
+          _isLoadingVendors[restaurantId] = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _vendorErrors[RestaurantId] = e.toString();
-          _isLoadingVendors[RestaurantId] = false;
+          _vendorErrors[restaurantId] = e.toString();
+          _isLoadingVendors[restaurantId] = false;
         });
       }
     }

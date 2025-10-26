@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/location.dart';
-import 'package:naivedhya/services/hotel_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/services/location_service.dart';
 
 class LocationProvider extends ChangeNotifier {

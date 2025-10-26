@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/location/add_location_dialogue.dart';
 import 'package:naivedhya/Views/admin/restaurant/location/edit_location.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/services/hotel_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/location.dart';
 

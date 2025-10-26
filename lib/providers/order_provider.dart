@@ -1,3 +1,4 @@
+// providers/order_provider_enhanced.dart
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/services/order/order_service.dart';
@@ -7,14 +8,19 @@ class OrderProvider extends ChangeNotifier {
 
   // State variables
   List<Order> _orders = [];
+  List<Map<String, dynamic>> _ordersWithDetails = [];
+  Map<String, dynamic>? _selectedOrderDetails;
   String? _selectedStatusFilter;
   int _currentPage = 0;
   bool _isLoading = false;
   bool _hasMorePages = true;
   String? _errorMessage;
+  bool _useEnrichedData = true; // Toggle between basic and enriched data
 
   // Getters
   List<Order> get orders => _orders;
+  List<Map<String, dynamic>> get ordersWithDetails => _ordersWithDetails;
+  Map<String, dynamic>? get selectedOrderDetails => _selectedOrderDetails;
   String? get selectedStatusFilter => _selectedStatusFilter;
   int get currentPage => _currentPage;
   bool get isLoading => _isLoading;
@@ -22,8 +28,9 @@ class OrderProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isEmpty => _orders.isEmpty && !isLoading;
 
-  /// Initialize - fetch first page of orders
-  Future<void> initialize() async {
+  /// Initialize - fetch first page of orders with enriched data
+  Future<void> initialize({bool useEnrichedData = true}) async {
+    _useEnrichedData = useEnrichedData;
     await fetchOrders(page: 0);
   }
 
@@ -34,28 +41,63 @@ class OrderProvider extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
+      if (_useEnrichedData) {
+        await _fetchOrdersEnriched(page);
+      } else {
+        await _fetchOrdersBasic(page);
+      }
+
+      // Check if more pages are available
+      _hasMorePages = (_useEnrichedData ? _ordersWithDetails : _orders).length > (page * 10);
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Fetch orders with enriched data (restaurant, vendor, delivery details)
+  Future<void> _fetchOrdersEnriched(int page) async {
+    try {
+      final newOrdersWithDetails = await _orderService.fetchOrdersWithDetails(
+        page: page,
+        statusFilter: _selectedStatusFilter,
+      );
+
+      if (page == 0) {
+        _ordersWithDetails = newOrdersWithDetails;
+        _currentPage = 0;
+      } else {
+        _ordersWithDetails.addAll(newOrdersWithDetails);
+        _currentPage = page;
+      }
+
+      _hasMorePages = newOrdersWithDetails.length == 10;
+    } catch (e) {
+      throw Exception('Failed to fetch enriched orders: $e');
+    }
+  }
+
+  /// Fetch orders with basic data only
+  Future<void> _fetchOrdersBasic(int page) async {
+    try {
       final newOrders = await _orderService.fetchOrders(
         page: page,
         statusFilter: _selectedStatusFilter,
       );
 
       if (page == 0) {
-        // Replace list for first page
         _orders = newOrders;
         _currentPage = 0;
       } else {
-        // Append for subsequent pages
         _orders.addAll(newOrders);
         _currentPage = page;
       }
 
-      // Check if more pages are available
       _hasMorePages = newOrders.length == 10;
     } catch (e) {
-      _errorMessage = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      throw Exception('Failed to fetch orders: $e');
     }
   }
 
@@ -82,6 +124,26 @@ class OrderProvider extends ChangeNotifier {
       return order;
     } catch (e) {
       _errorMessage = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Get single order with enriched details
+  Future<Map<String, dynamic>?> getOrderByIdWithDetails(String orderId) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      _selectedOrderDetails = await _orderService.fetchOrderByIdWithDetails(orderId);
+      
+      _isLoading = false;
+      notifyListeners();
+      return _selectedOrderDetails;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
       notifyListeners();
       return null;
     }
@@ -167,6 +229,7 @@ class OrderProvider extends ChangeNotifier {
 
       // Remove from local list
       _orders.removeWhere((o) => o.orderId == orderId);
+      _ordersWithDetails.removeWhere((od) => od['order'].orderId == orderId);
 
       _isLoading = false;
       notifyListeners();
@@ -189,6 +252,12 @@ class OrderProvider extends ChangeNotifier {
   /// Clear error message
   void clearError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  /// Clear selected order details
+  void clearSelectedOrderDetails() {
+    _selectedOrderDetails = null;
     notifyListeners();
   }
 }

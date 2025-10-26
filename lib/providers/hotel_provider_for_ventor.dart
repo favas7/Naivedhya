@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/services/hotel_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 
 
 class VendorRestaurantProvider with ChangeNotifier {

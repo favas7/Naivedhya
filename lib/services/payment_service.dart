@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:naivedhya/models/payment_model.dart';
-import 'package:naivedhya/services/hotel_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaymentService {

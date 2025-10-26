@@ -13,7 +13,7 @@ import 'package:naivedhya/Views/admin/restaurant/widgets/hotel_card_status_row.d
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/models/location.dart';
-import 'package:naivedhya/services/hotel_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/services/menu_service.dart';
 
 class ExpandableRestaurantCard extends StatefulWidget {

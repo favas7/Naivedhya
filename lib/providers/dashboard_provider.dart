@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/services/hotel_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();

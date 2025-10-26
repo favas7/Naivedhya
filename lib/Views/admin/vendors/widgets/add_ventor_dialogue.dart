@@ -58,9 +58,9 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                 // Restaurant Selection (if not pre-selected)
                 if (widget.restaurant == null) ...[
                   Consumer<RestaurantProvider>(
-                    builder: (context, RestaurantProvider, child) {
+                    builder: (context, restaurantProvider, child) {
                       return DropdownButtonFormField<Restaurant>(
-                        value: _selectedRestaurant,
+                        initialValue: _selectedRestaurant,
                         decoration: InputDecoration(
                           labelText: 'Select Restaurant',
                           prefixIcon: const Icon(Icons.restaurant),
@@ -72,7 +72,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                             borderSide: const BorderSide(color: AppTheme.primary),
                           ),
                         ),
-                        items: RestaurantProvider.restaurants.map((restaurant) {
+                        items: restaurantProvider.restaurants.map((restaurant) {
                           return DropdownMenuItem<Restaurant>(
                             value: restaurant,
                             child: Text(restaurant.name),

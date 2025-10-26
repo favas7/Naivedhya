@@ -182,24 +182,24 @@ class SupabaseService {
     }
   }
 
-  // Get location by Restaurant ID
-  Future<Location?> getLocationByrestaurantId(String restaurantId) async {
-    try {
-      final response = await _client
-          .from('locations')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .maybeSingle();
+  // // Get location by Restaurant ID
+  // Future<Location?> getLocationByrestaurantId(String restaurantId) async {
+  //   try {
+  //     final response = await _client
+  //         .from('locations')
+  //         .select()
+  //         .eq('hotel_id', restaurantId)
+  //         .maybeSingle();
 
-      if (response != null) {
-        return Location.fromJson(response);
-      }
-      return null;
-    } catch (e) {
-      print('Error getting location by Restaurant ID: $e');
-      return null;
-    }
-  }
+  //     if (response != null) {
+  //       return Location.fromJson(response);
+  //     }
+  //     return null;
+  //   } catch (e) {
+  //     print('Error getting location by Restaurant ID: $e');
+  //     return null;
+  //   }
+  // }
 
   // FIXED: Update Restaurant - only allow name and address updates for basic info
   Future<Restaurant?> updateRestaurantBasicInfo(String restaurantId, String name, String address) async {
@@ -589,4 +589,244 @@ class SupabaseService {
       return false;
     }
   }
+
+
+getRestaurantDetails(String restaurantId) async {
+    try {
+      final restaurant = await getRestaurantById(restaurantId);
+      if (restaurant == null) return null;
+
+      final manager = await getManagerByrestaurantId(restaurantId);
+      final location = await getLocationByrestaurantId(restaurantId);
+
+      return {
+        'restaurant': restaurant,
+        'manager': manager,
+        'location': location,
+      };
+    } catch (e) {
+      print('Error getting Restaurant details: $e');
+      return null;
+    }
+  }
+
+  
+  /// Get order by ID
+Future<Map<String, dynamic>?> getOrderById(String orderId) async {
+  try {
+    final response = await _client
+        .from('orders')
+        .select()
+        .eq('order_id', orderId)
+        .maybeSingle();
+
+    if (response == null) {
+      print('Order not found with ID: $orderId');
+      return null;
+    }
+
+    return response;
+  } catch (e) {
+    print('Error getting order by ID: $e');
+    return null;
+  }
+}
+
+/// Get all orders for a restaurant
+Future<List<Map<String, dynamic>>> getOrdersByRestaurant(String restaurantId) async {
+  try {
+    final response = await _client
+        .from('orders')
+        .select()
+        .eq('hotel_id', restaurantId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    print('Error getting orders by restaurant: $e');
+    return [];
+  }
+}
+
+/// Get all orders for a vendor
+Future<List<Map<String, dynamic>>> getOrdersByVendor(String vendorId) async {
+  try {
+    final response = await _client
+        .from('orders')
+        .select()
+        .eq('vendor_id', vendorId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    print('Error getting orders by vendor: $e');
+    return [];
+  }
+}
+
+/// Get orders with pagination
+Future<List<Map<String, dynamic>>> getOrdersPaginated({
+  int limit = 20,
+  int offset = 0,
+  String? status,
+  String? restaurantId,
+}) async {
+  try {
+    var query = _client.from('orders').select();
+
+    if (status != null) {
+      query = query.eq('status', status);
+    }
+
+    if (restaurantId != null) {
+      query = query.eq('hotel_id', restaurantId);
+    }
+
+    final response = await query
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    print('Error getting paginated orders: $e');
+    return [];
+  }
+}
+
+/// Get order with related restaurant and vendor details
+Future<Map<String, dynamic>?> getOrderWithDetails(String orderId) async {
+  try {
+    final orderResponse = await _client
+        .from('orders')
+        .select()
+        .eq('order_id', orderId)
+        .maybeSingle();
+
+    if (orderResponse == null) return null;
+
+    final order = orderResponse;
+    
+    // Fetch restaurant details
+    final restaurant = await getRestaurantById(order['hotel_id']);
+    
+    // Vendor details are already in the VendorService
+    
+    return {
+      ...order,
+      'restaurant': restaurant?.toJson(),
+    };
+  } catch (e) {
+    print('Error getting order with details: $e');
+    return null;
+  }
+}
+
+/// Update order status
+Future<bool> updateOrderStatus(String orderId, String status) async {
+  try {
+    await _client
+        .from('orders')
+        .update({
+          'status': status,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('order_id', orderId);
+
+    return true;
+  } catch (e) {
+    print('Error updating order status: $e');
+    return false;
+  }
+}
+
+/// Update delivery status
+Future<bool> updateDeliveryStatus(String orderId, String deliveryStatus) async {
+  try {
+    await _client
+        .from('orders')
+        .update({
+          'delivery_status': deliveryStatus,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('order_id', orderId);
+
+    return true;
+  } catch (e) {
+    print('Error updating delivery status: $e');
+    return false;
+  }
+}
+
+/// Get orders by status
+Future<List<Map<String, dynamic>>> getOrdersByStatus(String status) async {
+  try {
+    final response = await _client
+        .from('orders')
+        .select()
+        .eq('status', status)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    print('Error getting orders by status: $e');
+    return [];
+  }
+}
+
+// ============= FIX FOR RESTAURANT LOCATION QUERY =============
+
+// /// FIXED: Get location by Restaurant ID - returns first location or null
+// Future<Location?> getLocationByRestaurantIdFixed(String restaurantId) async {
+//   try {
+//     final response = await _client
+//         .from('locations')
+//         .select()
+//         .eq('hotel_id', restaurantId)
+//         .limit(1);  // Only get the first location
+
+//     if ((response as List).isEmpty) return null;
+
+//     return Location.fromJson(response[0]);
+//   } catch (e) {
+//     print('Error getting location by Restaurant ID: $e');
+//     return null;
+//   }
+// }
+
+/// Alternative: Get all locations for a Restaurant
+Future<List<Location>> getLocationsByRestaurantId(String restaurantId) async {
+  try {
+    final response = await _client
+        .from('locations')
+        .select()
+        .eq('hotel_id', restaurantId);
+
+    return (response as List)
+        .map((json) => Location.fromJson(json))
+        .toList();
+  } catch (e) {
+    print('Error getting locations by Restaurant ID: $e');
+    return [];
+  }
+}
+
+// ============= REPLACE THIS EXISTING METHOD =============
+// Replace your existing getLocationByrestaurantId (line 186) with this:
+
+Future<Location?> getLocationByrestaurantId(String restaurantId) async {
+  try {
+    final response = await _client
+        .from('locations')
+        .select()
+        .eq('hotel_id', restaurantId)
+        .limit(1);  // Add this to only get first location
+
+    if ((response as List).isEmpty) return null;
+
+    return Location.fromJson(response[0]);
+  } catch (e) {
+    print('Error getting location by Restaurant ID: $e');
+    return null;
+  }
+}
 }
