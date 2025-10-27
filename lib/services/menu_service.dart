@@ -1,173 +1,246 @@
-// lib/services/menu_service.dart
-// ignore_for_file: avoid_print
-
-import 'package:naivedhya/models/menu_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:naivedhya/models/menu_model.dart';
 
 class MenuService {
-  final SupabaseClient _client = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  // ============================================================================
-  // EXISTING METHODS (Keep all your current functionality)
-  // ============================================================================
-
-  // Create a new menu item
-  Future<MenuItem?> createMenuItem(MenuItem menuItem) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .insert(menuItem.toJson())
-          .select()
-          .single();
-
-      return MenuItem.fromJson(response);
-    } catch (e) {
-      print('Error creating menu item: $e');
-      return null;
-    }
-  }
-
-  // Get all menu items for a specific Restaurant (compatibility method)
-  Future<List<MenuItem>> getMenuItemsByRestaurant(String restaurantId) async {
-    return getAvailableMenuItems(restaurantId);
-  }
-
-  // Get all menu items for a specific Restaurant
+  /// Get all menu items for a restaurant with their customizations
   Future<List<MenuItem>> getMenuItems(String restaurantId) async {
     try {
-      final response = await _client
+      // First, get menu items
+      final response = await _supabase
           .from('menu_items')
           .select()
           .eq('hotel_id', restaurantId)
-          .order('created_at', ascending: false);
+          .order('name');
 
-      return (response as List)
-          .map((json) => MenuItem.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error getting menu items: $e');
-      return [];
-    }
-  }
-
-  // Get menu items by category for a Restaurant
-  Future<List<MenuItem>> getMenuItemsByCategory(
-      String restaurantId, String category) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .eq('category', category)
-          .order('name', ascending: true);
-
-      return (response as List)
-          .map((json) => MenuItem.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error getting menu items by category: $e');
-      return [];
-    }
-  }
-
-  // Get available menu items for a Restaurant
-  Future<List<MenuItem>> getAvailableMenuItems(String restaurantId) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .eq('is_available', true)
-          .order('name', ascending: true);
-
-      return (response as List)
-          .map((json) => MenuItem.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error getting available menu items: $e');
-      return [];
-    }
-  }
-
-  // Get menu item by ID
-  Future<MenuItem?> getMenuItemById(String itemId) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('item_id', itemId)
-          .maybeSingle();
-
-      if (response != null) {
-        return MenuItem.fromJson(response);
-      }
-      return null;
-    } catch (e) {
-      print('Error getting menu item by ID: $e');
-      return null;
-    }
-  }
-
-  // Search menu items by name or description
-  Future<List<MenuItem>> searchMenuItems(
-      String restaurantId, String query) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .eq('is_available', true)
-          .ilike('name', '%$query%')
-          .order('name', ascending: true);
-
-      return (response as List)
-          .map((json) => MenuItem.fromJson(json))
-          .toList();
-    } catch (e) {
-      try {
-        // Fallback: search by name OR description
-        final response = await _client
-            .from('menu_items')
-            .select()
-            .eq('hotel_id', restaurantId)
-            .eq('is_available', true)
-            .or('name.ilike.%$query%,description.ilike.%$query%')
-            .order('name', ascending: true);
-
-        return (response as List)
-            .map((json) => MenuItem.fromJson(json))
-            .toList();
-      } catch (e2) {
-        print('Error searching menu items: $e2');
+      if (response.isEmpty) {
         return [];
       }
+
+      // Then, for each item, fetch its customizations separately
+      List<MenuItem> menuItems = [];
+      
+      for (var itemData in response) {
+        // Fetch customizations for this item
+        final customizationsResponse = await _supabase
+            .from('menu_item_customizations')
+            .select()
+            .eq('item_id', itemData['item_id'])
+            .order('display_order');
+        
+        // For each customization, fetch its options
+        List<Map<String, dynamic>> customizationsWithOptions = [];
+        
+        for (var customizationData in customizationsResponse) {
+          final optionsResponse = await _supabase
+              .from('customization_options')
+              .select()
+              .eq('customization_id', customizationData['customization_id'])
+              .order('display_order');
+          
+          customizationData['options'] = optionsResponse;
+          customizationsWithOptions.add(customizationData);
+        }
+              
+        // Add customizations to the item data
+        itemData['customizations'] = customizationsWithOptions;
+        
+        menuItems.add(MenuItem.fromJson(itemData));
+      }
+
+      return menuItems;
+    } catch (e) {
+      print('Error fetching menu items: $e');
+      rethrow;
     }
   }
 
-  // Update menu item
-  Future<MenuItem?> updateMenuItem(String itemId, MenuItem menuItem) async {
+  /// Get a single menu item by ID with customizations
+  Future<MenuItem?> getMenuItem(String itemId) async {
     try {
-      final updateData = menuItem.toJson();
-      updateData['updated_at'] = DateTime.now().toIso8601String();
-
-      final response = await _client
+      // Get menu item
+      final response = await _supabase
           .from('menu_items')
-          .update(updateData)
+          .select()
           .eq('item_id', itemId)
+          .single();
+
+      // Fetch customizations
+      final customizationsResponse = await _supabase
+          .from('menu_item_customizations')
+          .select()
+          .eq('item_id', itemId)
+          .order('display_order');
+      
+      // For each customization, fetch its options
+      List<Map<String, dynamic>> customizationsWithOptions = [];
+      
+      for (var customizationData in customizationsResponse) {
+        final optionsResponse = await _supabase
+            .from('customization_options')
+            .select()
+            .eq('customization_id', customizationData['customization_id'])
+            .order('display_order');
+        
+        customizationData['options'] = optionsResponse;
+        customizationsWithOptions.add(customizationData);
+      }
+          
+      response['customizations'] = customizationsWithOptions;
+      
+      return MenuItem.fromJson(response);
+    } catch (e) {
+      print('Error fetching menu item: $e');
+      return null;
+    }
+  }
+
+  /// Create a new menu item with customizations
+  Future<bool> createMenuItem(MenuItem menuItem) async {
+    try {
+      // 1. First, insert the menu item WITHOUT customizations
+      final itemData = menuItem.toJson();
+      itemData.remove('customizations');
+      itemData.remove('created_at');
+      itemData.remove('updated_at');
+      
+      final response = await _supabase
+          .from('menu_items')
+          .insert(itemData)
           .select()
           .single();
 
-      return MenuItem.fromJson(response);
+      final String newItemId = response['item_id'];
+
+      // 2. Then, insert customizations separately if any exist
+      if (menuItem.customizations.isNotEmpty) {
+        for (int i = 0; i < menuItem.customizations.length; i++) {
+          final customization = menuItem.customizations[i];
+          
+          // Insert customization
+          final customizationData = {
+            'item_id': newItemId,
+            'name': customization.name,
+            'type': customization.type,
+            'base_price': customization.basePrice,
+            'is_required': customization.isRequired,
+            'display_order': i,
+          };
+          
+          final customizationResponse = await _supabase
+              .from('menu_item_customizations')
+              .insert(customizationData)
+              .select()
+              .single();
+          
+          final String customizationId = customizationResponse['customization_id'];
+          
+          // Insert options for this customization
+          if (customization.options.isNotEmpty) {
+            final optionsData = customization.options.asMap().entries.map((entry) {
+              return {
+                'customization_id': customizationId,
+                'name': entry.value.name,
+                'additional_price': entry.value.additionalPrice,
+                'display_order': entry.key,
+              };
+            }).toList();
+            
+            await _supabase
+                .from('customization_options')
+                .insert(optionsData);
+          }
+        }
+      }
+
+      return true;
     } catch (e) {
-      print('Error updating menu item: $e');
-      return null;
+      print('Error creating menu item: $e');
+      return false;
     }
   }
 
-  // Delete menu item
+  /// Update an existing menu item
+  Future<bool> updateMenuItem(MenuItem menuItem) async {
+    if (menuItem.itemId == null) return false;
+
+    try {
+      // 1. Update the menu item WITHOUT customizations
+      final itemData = {
+        'name': menuItem.name,
+        'description': menuItem.description,
+        'price': menuItem.price,
+        'is_available': menuItem.isAvailable,
+        'category': menuItem.category,
+        'stock_quantity': menuItem.stockQuantity,
+        'low_stock_threshold': menuItem.lowStockThreshold,
+      };
+      
+      await _supabase
+          .from('menu_items')
+          .update(itemData)
+          .eq('item_id', menuItem.itemId!);
+
+      // 2. Delete old customizations (CASCADE will delete options too)
+      await _supabase
+          .from('menu_item_customizations')
+          .delete()
+          .eq('item_id', menuItem.itemId!);
+
+      // 3. Insert new customizations (same as create method)
+      if (menuItem.customizations.isNotEmpty) {
+        for (int i = 0; i < menuItem.customizations.length; i++) {
+          final customization = menuItem.customizations[i];
+          
+          final customizationData = {
+            'item_id': menuItem.itemId!,
+            'name': customization.name,
+            'type': customization.type,
+            'base_price': customization.basePrice,
+            'is_required': customization.isRequired,
+            'display_order': i,
+          };
+          
+          final customizationResponse = await _supabase
+              .from('menu_item_customizations')
+              .insert(customizationData)
+              .select()
+              .single();
+          
+          final String customizationId = customizationResponse['customization_id'];
+          
+          if (customization.options.isNotEmpty) {
+            final optionsData = customization.options.asMap().entries.map((entry) {
+              return {
+                'customization_id': customizationId,
+                'name': entry.value.name,
+                'additional_price': entry.value.additionalPrice,
+                'display_order': entry.key,
+              };
+            }).toList();
+            
+            await _supabase
+                .from('customization_options')
+                .insert(optionsData);
+          }
+        }
+      }
+
+      return true;
+    } catch (e) {
+      print('Error updating menu item: $e');
+      return false;
+    }
+  }
+
+  /// Delete a menu item (CASCADE will delete customizations and options)
   Future<bool> deleteMenuItem(String itemId) async {
     try {
-      await _client.from('menu_items').delete().eq('item_id', itemId);
+      await _supabase
+          .from('menu_items')
+          .delete()
+          .eq('item_id', itemId);
       return true;
     } catch (e) {
       print('Error deleting menu item: $e');
@@ -175,244 +248,27 @@ class MenuService {
     }
   }
 
-  // Update menu item availability
-  Future<bool> updateMenuItemAvailability(
-      String itemId, bool isAvailable) async {
+  /// Update menu item availability
+  Future<bool> updateMenuItemAvailability(String itemId, bool isAvailable) async {
     try {
-      await _client
+      await _supabase
           .from('menu_items')
-          .update({
-            'is_available': isAvailable,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
+          .update({'is_available': isAvailable})
           .eq('item_id', itemId);
       return true;
     } catch (e) {
-      print('Error updating menu item availability: $e');
+      print('Error updating availability: $e');
       return false;
     }
   }
 
-  // Get menu item count for a Restaurant
-  Future<int> getMenuItemCount(String restaurantId) async {
+  /// Update stock quantity
+  Future<bool> updateStockQuantity(String itemId, int quantity) async {
     try {
-      final response = await _client
+      await _supabase
           .from('menu_items')
-          .select('item_id')
-          .eq('hotel_id', restaurantId);
-
-      return (response as List).length;
-    } catch (e) {
-      print('Error getting menu item count: $e');
-      return 0;
-    }
-  }
-
-  // Get available menu item count for a Restaurant
-  Future<int> getAvailableMenuItemCount(String restaurantId) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select('item_id')
-          .eq('hotel_id', restaurantId)
-          .eq('is_available', true);
-
-      return (response as List).length;
-    } catch (e) {
-      print('Error getting available menu item count: $e');
-      return 0;
-    }
-  }
-
-  // Get distinct categories for a Restaurant
-  Future<List<String>> getMenuCategories(String restaurantId) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select('category')
-          .eq('hotel_id', restaurantId)
-          .not('category', 'is', null);
-
-      final categories = (response as List)
-          .map((item) => item['category'] as String)
-          .toSet() // Remove duplicates
-          .toList();
-
-      categories.sort(); // Sort alphabetically
-      return categories;
-    } catch (e) {
-      print('Error getting menu categories: $e');
-      return [];
-    }
-  }
-
-  // Bulk update menu item availability
-  Future<bool> bulkUpdateAvailability(
-      List<String> itemIds, bool isAvailable) async {
-    try {
-      await _client
-          .from('menu_items')
-          .update({
-            'is_available': isAvailable,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .inFilter('item_id', itemIds);
-      return true;
-    } catch (e) {
-      print('Error bulk updating menu item availability: $e');
-      return false;
-    }
-  }
-
-  // Get menu statistics for a Restaurant
-  Future<Map<String, dynamic>> getMenuStatistics(String restaurantId) async {
-    try {
-      final allItems = await getMenuItems(restaurantId);
-      final availableItems =
-          allItems.where((item) => item.isAvailable).toList();
-      final categories = await getMenuCategories(restaurantId);
-
-      double averagePrice = 0.0;
-      if (allItems.isNotEmpty) {
-        averagePrice = allItems
-                .map((item) => item.price)
-                .reduce((a, b) => a + b) /
-            allItems.length;
-      }
-
-      return {
-        'totalItems': allItems.length,
-        'availableItems': availableItems.length,
-        'unavailableItems': allItems.length - availableItems.length,
-        'totalCategories': categories.length,
-        'averagePrice': averagePrice,
-        'categories': categories,
-      };
-    } catch (e) {
-      print('Error getting menu statistics: $e');
-      return {
-        'totalItems': 0,
-        'availableItems': 0,
-        'unavailableItems': 0,
-        'totalCategories': 0,
-        'averagePrice': 0.0,
-        'categories': <String>[],
-      };
-    }
-  }
-
-  // ============================================================================
-  // NEW METHODS - CUSTOMIZATION & INVENTORY SUPPORT
-  // ============================================================================
-
-  /// Get menu items WITH customizations and inventory
-  Future<List<MenuItem>> getAvailableMenuItemsWithCustomizations(
-      String restaurantId) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .eq('is_available', true)
-          .order('name', ascending: true);
-
-      List<MenuItem> menuItems = [];
-
-      for (final itemData in response) {
-        final itemId = itemData['item_id'];
-        final customizations = await _getCustomizationsForItem(itemId);
-
-        menuItems.add(
-          MenuItem.fromJson({
-            ...itemData,
-            'customizations': customizations,
-          }),
-        );
-      }
-
-      return menuItems;
-    } catch (e) {
-      print('Error fetching menu items with customizations: $e');
-      return [];
-    }
-  }
-
-  /// Get customizations for a specific menu item
-  Future<List<Map<String, dynamic>>> _getCustomizationsForItem(
-      String itemId) async {
-    try {
-      final customizationsResponse = await _client
-          .from('menu_item_customizations')
-          .select()
-          .eq('item_id', itemId)
-          .order('display_order', ascending: true);
-
-      List<Map<String, dynamic>> customizations = [];
-
-      for (final customData in customizationsResponse) {
-        final customizationId = customData['customization_id'];
-
-        // Fetch options for this customization
-        final optionsResponse = await _client
-            .from('customization_options')
-            .select()
-            .eq('customization_id', customizationId)
-            .order('display_order', ascending: true);
-
-        customizations.add({
-          ...customData,
-          'options': optionsResponse,
-        });
-      }
-
-      return customizations;
-    } catch (e) {
-      print('Error fetching customizations: $e');
-      return [];
-    }
-  }
-
-  /// Get single menu item with full customization details
-  Future<MenuItem?> getMenuItemWithCustomizations(String itemId) async {
-    try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('item_id', itemId)
-          .single();
-
-      final customizations = await _getCustomizationsForItem(itemId);
-
-      return MenuItem.fromJson({
-        ...response,
-        'customizations': customizations,
-      });
-    } catch (e) {
-      print('Error fetching menu item with customizations: $e');
-      return null;
-    }
-  }
-
-  /// Update item stock after order
-  Future<bool> updateItemStock(String itemId, int quantityOrdered) async {
-    try {
-      // Get current stock
-      final item = await _client
-          .from('menu_items')
-          .select('stock_quantity')
-          .eq('item_id', itemId)
-          .single();
-
-      final currentStock = item['stock_quantity'] as int;
-      final newStock =
-          (currentStock - quantityOrdered).clamp(0, double.infinity).toInt();
-
-      // Update stock
-      await _client
-          .from('menu_items')
-          .update({'stock_quantity': newStock})
+          .update({'stock_quantity': quantity})
           .eq('item_id', itemId);
-
       return true;
     } catch (e) {
       print('Error updating stock: $e');
@@ -420,72 +276,39 @@ class MenuService {
     }
   }
 
-  /// Check if item is in stock
-  Future<bool> isItemInStock(String itemId) async {
+  /// Get all unique categories for a restaurant
+  Future<List<String?>> getMenuCategories(String restaurantId) async {
     try {
-      final response = await _client
+      final response = await _supabase
           .from('menu_items')
-          .select('stock_quantity, is_available')
-          .eq('item_id', itemId)
-          .single();
+          .select('category')
+          .eq('hotel_id', restaurantId)
+          .not('category', 'is', null);
 
-      final stockQuantity = response['stock_quantity'] as int;
-      final isAvailable = response['is_available'] as bool;
-
-      return isAvailable && stockQuantity > 0;
-    } catch (e) {
-      print('Error checking stock: $e');
-      return false;
-    }
-  }
-
-  /// Get items by category with stock info
-  Future<Map<String, List<MenuItem>>> getMenuItemsByCategoryWithStock(
-      String restaurantId) async {
-    try {
-      final items = await getAvailableMenuItemsWithCustomizations(restaurantId);
-
-      Map<String, List<MenuItem>> itemsByCategory = {};
-      for (final item in items) {
-        final category = item.category ?? 'Uncategorized';
-        if (!itemsByCategory.containsKey(category)) {
-          itemsByCategory[category] = [];
-        }
-        itemsByCategory[category]!.add(item);
+      if (response.isEmpty) {
+        return [];
       }
 
-      return itemsByCategory;
+      // Extract unique categories
+      final categories = response
+          .map((item) => item['category'] as String?)
+          .where((category) => category != null && category.isNotEmpty)
+          .toSet()
+          .toList();
+
+      categories.sort();
+      return categories;
     } catch (e) {
-      print('Error grouping items by category: $e');
-      return {};
+      print('Error fetching categories: $e');
+      return [];
     }
   }
 
-  /// Get low stock items for a restaurant
+  /// Get low stock items
   Future<List<MenuItem>> getLowStockItems(String restaurantId) async {
     try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .lte('stock_quantity', 5)
-          .gt('stock_quantity', 0);
-
-      List<MenuItem> menuItems = [];
-
-      for (final itemData in response) {
-        final itemId = itemData['item_id'];
-        final customizations = await _getCustomizationsForItem(itemId);
-
-        menuItems.add(
-          MenuItem.fromJson({
-            ...itemData,
-            'customizations': customizations,
-          }),
-        );
-      }
-
-      return menuItems;
+      final items = await getMenuItems(restaurantId);
+      return items.where((item) => item.isLowStock).toList();
     } catch (e) {
       print('Error fetching low stock items: $e');
       return [];
@@ -495,104 +318,79 @@ class MenuService {
   /// Get out of stock items
   Future<List<MenuItem>> getOutOfStockItems(String restaurantId) async {
     try {
-      final response = await _client
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .eq('stock_quantity', 0);
-
-      List<MenuItem> menuItems = [];
-
-      for (final itemData in response) {
-        final itemId = itemData['item_id'];
-        final customizations = await _getCustomizationsForItem(itemId);
-
-        menuItems.add(
-          MenuItem.fromJson({
-            ...itemData,
-            'customizations': customizations,
-          }),
-        );
-      }
-
-      return menuItems;
+      final items = await getMenuItems(restaurantId);
+      return items.where((item) => !item.isInStock).toList();
     } catch (e) {
       print('Error fetching out of stock items: $e');
       return [];
     }
   }
 
-  /// Bulk update stock for multiple items
-  Future<bool> bulkUpdateStock(
-      Map<String, int> itemQuantityMap) async {
-    try {
-      for (final entry in itemQuantityMap.entries) {
-        await updateItemStock(entry.key, entry.value);
-      }
-      return true;
-    } catch (e) {
-      print('Error bulk updating stock: $e');
-      return false;
-    }
+  /// Bulk update availability
+/// Bulk update availability
+Future<bool> bulkUpdateAvailability(List<String> itemIds, bool isAvailable) async {
+  try {
+    await _supabase
+        .from('menu_items')
+        .update({'is_available': isAvailable})
+        .inFilter('item_id', itemIds);
+    return true;
+  } catch (e) {
+    print('Error bulk updating availability: $e');
+    return false;
   }
+}
 
-  /// Get inventory statistics
-  Future<Map<String, dynamic>> getInventoryStatistics(
-      String restaurantId) async {
+  /// Search menu items
+  Future<List<MenuItem>> searchMenuItems(String restaurantId, String query) async {
     try {
-      final allItems = await getMenuItems(restaurantId);
-
-      int inStock = 0;
-      int lowStock = 0;
-      int outOfStock = 0;
-      int totalQuantity = 0;
-
-      for (final item in allItems) {
-        if (item.stockQuantity > 0 && item.stockQuantity <= item.lowStockThreshold) {
-          lowStock++;
-        } else if (item.stockQuantity <= 0) {
-          outOfStock++;
-        } else {
-          inStock++;
-        }
-        totalQuantity += item.stockQuantity;
+      final items = await getMenuItems(restaurantId);
+      
+      if (query.isEmpty) {
+        return items;
       }
 
-      return {
-        'inStock': inStock,
-        'lowStock': lowStock,
-        'outOfStock': outOfStock,
-        'totalItems': allItems.length,
-        'totalQuantity': totalQuantity,
-      };
+      final lowerQuery = query.toLowerCase();
+      return items.where((item) {
+        return item.name.toLowerCase().contains(lowerQuery) ||
+               (item.description?.toLowerCase().contains(lowerQuery) ?? false) ||
+               (item.category?.toLowerCase().contains(lowerQuery) ?? false);
+      }).toList();
     } catch (e) {
-      print('Error getting inventory statistics: $e');
-      return {
-        'inStock': 0,
-        'lowStock': 0,
-        'outOfStock': 0,
-        'totalItems': 0,
-        'totalQuantity': 0,
-      };
+      print('Error searching menu items: $e');
+      return [];
     }
   }
 
-  /// Update stock threshold for item
-  Future<bool> updateStockThreshold(
-      String itemId, int newThreshold) async {
-    try {
-      await _client
-          .from('menu_items')
-          .update({
-            'low_stock_threshold': newThreshold,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('item_id', itemId);
+  
+/// Get total count of menu items for a restaurant
+Future<int> getMenuItemCount(String restaurantId) async {
+  try {
+    final response = await _supabase
+        .from('menu_items')
+        .select('item_id')
+        .eq('hotel_id', restaurantId);
 
-      return true;
-    } catch (e) {
-      print('Error updating stock threshold: $e');
-      return false;
-    }
+    return response.length;
+  } catch (e) {
+    print('Error fetching menu item count: $e');
+    return 0;
   }
+}
+
+/// Get count of available menu items for a restaurant
+Future<int> getAvailableMenuItemCount(String restaurantId) async {
+  try {
+    final response = await _supabase
+        .from('menu_items')
+        .select('item_id', )
+        .eq('hotel_id', restaurantId)
+        .eq('is_available', true);
+
+    return response.length;
+  } catch (e) {
+    print('Error fetching available menu item count: $e');
+    return 0;
+  }
+}
 }

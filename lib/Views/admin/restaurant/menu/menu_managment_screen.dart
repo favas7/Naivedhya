@@ -54,7 +54,7 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
       
       setState(() {
         _menuItems = items;
-        _categories = ['All', ...categories];
+        _categories = ['All', ...categories.whereType<String>()];
         _filteredItems = items;
         _isLoading = false;
       });

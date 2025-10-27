@@ -350,7 +350,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 2:
         return const OrdersScreen();
       case 3:
-        return const RestaurantScreen();
+        return  const RestaurantScreenEnhanced();
       case 4:
         return const VendorScreen();
       case 5:
