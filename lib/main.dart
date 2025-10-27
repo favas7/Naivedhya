@@ -5,8 +5,8 @@ import 'package:naivedhya/firebase_options.dart';
 import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
-import 'package:naivedhya/providers/hotel_provider.dart';
-import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
+import 'package:naivedhya/providers/restaurant_provider.dart';
+import 'package:naivedhya/providers/restaurant_provider_for_ventor.dart';
 import 'package:naivedhya/providers/location_provider.dart';
 import 'package:naivedhya/providers/manager_provider.dart';
 import 'package:naivedhya/providers/order_provider.dart';
@@ -27,11 +27,11 @@ void main() async {
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
-  );
+  );  
 
   runApp(const MyApp());
 }
-
+ 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

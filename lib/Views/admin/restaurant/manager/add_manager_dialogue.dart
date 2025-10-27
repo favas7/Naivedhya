@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/providers/hotel_provider.dart';
+import 'package:naivedhya/providers/restaurant_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/manager.dart';
 import 'package:naivedhya/providers/manager_provider.dart'; // Changed import

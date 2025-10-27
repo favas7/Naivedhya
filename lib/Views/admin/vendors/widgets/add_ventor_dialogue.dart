@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/providers/hotel_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/services/ventor_Service.dart';
-import 'package:provider/provider.dart';
-
-// Assuming AppTheme is not imported, adding a simple color definition
 
 class AddVendorDialog extends StatefulWidget {
-  final Restaurant? restaurant; // If provided, vendor will be added to this specific Restaurant
+  final Restaurant? restaurant;
+  final Vendor? vendor;
+  final List<Restaurant>? availableRestaurants; // ✅ NEW: Accept restaurants list
   
-  const AddVendorDialog({super.key, this.restaurant,  Vendor? vendor});
+  const AddVendorDialog({
+    super.key, 
+    this.restaurant, 
+    this.vendor,
+    this.availableRestaurants, // ✅ NEW
+  });
 
   @override
   State<AddVendorDialog> createState() => _AddVendorDialogState();
@@ -22,15 +25,24 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _companyController = TextEditingController();
   final _serviceTypeController = TextEditingController();
   bool _isLoading = false;
   Restaurant? _selectedRestaurant;
+
+  bool get _isEditMode => widget.vendor != null;
 
   @override
   void initState() {
     super.initState();
     _selectedRestaurant = widget.restaurant;
+    
+    // Pre-fill fields if editing
+    if (_isEditMode) {
+      _nameController.text = widget.vendor!.name;
+      _emailController.text = widget.vendor!.email;
+      _phoneController.text = widget.vendor!.phone;
+      _serviceTypeController.text = widget.vendor!.serviceType;
+    }
   }
 
   @override
@@ -38,79 +50,129 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _companyController.dispose();
     _serviceTypeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add New Vendor'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
+    final colors = AppTheme.of(context);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Restaurant Selection (if not pre-selected)
-                if (widget.restaurant == null) ...[
-                  Consumer<RestaurantProvider>(
-                    builder: (context, restaurantProvider, child) {
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _isEditMode ? 'Edit Vendor' : 'Add New Vendor',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // ✅ UPDATED: Restaurant Selection (if not pre-selected)
+                if (widget.restaurant == null && !_isEditMode) ...[
+                  Builder(
+                    builder: (context) {
+                      // Use passed restaurants or empty list
+                      final restaurants = widget.availableRestaurants ?? [];
+                      
+                      // Show empty state if no restaurants
+                      if (restaurants.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colors.warning.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.warning.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: colors.warning),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'No restaurants available. Please add a restaurant first.',
+                                  style: TextStyle(color: colors.warning, fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      
+                      // Show dropdown with restaurants
                       return DropdownButtonFormField<Restaurant>(
-                        initialValue: _selectedRestaurant,
+                        value: _selectedRestaurant,
                         decoration: InputDecoration(
                           labelText: 'Select Restaurant',
-                          prefixIcon: const Icon(Icons.restaurant),
+                          prefixIcon: Icon(Icons.restaurant, color: colors.primary),
+                          filled: true,
+                          fillColor: colors.background,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppTheme.primary),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                         ),
-                        items: restaurantProvider.restaurants.map((restaurant) {
+                        items: restaurants.map((restaurant) {
                           return DropdownMenuItem<Restaurant>(
                             value: restaurant,
                             child: Text(restaurant.name),
                           );
                         }).toList(),
                         onChanged: (restaurant) {
-                          setState(() {
-                            _selectedRestaurant = restaurant;
-                          });
+                          setState(() => _selectedRestaurant = restaurant);
                         },
                         validator: (value) {
-                          if (value == null) {
-                            return 'Please select a Restaurant';
-                          }
+                          if (value == null) return 'Please select a restaurant';
                           return null;
                         },
                       );
                     },
                   ),
                   const SizedBox(height: 16),
-                ] else ...[
+                ] else if (widget.restaurant != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue[200]!),
+                      color: colors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colors.primary.withOpacity(0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.restaurant, color: Colors.blue),
+                        Icon(Icons.restaurant, color: colors.primary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Adding vendor to: ${widget.restaurant!.name}',
+                            'Restaurant: ${widget.restaurant!.name}',
                             style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w600,
+                              color: colors.primary,
                             ),
                           ),
                         ),
@@ -119,20 +181,19 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 // Vendor Name
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Vendor Name',
                     hintText: 'Enter vendor name',
-                    prefixIcon: const Icon(Icons.person),
+                    prefixIcon: Icon(Icons.person, color: colors.primary),
+                    filled: true,
+                    fillColor: colors.background,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.primary),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator: (value) {
@@ -145,6 +206,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     return null;
                   },
                   textInputAction: TextInputAction.next,
+                  enabled: !_isLoading,
                 ),
                 const SizedBox(height: 16),
 
@@ -154,13 +216,12 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                   decoration: InputDecoration(
                     labelText: 'Email Address',
                     hintText: 'Enter email address',
-                    prefixIcon: const Icon(Icons.email),
+                    prefixIcon: Icon(Icons.email, color: colors.primary),
+                    filled: true,
+                    fillColor: colors.background,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.primary),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   keyboardType: TextInputType.emailAddress,
@@ -168,12 +229,14 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter email address';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                      return 'Please enter a valid email address';
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
+                      return 'Please enter a valid email';
                     }
                     return null;
                   },
                   textInputAction: TextInputAction.next,
+                  enabled: !_isLoading,
                 ),
                 const SizedBox(height: 16),
 
@@ -183,13 +246,12 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
                     hintText: 'Enter phone number',
-                    prefixIcon: const Icon(Icons.phone),
+                    prefixIcon: Icon(Icons.phone, color: colors.primary),
+                    filled: true,
+                    fillColor: colors.background,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.primary),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   keyboardType: TextInputType.phone,
@@ -203,31 +265,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     return null;
                   },
                   textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 16),
-
-                // Company Name
-                TextFormField(
-                  controller: _companyController,
-                  decoration: InputDecoration(
-                    labelText: 'Company Name',
-                    hintText: 'Enter company name',
-                    prefixIcon: const Icon(Icons.business),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.primary),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter company name';
-                    }
-                    return null;
-                  },
-                  textInputAction: TextInputAction.next,
+                  enabled: !_isLoading,
                 ),
                 const SizedBox(height: 16),
 
@@ -236,14 +274,13 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                   controller: _serviceTypeController,
                   decoration: InputDecoration(
                     labelText: 'Service Type',
-                    hintText: 'e.g., Food & Beverage, Maintenance, Cleaning',
-                    prefixIcon: const Icon(Icons.work),
+                    hintText: 'e.g., Food & Beverage, Maintenance',
+                    prefixIcon: Icon(Icons.work, color: colors.primary),
+                    filled: true,
+                    fillColor: colors.background,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.primary),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                   validator: (value) {
@@ -253,6 +290,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                     return null;
                   },
                   textInputAction: TextInputAction.done,
+                  enabled: !_isLoading,
                 ),
                 const SizedBox(height: 16),
 
@@ -260,121 +298,143 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green[200]!),
+                    color: colors.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colors.info.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: Colors.green,
-                      ),
+                      Icon(Icons.info_outline, size: 20, color: colors.info),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'The vendor will be notified via email about their registration.',
+                          'Vendor will be notified via email about registration',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.green[700],
+                            color: colors.info,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // Actions
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(_isEditMode ? 'Update Vendor' : 'Add Vendor'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleSubmit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: Colors.white,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text('Add Vendor'),
-        ),
-      ],
     );
   }
 
-Future<void> _handleSubmit() async {
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  if (_selectedRestaurant == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please select a Restaurant'),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    return;
-  }
-
-  setState(() {
-    _isLoading = true;
-  });
-
-  try {
-    final vendorService = VendorService();
-    final newVendor = Vendor(
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      serviceType: _serviceTypeController.text.trim(),
-      restaurantId: _selectedRestaurant!.id,
-    );
-
-    await vendorService.createVendor(newVendor);
-
-    if (mounted) {
-      Navigator.of(context).pop();
+    if (_selectedRestaurant == null && !_isEditMode) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Vendor "${_nameController.text.trim()}" added successfully to ${_selectedRestaurant!.name}!',
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
+        const SnackBar(
+          content: Text('Please select a restaurant'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
     }
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+
+    setState(() => _isLoading = true);
+
+    try {
+      final vendorService = VendorService();
+      
+      if (_isEditMode) {
+        // Update existing vendor
+        final updatedVendor = widget.vendor!.copyWith(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          serviceType: _serviceTypeController.text.trim(),
+        );
+        
+        await vendorService.updateVendor(updatedVendor);
+        
+        if (mounted) {
+          Navigator.of(context).pop(true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Vendor updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Create new vendor
+        final newVendor = Vendor(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          phone: _phoneController.text.trim(),
+          serviceType: _serviceTypeController.text.trim(),
+          restaurantId: _selectedRestaurant!.id,
+        );
+
+        await vendorService.createVendor(newVendor);
+
+        if (mounted) {
+          Navigator.of(context).pop(true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Vendor "${_nameController.text.trim()}" added to ${_selectedRestaurant!.name}!',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/add_hotel_dialogue.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/restaurant_card.dart';
-import 'package:naivedhya/providers/hotel_provider.dart';
+import 'package:naivedhya/providers/restaurant_provider.dart';
 import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/services/menu_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';

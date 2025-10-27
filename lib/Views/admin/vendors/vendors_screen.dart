@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/Views/admin/restaurant/widgets/add_hotel_dialogue.dart';
-import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/models/ventor_model.dart';
+import 'package:naivedhya/Views/admin/vendors/vendor_details_screen/vendor_details_screen.dart';
 import 'package:naivedhya/Views/admin/vendors/widgets/add_ventor_dialogue.dart';
-import 'package:naivedhya/Views/admin/vendors/widgets/custom_error_widget.dart';
-import 'package:naivedhya/Views/admin/vendors/widgets/loading_widget.dart';
-import 'package:naivedhya/providers/hotel_provider.dart';
-import 'package:naivedhya/providers/hotel_provider_for_ventor.dart';
+import 'package:naivedhya/Views/admin/vendors/widgets/ventor_card.dart';
+import 'package:naivedhya/models/ventor_model.dart';
+import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/services/ventor_Service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';
-import 'package:provider/provider.dart';
 
 class VendorScreen extends StatefulWidget {
   const VendorScreen({super.key});
@@ -19,520 +16,562 @@ class VendorScreen extends StatefulWidget {
 }
 
 class _VendorScreenState extends State<VendorScreen> {
-  // Map to store vendors for each Restaurant
-  final Map<String, List<Vendor>> _vendorsCache = {};
-  final Map<String, bool> _isLoadingVendors = {};
-  final Map<String, String?> _vendorErrors = {};
+  final VendorService _vendorService = VendorService();
+  final RestaurantService _restaurantService = RestaurantService();
+
+  List<Vendor> _vendors = [];
+  List<Vendor> _filteredVendors = [];
+  final Map<String, String> _restaurantNames = {}; // vendorId -> restaurantName
+  List<String> _serviceTypes = [];
+  List<Restaurant> _restaurants = [];
+
+  bool _isLoading = true;
+  bool _isGridView = true; // Toggle between grid and list
+  String _searchQuery = '';
+  String _selectedServiceType = 'All';
+  String? _selectedRestaurantId;
+
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Load Restaurants for current user when screen initializes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<VendorRestaurantProvider>().loadRestaurantsForCurrentUser();
-    });
+    _loadData();
   }
 
-  // Fetch vendors for a specific Restaurant
-  Future<void> _loadVendorsForRestaurant(String restaurantId) async {
-    if (_vendorsCache.containsKey(restaurantId) || _isLoadingVendors[restaurantId] == true) return;
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    // Use addPostFrameCallback to ensure setState is called after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _isLoadingVendors[restaurantId] = true;
-          _vendorErrors[restaurantId] = null;
-        });
-      }
-    });
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
 
     try {
-      final vendorService = VendorService();
-      final vendors = await vendorService.getVendorsByRestaurant(restaurantId);
-      
-      if (mounted) {
-        setState(() {
-          _vendorsCache[restaurantId] = vendors;
-          _isLoadingVendors[restaurantId] = false;
-        });
+      // Load restaurants first
+      _restaurants = await _restaurantService.getRestaurants();
+
+      // Load all vendors
+      final vendorMaps = await _vendorService.fetchAllActiveVendors();
+      _vendors = vendorMaps.map((map) {
+        return Vendor(
+          id: map['vendor_id'],
+          name: map['name'] ?? 'Unknown',
+          email: map['email'] ?? '',
+          phone: map['phone'] ?? '',
+          serviceType: map['service_type'] ?? 'General',
+          restaurantId: map['hotel_id'],
+          isActive: true,
+        );
+      }).toList();
+
+      // Build restaurant names map
+      for (var vendor in _vendors) {
+        if (vendor.restaurantId != null) {
+          final restaurant = _restaurants.firstWhere(
+            (r) => r.id == vendor.restaurantId,
+            orElse: () => Restaurant(name: 'Unknown', address: ''),
+          );
+          _restaurantNames[vendor.id!] = restaurant.name;
+        }
       }
+
+      // Extract unique service types
+      _serviceTypes = ['All', ..._vendors.map((v) => v.serviceType).toSet().toList()];
+
+      _filteredVendors = _vendors;
+      setState(() => _isLoading = false);
     } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
-        setState(() {
-          _vendorErrors[restaurantId] = e.toString();
-          _isLoadingVendors[restaurantId] = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading vendors: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
+  void _filterVendors() {
+    List<Vendor> filtered = _vendors;
+
+    // Filter by service type
+    if (_selectedServiceType != 'All') {
+      filtered = filtered.where((v) => v.serviceType == _selectedServiceType).toList();
+    }
+
+    // Filter by restaurant
+    if (_selectedRestaurantId != null) {
+      filtered = filtered.where((v) => v.restaurantId == _selectedRestaurantId).toList();
+    }
+
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((v) {
+        return v.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            v.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            v.serviceType.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+
+    setState(() => _filteredVendors = filtered);
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() => _searchQuery = query);
+    _filterVendors();
+  }
+
+  void _onServiceTypeChanged(String? type) {
+    setState(() => _selectedServiceType = type ?? 'All');
+    _filterVendors();
+  }
+
+  void _onRestaurantChanged(String? restaurantId) {
+    setState(() => _selectedRestaurantId = restaurantId);
+    _filterVendors();
+  }
+
+  // ✅ UPDATED: Pass restaurants to the dialog
+  Future<void> _showAddVendorDialog({Restaurant? restaurant}) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AddVendorDialog(
+        restaurant: restaurant,
+        availableRestaurants: _restaurants, // ✅ Pass the restaurants list
+      ),
+    );
+
+    if (result == true) {
+      _loadData();
+    }
+  }
+
+  Future<void> _showEditVendorDialog(Vendor vendor) async {
+    // TODO: Implement edit dialog
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Edit functionality coming soon')),
+    );
+  }
+
+  Future<void> _deleteVendor(Vendor vendor) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Vendor'),
+        content: Text('Are you sure you want to delete "${vendor.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && vendor.id != null) {
+      try {
+        await _vendorService.deleteVendor(vendor.id!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Vendor deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+void _showVendorDetails(Vendor vendor) {
+  if (vendor.id != null) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VendorDetailsScreen(vendorId: vendor.id!),
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Vendor ID not found')),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth > 768;
+    final colors = AppTheme.of(context);
 
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: Column(
+        children: [
+          _buildHeader(colors),
+          Expanded(
+            child: _isLoading ? _buildLoading(colors) : _buildContent(colors),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddVendorDialog(),
+        backgroundColor: colors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Vendor'),
+      ),
+    );
+  }
+
+  Widget _buildHeader(AppThemeColors colors) {
     return Container(
-      padding: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
-      color: Colors.grey[100],
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(isDesktop),
-          const SizedBox(height: 24),
-          _buildActionButtons(context),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: _buildContent(context, isDesktop),
+          // Title Row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vendor Management',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Manage your restaurant vendors and suppliers',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              // View Toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: colors.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.grid_view,
+                        color: _isGridView ? colors.primary : colors.textSecondary,
+                      ),
+                      onPressed: () => setState(() => _isGridView = true),
+                      tooltip: 'Grid View',
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.view_list,
+                        color: !_isGridView ? colors.primary : colors.textSecondary,
+                      ),
+                      onPressed: () => setState(() => _isGridView = false),
+                      tooltip: 'List View',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Search and Filters
+          Row(
+            children: [
+              // Search Bar
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Search vendors...',
+                    prefixIcon: Icon(Icons.search, color: colors.textSecondary),
+                    filled: true,
+                    fillColor: colors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Service Type Filter
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: colors.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: DropdownButton<String>(
+                  value: _selectedServiceType,
+                  underline: const SizedBox(),
+                  icon: Icon(Icons.arrow_drop_down, color: colors.textSecondary),
+                  items: _serviceTypes.map((type) {
+                    return DropdownMenuItem(value: type, child: Text(type));
+                  }).toList(),
+                  onChanged: _onServiceTypeChanged,
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Restaurant Filter
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: colors.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: DropdownButton<String?>(
+                  value: _selectedRestaurantId,
+                  hint: const Text('All Restaurants'),
+                  underline: const SizedBox(),
+                  icon: Icon(Icons.arrow_drop_down, color: colors.textSecondary),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('All Restaurants'),
+                    ),
+                    ..._restaurants.map((restaurant) {
+                      return DropdownMenuItem<String?>(
+                        value: restaurant.id,
+                        child: Text(restaurant.name),
+                      );
+                    }).toList(),
+                  ],
+                  onChanged: _onRestaurantChanged,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(bool isDesktop) {
-    return Text(
-      'Restaurant & Vendors Management',
-      style: TextStyle(
-        fontSize: isDesktop ? 28 : 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
+  Widget _buildLoading(AppThemeColors colors) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: colors.primary),
+          const SizedBox(height: 16),
+          Text(
+            'Loading Vendors...',
+            style: TextStyle(fontSize: 16, color: colors.textSecondary),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
-    return Consumer<RestaurantProvider>(
-      builder: (context, RestaurantProvider, child) {
-        return Row(
-          children: [
-            ElevatedButton.icon(
-              onPressed: () => _showAddRestaurantDialog(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromRGBO(255, 100, 47, 1),
-                foregroundColor: Colors.white,
-              ),
-              icon: const Icon(Icons.restaurant),
-              label: const Text('Add New Restaurant'),
-            ),
-            const SizedBox(width: 12),
-            if (RestaurantProvider.restaurants.isNotEmpty)
-              ElevatedButton.icon(
-                onPressed: () => _showAddVendorDialog(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-                icon: const Icon(Icons.person_add),
-                label: const Text('Add Vendor'),
-              ),
-          ],
+  Widget _buildContent(AppThemeColors colors) {
+    if (_filteredVendors.isEmpty) {
+      return _buildEmptyState(colors);
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      color: colors.primary,
+      child: Column(
+        children: [
+          // Stats Bar
+          _buildStatsBar(colors),
+
+          // Vendors Grid/List
+          Expanded(
+            child: _isGridView ? _buildGridView() : _buildListView(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsBar(AppThemeColors colors) {
+    final activeCount = _vendors.where((v) => v.isActive).length;
+    final serviceTypeCount = _serviceTypes.length - 1; // Exclude 'All'
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: colors.textSecondary.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(colors, 'Total', _vendors.length.toString(), Icons.people),
+          _buildStatItem(colors, 'Active', activeCount.toString(), Icons.check_circle),
+          _buildStatItem(colors, 'Services', serviceTypeCount.toString(), Icons.business_center),
+          _buildStatItem(colors, 'Showing', _filteredVendors.length.toString(), Icons.visibility),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(AppThemeColors colors, String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: colors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 20, color: colors.primary),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: colors.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: colors.textSecondary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGridView() {
+    return GridView.builder(
+      padding: const EdgeInsets.all(24),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 400,
+        childAspectRatio: 1.0,
+        crossAxisSpacing: 24,
+        mainAxisSpacing: 24,
+        mainAxisExtent: 280,
+      ),
+      itemCount: _filteredVendors.length,
+      itemBuilder: (context, index) {
+        final vendor = _filteredVendors[index];
+        return VendorCard(
+          vendor: vendor,
+          restaurantName: _restaurantNames[vendor.id],
+          onEdit: () => _showEditVendorDialog(vendor),
+          onDelete: () => _deleteVendor(vendor),
+          onViewDetails: () => _showVendorDetails(vendor),
         );
       },
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isDesktop) {
-    return Consumer<VendorRestaurantProvider>(
-      builder: (context, vendorRestaurantProvider, child) {
-        if (vendorRestaurantProvider.isLoading) {
-          return const LoadingWidget();
-        }
-
-        if (vendorRestaurantProvider.error != null) {
-          return CustomErrorWidget(
-            message: vendorRestaurantProvider.error!,
-            onRetry: () => vendorRestaurantProvider.loadRestaurantsForCurrentUser(),
-          );
-        }
-
-        if (vendorRestaurantProvider.restaurants.isEmpty) {
-          return _buildEmptyState();
-        }
-
-        return _buildRestaurantsList(vendorRestaurantProvider.restaurants, isDesktop);
+  Widget _buildListView() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: _filteredVendors.length,
+      itemBuilder: (context, index) {
+        final vendor = _filteredVendors[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: VendorCard(
+            vendor: vendor,
+            restaurantName: _restaurantNames[vendor.id],
+            onEdit: () => _showEditVendorDialog(vendor),
+            onDelete: () => _deleteVendor(vendor),
+            onViewDetails: () => _showVendorDetails(vendor),
+          ),
+        );
       },
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppThemeColors colors) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.restaurant,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No Restaurants Found',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: colors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Create your first Restaurant to start managing vendors',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
+            child: Icon(
+              _vendors.isEmpty ? Icons.business_center : Icons.search_off,
+              size: 60,
+              color: colors.primary,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _showAddRestaurantDialog(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromRGBO(255, 100, 47, 1),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('Create Restaurant'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRestaurantsList(List<Restaurant> Restaurants, bool isDesktop) {
-    return ListView.builder(
-      itemCount: Restaurants.length,
-      itemBuilder: (context, index) {
-        final Restaurant = Restaurants[index];
-        // Schedule vendor loading after the current build completes
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _loadVendorsForRestaurant(Restaurant.id!);
-        });
-        return _buildRestaurantCard(Restaurant, isDesktop);
-      },
-    );
-  }
-
-  Widget _buildRestaurantCard(Restaurant Restaurant, bool isDesktop) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 1,
-      child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: Color.fromRGBO(255, 100, 47, 1),
-          child: const Icon(
-            Icons.restaurant,
-            color: Colors.white,
-          ),
-        ),
-        title: Text(
-          Restaurant.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              Restaurant.address,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Admin: ${Restaurant.adminEmail ?? 'Not assigned'}',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) => _handleRestaurantAction(value, Restaurant),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: ListTile(
-                leading: Icon(Icons.edit, size: 20),
-                title: Text('Edit Restaurant'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'add_vendor',
-              child: ListTile(
-                leading: Icon(Icons.person_add, size: 20),
-                title: Text('Add Vendor'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: ListTile(
-                leading: Icon(Icons.delete, size: 20, color: Colors.red),
-                title: Text('Delete Restaurant', style: TextStyle(color: Colors.red)),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildRestaurantDetails(Restaurant),
-                const SizedBox(height: 16),
-                _buildVendorsList(Restaurant),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRestaurantDetails(Restaurant Restaurant) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Restaurant Details',
+          Text(
+            _vendors.isEmpty ? 'No Vendors Yet' : 'No vendors found',
             style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          _buildDetailRow('Restaurant ID', Restaurant.id ?? 'N/A'),
-          _buildDetailRow('Created', _formatDate(Restaurant.createdAt)),
-          _buildDetailRow('Last Updated', _formatDate(Restaurant.updatedAt)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+          Text(
+            _vendors.isEmpty
+                ? 'Start by adding your first vendor'
+                : 'Try adjusting your search or filters',
+            style: TextStyle(fontSize: 16, color: colors.textSecondary),
+          ),
+          if (_vendors.isEmpty) ...[
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () => _showAddVendorDialog(),
+              icon: const Icon(Icons.add),
+              label: const Text('Add Vendor'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVendorsList(Restaurant restaurant) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(8), 
-        border: Border.all(color: AppTheme.primary),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Vendors',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _showAddVendorDialog(context, restaurant),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add Vendor'),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _isLoadingVendors[restaurant.id] == true
-              ? const LoadingWidget()
-              : _vendorErrors[restaurant.id] != null
-                  ? CustomErrorWidget(
-                      message: _vendorErrors[restaurant.id]!,
-                      onRetry: () => _loadVendorsForRestaurant(restaurant.id!),
-                    )
-                  : _vendorsCache[restaurant.id]?.isEmpty ?? true
-                      ? const Text(
-                          'No vendors found for this Restaurant.',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        )
-                      : Column(
-                          children: _vendorsCache[restaurant.id]!
-                              .map((vendor) => _buildVendorItem(vendor))
-                              .toList(),
-                        ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVendorItem(Vendor vendor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 12,
-            backgroundColor: Color.fromRGBO(255, 100, 47, 1),
-            child: Text(
-              vendor.name.isNotEmpty ? vendor.name[0].toUpperCase() : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  vendor.name,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  vendor.email.isNotEmpty ? vendor.email : 'No email provided',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => _showEditVendorDialog(context, vendor),
-            icon: const Icon(Icons.edit, size: 16),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'N/A';
-    return '${date.day}/${date.month}/${date.year}';
-  }
-
-  void _handleRestaurantAction(String action, Restaurant Restaurant) {
-    switch (action) {
-      case 'edit':
-        _showEditRestaurantDialog(context, Restaurant);
-        break;
-      case 'add_vendor':
-        _showAddVendorDialog(context, Restaurant);
-        break;
-      case 'delete':
-        _showDeleteConfirmation(context, Restaurant);
-        break;
-    }
-  }
-
-  void _showAddRestaurantDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const AddRestaurantDialog(),
-    );
-  }
-
-  void _showEditRestaurantDialog(BuildContext context, Restaurant Restaurant) {
-    showDialog(
-      context: context,
-      builder: (context) => AddRestaurantDialog(restaurant: Restaurant),
-    );
-  }
-
-  void _showAddVendorDialog(BuildContext context, [Restaurant? Restaurant]) {
-    showDialog(
-      context: context,
-      builder: (context) => AddVendorDialog(restaurant: Restaurant),
-    );
-  }
-
-  void _showEditVendorDialog(BuildContext context, Vendor vendor) {
-    showDialog(
-      context: context,
-      builder: (context) => AddVendorDialog(vendor: vendor),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, Restaurant Restaurant) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Restaurant'),
-        content: Text('Are you sure you want to delete "${Restaurant.name}"? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.read<RestaurantProvider>().deleteRestaurant(Restaurant.id!);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
+          ],
         ],
       ),
     );
