@@ -14,7 +14,7 @@ class OrderService {
   final _restaurantService = RestaurantService();
   final VendorService _vendorService = VendorService();
   final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
-  final OrderItemService _orderItemService = OrderItemService();
+  final AddOrderItemService _orderItemService = AddOrderItemService();
 
   /// Fetch paginated orders with optional status filter
   /// Returns list of orders sorted by created_at (newest first)
