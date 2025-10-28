@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/Views/admin/admin_dashboard/widgets/activity_feed_widget.dart';
-import 'package:naivedhya/Views/admin/admin_dashboard/widgets/milestone_settings_widget.dart';
+import 'package:naivedhya/Views/admin/dashboard/widgets/activity_feed_widget.dart';
+import 'package:naivedhya/Views/admin/dashboard/widgets/milestone_settings_widget.dart';
 import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
 import 'package:naivedhya/providers/theme_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
-
+ 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -18,26 +18,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    print('🚀 [DashboardScreen] initState called');
+    
     // Fetch dashboard data when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DashboardProvider>().fetchDashboardStats();
-      context.read<ActivityProvider>().initialize();
+      print('🔍 [DashboardScreen] PostFrameCallback executing...');
+      
+      try {
+        print('🔍 [DashboardScreen] Fetching dashboard stats...');
+        context.read<DashboardProvider>().fetchDashboardStats();
+        
+        print('🔍 [DashboardScreen] Initializing activity provider...');
+        context.read<ActivityProvider>().initialize();
+        
+        print('✅ [DashboardScreen] Initial data fetch triggered');
+      } catch (e, stackTrace) {
+        print('❌ [DashboardScreen] Error in PostFrameCallback: $e');
+        print('📍 [DashboardScreen] Stack trace: $stackTrace');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    print('🔨 [DashboardScreen] Building widget...');
+    
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 768;
     final themeProvider = Provider.of<ThemeProvider>(context);
     final colors = AppTheme.of(context);
 
+    print('📱 [DashboardScreen] Screen width: $screenWidth, isDesktop: $isDesktop');
+
     return Consumer<DashboardProvider>(
       builder: (context, dashboardProvider, child) {
+        print('🔨 [DashboardScreen] Consumer rebuilding...');
+        print('📊 [DashboardScreen] Dashboard loading: ${dashboardProvider.isLoading}');
+        print('📊 [DashboardScreen] Dashboard error: ${dashboardProvider.error}');
+        
         return RefreshIndicator(
           onRefresh: () async {
-            await dashboardProvider.refreshDashboard();
-            await context.read<ActivityProvider>().refresh();
+            print('🔄 [DashboardScreen] Pull-to-refresh triggered');
+            
+            try {
+              await dashboardProvider.refreshDashboard();
+              await context.read<ActivityProvider>().refresh();
+              
+              print('✅ [DashboardScreen] Refresh complete');
+            } catch (e, stackTrace) {
+              print('❌ [DashboardScreen] Refresh error: $e');
+              print('📍 [DashboardScreen] Stack trace: $stackTrace');
+            }
           },
           color: colors.primary,
           child: SingleChildScrollView(
@@ -66,8 +97,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: colors.primary,
                           ),
                           onPressed: () async {
-                            await dashboardProvider.refreshDashboard();
-                            await context.read<ActivityProvider>().refresh();
+                            print('🔄 [DashboardScreen] Manual refresh button pressed');
+                            
+                            try {
+                              await dashboardProvider.refreshDashboard();
+                              await context.read<ActivityProvider>().refresh();
+                              
+                              print('✅ [DashboardScreen] Manual refresh complete');
+                            } catch (e, stackTrace) {
+                              print('❌ [DashboardScreen] Manual refresh error: $e');
+                              print('📍 [DashboardScreen] Stack trace: $stackTrace');
+                            }
                           },
                           tooltip: 'Refresh Dashboard',
                         ),
@@ -90,7 +130,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ? colors.primary
                                       : colors.textSecondary,
                                 ),
-                                onPressed: () => themeProvider.setLightMode(),
+                                onPressed: () {
+                                  print('🌞 [DashboardScreen] Light mode selected');
+                                  themeProvider.setLightMode();
+                                },
                                 tooltip: 'Light Mode',
                               ),
                               IconButton(
@@ -100,7 +143,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ? colors.primary
                                       : colors.textSecondary,
                                 ),
-                                onPressed: () => themeProvider.setDarkMode(),
+                                onPressed: () {
+                                  print('🌙 [DashboardScreen] Dark mode selected');
+                                  themeProvider.setDarkMode();
+                                },
                                 tooltip: 'Dark Mode',
                               ),
                             ],
@@ -139,7 +185,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         IconButton(
-                          onPressed: dashboardProvider.clearError,
+                          onPressed: () {
+                            print('🔍 [DashboardScreen] Error dismissed');
+                            dashboardProvider.clearError();
+                          },
                           icon: Icon(
                             Icons.close,
                             color: colors.error,
@@ -224,18 +273,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 30),
 
                 // Activity Feed Section
-                if (isDesktop)
-                  // Desktop Layout: Activity feed takes full width
-                  SizedBox(
-                    height: 600,
-                    child: ActivityFeedWidget(),
-                  )
-                else
-                  // Mobile Layout: Activity feed with fixed height
-                  SizedBox(
-                    height: 500,
-                    child: ActivityFeedWidget(),
-                  ),
+                Consumer<ActivityProvider>(
+                  builder: (context, activityProvider, child) {
+                    print('🔨 [DashboardScreen] Activity Consumer rebuilding');
+                    print('📊 [DashboardScreen] Activities count: ${activityProvider.activities.length}');
+                    print('📊 [DashboardScreen] Activity loading: ${activityProvider.isLoading}');
+                    print('📊 [DashboardScreen] Activity error: ${activityProvider.error}');
+                    
+                    return Column(
+                      children: [
+                        if (activityProvider.error != null)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: colors.error.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: colors.error.withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: colors.error,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Activity Error: ${activityProvider.error}',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: colors.error,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (isDesktop)
+                          // Desktop Layout: Activity feed takes full width
+                          SizedBox(
+                            height: 600,
+                            child: ActivityFeedWidget(),
+                          )
+                        else
+                          // Mobile Layout: Activity feed with fixed height
+                          SizedBox(
+                            height: 500,
+                            child: ActivityFeedWidget(),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),

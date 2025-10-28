@@ -5,7 +5,7 @@ import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 
 class ActivityFeedWidget extends StatelessWidget {
-  const ActivityFeedWidget({Key? key}) : super(key: key);
+  const ActivityFeedWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
