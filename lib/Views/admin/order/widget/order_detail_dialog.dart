@@ -243,7 +243,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   SizedBox(height: 12.h),
                                   _buildDetailItem(
                                     label: 'Customer ID',
-                                    value: widget.order.customerId,
+                                    value: widget.order.customerId ?? 'N/A',
                                     themeColors: themeColors,
                                     icon: Icons.badge_outlined,
                                   ),

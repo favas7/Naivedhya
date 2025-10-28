@@ -15,6 +15,7 @@ import 'package:naivedhya/services/menu_service.dart';
 import 'package:naivedhya/services/order/order_service.dart';
 import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/services/ventor_service.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 import 'package:uuid/uuid.dart';
 
 class AddOrderScreen extends StatefulWidget {
@@ -596,7 +597,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                       const SizedBox(height: 20),
                       _buildMenuItemsSection(),
                       const SizedBox(height: 20),
-                      _buildOrderSummary(),
+                      _buildOrderSummary(context),
                       const SizedBox(height: 20),
                       _buildAdditionalDetails(),
                       const SizedBox(height: 32),
@@ -695,46 +696,147 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     );
   }
 
-  Widget _buildCustomerSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Customer',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                TextButton.icon(
-                  onPressed: _showCustomerSelection,
-                  icon: const Icon(Icons.person_add),
-                  label: const Text('Select Customer'),
-                ),
-              ],
+Widget _buildCustomerSection() {
+  return Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Customer',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              TextButton.icon(
+                onPressed: _showCustomerSelection,
+                icon: const Icon(Icons.person_add),
+                label: const Text('Select Customer'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_selectedCustomer != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.person, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _selectedCustomer!.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_selectedCustomer!.phone.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text('Phone: ${_selectedCustomer!.phone}'),
+                  ],
+                  if (_selectedCustomer!.email.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text('Email: ${_selectedCustomer!.email}'),
+                  ],
+                ],
+              ),
+            )
+          else if (_isGuestOrder)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.person_outline, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Guest Order',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Name: $_guestName'),
+                  Text('Phone: $_guestMobile'),
+                  Text('Address: $_guestAddress'),
+                ],
+              ),
+            )
+          else
+            const Text(
+              'No customer selected',
+              style: TextStyle(color: Colors.grey),
             ),
-            const SizedBox(height: 12),
-            if (_selectedCustomer != null)
+          if (_selectedCustomer != null && _customerAddresses.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Text(
+              'Delivery Address',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<Address>(
+              value: _selectedAddress,
+              decoration: const InputDecoration(
+                labelText: 'Select Address',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.location_on),
+              ),
+              items: _customerAddresses.map((address) {
+                return DropdownMenuItem(
+                  value: address,
+                  child: Text(
+                    address.label ?? 'Address ${_customerAddresses.indexOf(address) + 1}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => _selectedAddress = value);
+              },
+            ),
+            if (_selectedAddress != null) ...[
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
+                  color: Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
+                  border: Border.all(color: Colors.green[200]!),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.person, color: Colors.blue),
+                        const Icon(Icons.location_on, color: Colors.green),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _selectedCustomer!.name,
+                            _selectedAddress!.label ?? 'Selected Address',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -743,99 +845,21 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                         ),
                       ],
                     ),
-                    if (_selectedCustomer!.phone.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text('Phone: ${_selectedCustomer!.phone}'),
-                    ],
-                    if (_selectedCustomer!.email.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text('Email: ${_selectedCustomer!.email}'),
-                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      _selectedAddress!.fullAddress,
+                      style: const TextStyle(fontSize: 14),
+                    ),
                   ],
                 ),
-              )
-            else if (_isGuestOrder)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.person_outline, color: Colors.orange),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Guest Order',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text('Name: $_guestName'),
-                    Text('Phone: $_guestMobile'),
-                    Text('Address: $_guestAddress'),
-                  ],
-                ),
-              )
-            else
-              const Text(
-                'No customer selected',
-                style: TextStyle(color: Colors.grey),
-              ),
-            if (_selectedCustomer != null && _customerAddresses.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Delivery Address',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<Address>(
-                value: _selectedAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Select Address',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-
-                items: _customerAddresses.map((address) {
-                  return DropdownMenuItem(
-                    value: address,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (address.label != null)
-                          Text(
-                            address.label!,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        Text(
-                          address.fullAddress,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedAddress = value);
-                },
               ),
             ],
           ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMenuItemsSection() {
     return Card(
@@ -918,52 +942,66 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     );
   }
 
-  Widget _buildOrderSummary() {
-    return Card(
-      color: Colors.blue[50],
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Order Summary',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+Widget _buildOrderSummary(BuildContext context) {
+  final theme = AppTheme.of(context);
+  final textTheme = Theme.of(context).textTheme;
+
+  return Card(
+    color: theme.info.withOpacity(0.08),
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Order Summary',
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.textPrimary,
             ),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Items:', style: TextStyle(fontSize: 16)),
-                Text(
-                  _orderItems.length.toString(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+          ),
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Items:',
+                style: textTheme.bodyLarge?.copyWith(color: theme.textPrimary),
+              ),
+              Text(
+                _orderItems.length.toString(),
+                style: textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.textPrimary,
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Total Amount:', style: TextStyle(fontSize: 18)),
-                Text(
-                  '₹${_totalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Total Amount:',
+                style: textTheme.titleMedium?.copyWith(color: theme.textPrimary),
+              ),
+              Text(
+                '₹${_totalAmount.toStringAsFixed(2)}',
+                style: textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.info,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildAdditionalDetails() {
     return Card(

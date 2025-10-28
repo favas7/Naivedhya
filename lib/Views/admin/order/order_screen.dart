@@ -1,7 +1,7 @@
 // screens/orders_screen.dart
 import 'package:flutter/material.dart';
-import 'package:naivedhya/Views/admin/order/edit_order/edit_order_page.dart';
 import 'package:naivedhya/Views/admin/order/add_order_screen/add_order_screen.dart';
+import 'package:naivedhya/Views/admin/order/edit_order/edit_order_screen.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_detail_dialog.dart';
 import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
@@ -633,7 +633,8 @@ Widget _buildOrdersListSection(AppThemeColors themeColors) {
                   Icon(Icons.schedule, size: 16, color: themeColors.textSecondary),
                   SizedBox(width: 4),
                   Text(
-                    _formatTime(order.createdAt),
+                    _formatTime(order.createdAt ?? DateTime.now())
+                    ,
                     style: TextStyle(
                       fontSize: 12,
                       color: themeColors.textSecondary,
@@ -792,7 +793,7 @@ Widget _buildOrdersListSection(AppThemeColors themeColors) {
               onTap: () {
                 Navigator.push(context,
                   MaterialPageRoute(
-                    builder: (context) => EditOrderPage(order: order,
+                    builder: (context) => EditOrderScreen(orderId: order.orderId
                   ),
                 )
                 );

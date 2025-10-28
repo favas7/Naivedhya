@@ -703,7 +703,7 @@ Widget _buildDetailRow({
                   Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 8),
                   Text(
-                    DateFormat('MMM dd, yyyy - hh:mm a').format(order.createdAt),
+                    DateFormat('MMM dd, yyyy - hh:mm a').format(order.createdAt ?? DateTime.now()),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 14,

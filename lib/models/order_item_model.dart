@@ -6,9 +6,9 @@ class OrderItem {
   final String itemId;
   int quantity;
   final double price;
-  final String? itemName; // For display purposes, fetched from menu_items join
-  final List<SelectedCustomization> selectedCustomizations; // NEW
-  final double customizationAdditionalPrice; // NEW
+  final String? itemName; // For display purposes only - NOT stored in DB
+  final List<SelectedCustomization> selectedCustomizations;
+  final double customizationAdditionalPrice;
 
   OrderItem({
     required this.orderId,
@@ -20,13 +20,14 @@ class OrderItem {
     this.customizationAdditionalPrice = 0,
   });
 
+  /// Factory for reading FROM database (includes item_name from join)
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
       orderId: json['order_id'],
       itemId: json['item_id'],
       quantity: json['quantity'],
       price: (json['price'] as num).toDouble(),
-      itemName: json['item_name'],
+      itemName: json['item_name'], // ✅ Read from join
       selectedCustomizations: (json['selected_customizations'] as List<dynamic>?)
               ?.map((c) => SelectedCustomization.fromJson(c))
               .toList() ??
@@ -36,13 +37,28 @@ class OrderItem {
     );
   }
 
+  /// Convert to JSON for JSONB storage (includes item_name)
+  /// ✅ NOW includes item_name since we're storing in JSONB, not separate table
   Map<String, dynamic> toJson() {
+    return {
+      'item_id': itemId,
+      'item_name': itemName,
+      'quantity': quantity,
+      'price': price,
+      'selected_customizations':
+          selectedCustomizations.map((c) => c.toJson()).toList(),
+      'customization_additional_price': customizationAdditionalPrice,
+    };
+  }
+
+  /// Convert to JSON including ALL fields (for complete representation)
+  Map<String, dynamic> toJsonComplete() {
     return {
       'order_id': orderId,
       'item_id': itemId,
+      'item_name': itemName,
       'quantity': quantity,
       'price': price,
-      'item_name': itemName,
       'selected_customizations':
           selectedCustomizations.map((c) => c.toJson()).toList(),
       'customization_additional_price': customizationAdditionalPrice,

@@ -1,7 +1,9 @@
-// models/order.dart
+// models/order_model.dart
+import 'package:naivedhya/models/order_item_model.dart';
+
 class Order {
   final String orderId;
-  final String customerId;
+  final String? customerId;
   final String vendorId;
   final String restaurantId;
   final String orderNumber;
@@ -13,12 +15,23 @@ class Order {
   final DateTime? proposedDeliveryTime;
   final DateTime? pickupTime;
   final DateTime? deliveryTime;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String? deliveryAddress;
+  final String? specialInstructions;
+  final String? paymentMethod;
+  
+  // ✅ NEW: Order items array
+  final List<OrderItem> orderItems;
+
+  // Additional enriched data (not from DB)
+  final Map<String, dynamic>? restaurant;
+  final Map<String, dynamic>? vendor;
+  final Map<String, dynamic>? deliveryPerson;
 
   Order({
     required this.orderId,
-    required this.customerId,
+    this.customerId,
     required this.vendorId,
     required this.restaurantId,
     required this.orderNumber,
@@ -30,11 +43,29 @@ class Order {
     this.proposedDeliveryTime,
     this.pickupTime,
     this.deliveryTime,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.deliveryAddress,
+    this.specialInstructions,
+    this.paymentMethod,
+    this.orderItems = const [], // ✅ Default empty array
+    this.restaurant,
+    this.vendor,
+    this.deliveryPerson,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    // Parse order items from JSONB array
+    List<OrderItem> items = [];
+    if (json['order_items'] != null && json['order_items'] is List) {
+      items = (json['order_items'] as List)
+          .map((item) => OrderItem.fromJson({
+                ...item,
+                'order_id': json['order_id'], // Ensure order_id is set
+              }))
+          .toList();
+    }
+
     return Order(
       orderId: json['order_id'],
       customerId: json['customer_id'],
@@ -55,8 +86,19 @@ class Order {
       deliveryTime: json['delivery_time'] != null
           ? DateTime.parse(json['delivery_time'])
           : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : null,
+      deliveryAddress: json['delivery_address'],
+      specialInstructions: json['special_instructions'],
+      paymentMethod: json['payment_method'],
+      orderItems: items, // ✅ Parse items
+      restaurant: json['restaurant'],
+      vendor: json['vendor'],
+      deliveryPerson: json['delivery_person'],
     );
   }
 
@@ -75,8 +117,35 @@ class Order {
       'proposed_delivery_time': proposedDeliveryTime?.toIso8601String(),
       'pickup_time': pickupTime?.toIso8601String(),
       'delivery_time': deliveryTime?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+      'delivery_address': deliveryAddress,
+      'special_instructions': specialInstructions,
+      'payment_method': paymentMethod,
+      'order_items': orderItems.map((item) => item.toJsonComplete()).toList(), // ✅ Include items with item_name
+    };
+  }
+
+  /// Convert to JSON for database updates (without read-only fields)
+  Map<String, dynamic> toJsonForUpdate() {
+    return {
+      'customer_id': customerId,
+      'vendor_id': vendorId,
+      'hotel_id': restaurantId,
+      'order_number': orderNumber,
+      'total_amount': totalAmount,
+      'status': status,
+      'customer_name': customerName,
+      'delivery_status': deliveryStatus,
+      'delivery_person_id': deliveryPersonId,
+      'proposed_delivery_time': proposedDeliveryTime?.toIso8601String(),
+      'pickup_time': pickupTime?.toIso8601String(),
+      'delivery_time': deliveryTime?.toIso8601String(),
+      'delivery_address': deliveryAddress,
+      'special_instructions': specialInstructions,
+      'payment_method': paymentMethod,
+      'order_items': orderItems.map((item) => item.toJsonComplete()).toList(), // ✅ Include full items
+      'updated_at': DateTime.now().toIso8601String(),
     };
   }
 
@@ -96,6 +165,13 @@ class Order {
     DateTime? deliveryTime,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? deliveryAddress,
+    String? specialInstructions,
+    String? paymentMethod,
+    List<OrderItem>? orderItems, // ✅ Can update items
+    Map<String, dynamic>? restaurant,
+    Map<String, dynamic>? vendor,
+    Map<String, dynamic>? deliveryPerson,
   }) {
     return Order(
       orderId: orderId ?? this.orderId,
@@ -113,6 +189,39 @@ class Order {
       deliveryTime: deliveryTime ?? this.deliveryTime,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      specialInstructions: specialInstructions ?? this.specialInstructions,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      orderItems: orderItems ?? this.orderItems, // ✅ Update items
+      restaurant: restaurant ?? this.restaurant,
+      vendor: vendor ?? this.vendor,
+      deliveryPerson: deliveryPerson ?? this.deliveryPerson,
     );
   }
+
+  // ✅ Helper: Calculate total from items
+  double calculateTotalFromItems() {
+    return orderItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+  }
+
+  // ✅ Helper: Get item count
+  int get itemCount => orderItems.length;
+
+  // ✅ Helper: Get total quantity
+  int get totalQuantity =>
+      orderItems.fold(0, (sum, item) => sum + item.quantity);
+
+  @override
+  String toString() {
+    return 'Order(orderId: $orderId, orderNumber: $orderNumber, status: $status, items: ${orderItems.length})';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Order && other.orderId == orderId;
+  }
+
+  @override
+  int get hashCode => orderId.hashCode;
 }
