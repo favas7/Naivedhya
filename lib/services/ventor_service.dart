@@ -1,4 +1,4 @@
-
+// services/ventor_service.dart - FIXED
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -66,7 +66,8 @@ class VendorService {
     }
   }
 
- /// Fetch vendor by ID with full details
+  /// Fetch vendor by ID with full details
+  /// ✅ FIXED: This is the main method used by OrderService
   Future<Map<String, dynamic>?> fetchVendorById(String vendorId) async {
     try {
       final response = await _supabase
@@ -133,7 +134,7 @@ class VendorService {
           .eq('hotel_id', restaurantId)
           .eq('is_active', true);
 
-      return List<Map<String, dynamic>>.from(response );
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error fetching vendors: $e');
       return [];
@@ -209,66 +210,6 @@ class VendorService {
     }
   }
 
-  // /// Create new vendor (admin only)
-  // Future<Map<String, dynamic>?> createVendor({
-  //   required String hotelId,
-  //   required String name,
-  //   required String serviceType,
-  //   String? email,
-  //   String? phone,
-  // }) async {
-  //   try {
-  //     final response = await _supabase
-  //         .from(_tableName)
-  //         .insert({
-  //           'hotel_id': hotelId,
-  //           'name': name,
-  //           'service_type': serviceType,
-  //           'email': email,
-  //           'phone': phone,
-  //           'is_active': true,
-  //         })
-  //         .select()
-  //         .single();
-
-  //     return {
-  //       'id': response['vendor_id'],
-  //       'name': response['name'],
-  //       'email': response['email'],
-  //       'phone': response['phone'],
-  //       'serviceType': response['service_type'],
-  //     };
-  //   } catch (e) {
-  //     print('Error creating vendor: $e');
-  //     return null;
-  //   }
-  // }
-
-  // /// Update vendor
-  // Future<bool> updateVendor(
-  //   String vendorId, {
-  //   String? name,
-  //   String? email,
-  //   String? phone,
-  //   String? serviceType,
-  //   bool? isActive,
-  // }) async {
-  //   try {
-  //     final updates = <String, dynamic>{};
-  //     if (name != null) updates['name'] = name;
-  //     if (email != null) updates['email'] = email;
-  //     if (phone != null) updates['phone'] = phone;
-  //     if (serviceType != null) updates['service_type'] = serviceType;
-  //     if (isActive != null) updates['is_active'] = isActive;
-
-  //     await _supabase.from(_tableName).update(updates).eq('vendor_id', vendorId);
-  //     return true;
-  //   } catch (e) {
-  //     print('Error updating vendor: $e');
-  //     return false;
-  //   }
-  // }
-
   /// Deactivate vendor
   Future<bool> deactivateVendor(String vendorId) async {
     try {
@@ -301,18 +242,6 @@ class VendorService {
         });
   }
 
-    getVendorDetails(String vendorId) async {
-    try {
-      final response = await _supabase
-          .from(_tableName)
-          .select()
-          .eq('vendor_id', vendorId)
-          .single();
-
-      return Vendor.fromJson(response);
-    } catch (e) {
-      throw Exception('Failed to fetch vendor details: $e');
-    }
-  
-}
+  // ✅ REMOVED: Duplicate getVendorDetails() method that was causing conflicts
+  // The fetchVendorById() method above serves the same purpose with consistent return type
 }

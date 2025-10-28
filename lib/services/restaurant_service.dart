@@ -473,21 +473,21 @@ class RestaurantService {
     }
   }
 
-  // FIXED: Get Restaurant by ID
-  Future<Restaurant?> getRestaurantById(String restaurantId) async {
-    try {
-      final response = await _client
-          .from('restaurant')  // FIXED: Correct table name
-          .select()
-          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
-          .maybeSingle();
+  // // FIXED: Get Restaurant by ID
+  // Future<Restaurant?> getRestaurantById(String restaurantId) async {
+  //   try {
+  //     final response = await _client
+  //         .from('restaurant')  // FIXED: Correct table name
+  //         .select()
+  //         .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
+  //         .maybeSingle();
 
-      if (response == null) return null;
-      return Restaurant.fromJson(response);
-    } catch (e) {
-      return null;
-    }
-  }
+  //     if (response == null) return null;
+  //     return Restaurant.fromJson(response);
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 
   // FIXED: Get all Restaurants for current user (using Firebase Auth)
   Future<List<Restaurant>> getRestaurantsForCurrentUser() async {
@@ -591,24 +591,24 @@ class RestaurantService {
   }
 
 
-getRestaurantDetails(String restaurantId) async {
-    try {
-      final restaurant = await getRestaurantById(restaurantId);
-      if (restaurant == null) return null;
+// getRestaurantDetails(String restaurantId) async {
+//     try {
+//       final restaurant = await getRestaurantById(restaurantId);
+//       if (restaurant == null) return null;
 
-      final manager = await getManagerByrestaurantId(restaurantId);
-      final location = await getLocationByrestaurantId(restaurantId);
+//       final manager = await getManagerByrestaurantId(restaurantId);
+//       final location = await getLocationByrestaurantId(restaurantId);
 
-      return {
-        'restaurant': restaurant,
-        'manager': manager,
-        'location': location,
-      };
-    } catch (e) {
-      print('Error getting Restaurant details: $e');
-      return null;
-    }
-  }
+//       return {
+//         'restaurant': restaurant,
+//         'manager': manager,
+//         'location': location,
+//       };
+//     } catch (e) {
+//       print('Error getting Restaurant details: $e');
+//       return null;
+//     }
+//   }
 
   
   /// Get order by ID
@@ -826,6 +826,49 @@ Future<Location?> getLocationByrestaurantId(String restaurantId) async {
     return Location.fromJson(response[0]);
   } catch (e) {
     print('Error getting location by Restaurant ID: $e');
+    return null;
+  }
+}
+
+
+// ✅ ADD THIS METHOD if it doesn't exist, or REPLACE if it exists
+Future<Restaurant?> getRestaurantById(String restaurantId) async {
+  try {
+    final response = await _client
+        .from('restaurant')
+        .select()
+        .eq('hotel_id', restaurantId)
+        .maybeSingle();
+
+    if (response == null) {
+      print('Restaurant not found with ID: $restaurantId');
+      return null;
+    }
+
+    return Restaurant.fromJson(response);
+  } catch (e) {
+    print('Error getting restaurant by ID: $e');
+    return null;
+  }
+}
+
+// ✅ KEEP THIS METHOD (already exists in your file at line 594)
+// This method is used by OrderDetailScreen but not by OrderService
+Future<Map<String, dynamic>?> getRestaurantDetails(String restaurantId) async {
+  try {
+    final restaurant = await getRestaurantById(restaurantId);
+    if (restaurant == null) return null;
+
+    final manager = await getManagerByrestaurantId(restaurantId);
+    final location = await getLocationByrestaurantId(restaurantId);
+
+    return {
+      'restaurant': restaurant,
+      'manager': manager,
+      'location': location,
+    };
+  } catch (e) {
+    print('Error getting Restaurant details: $e');
     return null;
   }
 }

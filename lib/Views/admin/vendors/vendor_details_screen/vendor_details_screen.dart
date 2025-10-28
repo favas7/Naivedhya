@@ -55,7 +55,8 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
 
     try {
       print('📥 [VENDOR DETAILS] Fetching vendor details...');
-      _vendor = await _vendorService.getVendorDetails(widget.vendorId);
+      final vendorData = await _vendorService.fetchVendorById(widget.vendorId);
+      _vendor = vendorData != null ? Vendor.fromJson(vendorData) : null;
       
       if (_vendor == null) {
         print('❌ [VENDOR DETAILS] ERROR: Vendor not found!');

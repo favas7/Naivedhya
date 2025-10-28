@@ -20,6 +20,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
 
+  
+
 Map<String, dynamic>? _parseVendor(dynamic vendorData) {
   if (vendorData == null) return null;
   if (vendorData is Map<String, dynamic>) return vendorData;
@@ -41,19 +43,30 @@ Map<String, dynamic>? _parseVendor(dynamic vendorData) {
   return null;
 }
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
+// Also add debug logging to initState
+@override
+void initState() {
+  super.initState();
+  print('\n🎬 [OrdersScreen] initState called');
+  
+  _scrollController = ScrollController();
+  _scrollController.addListener(_onScroll);
+  
+  print('📱 [OrdersScreen] Setting up post-frame callback for initialization');
+  
+  // Initialize provider
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    print('🚀 [OrdersScreen] Post-frame callback executing...');
+    print('📍 [OrdersScreen] Calling OrderProvider.initialize(useEnrichedData: true)');
     
-
-    // Initialize provider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    try {
       context.read<OrderProvider>().initialize(useEnrichedData: true);
-    });
-    
-  }
+      print('✅ [OrdersScreen] Initialize call completed');
+    } catch (e) {
+      print('❌ [OrdersScreen] ERROR in initialize: $e');
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -336,92 +349,178 @@ Map<String, dynamic>? _parseVendor(dynamic vendorData) {
     );
   }
 
-  Widget _buildOrdersListSection(AppThemeColors themeColors) {
-    return Consumer<OrderProvider>(
-      builder: (context, orderProvider, child) {
-        if (orderProvider.ordersWithDetails.isEmpty && !orderProvider.isLoading) {
-          return Padding(
-            padding: EdgeInsets.all(32),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.inbox_outlined, size: 48, color: themeColors.textSecondary),
-                  SizedBox(height: 16),
-                  Text(
-                    'No orders found',
-                    style: TextStyle(
-                      color: themeColors.textSecondary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+// screens/orders_screen.dart - WITH DEBUG LOGGING
+// Add these debug prints to your existing _buildOrdersListSection method
 
-        return Container(
-          color: themeColors.background,
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Text(
-                  '${orderProvider.ordersWithDetails.length} Orders',
+Widget _buildOrdersListSection(AppThemeColors themeColors) {
+  return Consumer<OrderProvider>(
+    builder: (context, orderProvider, child) {
+      print('\n🎨 [OrdersScreen] Building orders list section');
+      print('📊 [OrdersScreen] State:');
+      print('   - Orders with Details: ${orderProvider.ordersWithDetails.length}');
+      print('   - Is Loading: ${orderProvider.isLoading}');
+      print('   - Error Message: ${orderProvider.errorMessage}');
+      print('   - Has More Pages: ${orderProvider.hasMorePages}');
+      
+      // Check if there's an error
+      if (orderProvider.errorMessage != null) {
+        print('❌ [OrdersScreen] ERROR STATE: ${orderProvider.errorMessage}');
+        return Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+                SizedBox(height: 16),
+                Text(
+                  'Error Loading Orders',
+                  style: TextStyle(
+                    color: themeColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  orderProvider.errorMessage ?? 'Unknown error',
                   style: TextStyle(
                     color: themeColors.textSecondary,
-                    fontSize: 12,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    print('🔄 [OrdersScreen] Retry button pressed');
+                    orderProvider.refreshOrders();
+                  },
+                  icon: Icon(Icons.refresh),
+                  label: Text('Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      
+      if (orderProvider.ordersWithDetails.isEmpty && !orderProvider.isLoading) {
+        print('ℹ️ [OrdersScreen] EMPTY STATE: No orders to display');
+        return Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(Icons.inbox_outlined, size: 48, color: themeColors.textSecondary),
+                SizedBox(height: 16),
+                Text(
+                  'No orders found',
+                  style: TextStyle(
+                    color: themeColors.textSecondary,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-              SizedBox(height: 12),
-              ListView.builder(
-                controller: _scrollController,
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: orderProvider.ordersWithDetails.length + (orderProvider.isLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == orderProvider.ordersWithDetails.length) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  final orderData = orderProvider.ordersWithDetails[index];
-                  final order = orderData['order'] as Order;
-                  final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
-                  final vendor = _parseVendor(orderData['vendor']);  // ✅ FIX APPLIED HERE
-                  final orderItems = orderData['orderItems'] as List? ?? [];
-
-                  return _buildOrderCard(
-                    order: order,
-                    restaurant: restaurant,
-                    vendor: vendor,
-                    orderItems: orderItems,
-                    themeColors: themeColors,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => OrderDetailScreen(order: order),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
+                SizedBox(height: 8),
+                Text(
+                  'Orders will appear here once they are created',
+                  style: TextStyle(
+                    color: themeColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         );
-      },
-    );
-  }
+      }
+
+      print('✅ [OrdersScreen] Rendering ${orderProvider.ordersWithDetails.length} orders');
+      
+      return Container(
+        color: themeColors.background,
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text(
+                '${orderProvider.ordersWithDetails.length} Orders',
+                style: TextStyle(
+                  color: themeColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            SizedBox(height: 12),
+            ListView.builder(
+              controller: _scrollController,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: orderProvider.ordersWithDetails.length + (orderProvider.isLoading ? 1 : 0),
+              itemBuilder: (context, index) {
+                // Show loading indicator at the end
+                if (index == orderProvider.ordersWithDetails.length) {
+                  print('⏳ [OrdersScreen] Showing loading indicator at end of list');
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                final orderData = orderProvider.ordersWithDetails[index];
+                
+                print('\n📦 [OrdersScreen] Building order card #$index');
+                print('   - Order Data Keys: ${orderData.keys.join(", ")}');
+                
+                // Extract data with null safety
+                final order = orderData['order'] as Order?;
+                final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
+                final vendor = _parseVendor(orderData['vendor']);
+                final orderItems = orderData['orderItems'] as List? ?? [];
+
+                if (order == null) {
+                  print('⚠️ [OrdersScreen] Order is NULL at index $index!');
+                  return SizedBox.shrink();
+                }
+                
+                print('   - Order: ${order.orderNumber}');
+                print('   - Restaurant: ${restaurant?['name'] ?? 'null'}');
+                print('   - Vendor: ${vendor?['name'] ?? 'null'}');
+                print('   - Items: ${orderItems.length}');
+
+                return _buildOrderCard(
+                  order: order,
+                  restaurant: restaurant,
+                  vendor: vendor,
+                  orderItems: orderItems,
+                  themeColors: themeColors,
+                  onTap: () {
+                    print('👆 [OrdersScreen] Order card tapped: ${order.orderNumber}');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OrderDetailScreen(order: order),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 
   Widget _buildOrderCard({
     required Order order,
