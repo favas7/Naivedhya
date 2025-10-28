@@ -33,7 +33,7 @@ class OrderService {
       if (statusFilter != null && statusFilter.isNotEmpty) {
         query = query.eq('status', statusFilter);
         print('📊 [OrderService] Applied status filter: $statusFilter');
-      }
+      } 
 
       // Apply ordering and pagination after filtering
       query = query
@@ -330,6 +330,26 @@ class OrderService {
       throw Exception('Failed to delete order: $e');
     }
   }
+
+  Future<List<Order>> fetchOrdersByCustomerId(String customerId) async {
+    try {
+      print('🔍 [OrderService] Fetching orders for customer: $customerId');
+      
+      final response = await Supabase.instance.client
+          .from('orders')
+          .select()
+          .eq('customer_id', customerId)
+          .order('created_at', ascending: false);
+
+      print('✅ [OrderService] Found ${(response as List).length} orders for customer');
+      
+      return (response).map((json) => Order.fromJson(json)).toList();
+    } catch (e) {
+      print('❌ [OrderService] Error fetching customer orders: $e');
+      throw Exception('Failed to fetch customer orders: $e');
+    }
+  }
+
 
   /// Get all available order statuses
   static const List<String> orderStatuses = [

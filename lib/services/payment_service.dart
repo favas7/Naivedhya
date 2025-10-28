@@ -227,4 +227,27 @@ class PaymentService {
       }
     }
   }
+
+  Future<List<Payment>>  getPaymentsByCustomerId(String customerId) async {
+    try {
+      final response = await _client
+          .from('payments')
+          .select('''
+            paymentid,
+            orderid,
+            customerid,
+            amount,
+            paymentmode,
+            status,
+            transactionid,
+            created_at,
+            updated_at
+          ''')
+          .eq('customerid', customerId);
+
+      return (response as List).map((json) => Payment.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch payments for customer $customerId: $e');
+    }
+  }
 }
