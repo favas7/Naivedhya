@@ -831,26 +831,26 @@ Future<Location?> getLocationByrestaurantId(String restaurantId) async {
 }
 
 
-// ✅ ADD THIS METHOD if it doesn't exist, or REPLACE if it exists
-Future<Restaurant?> getRestaurantById(String restaurantId) async {
-  try {
-    final response = await _client
-        .from('restaurant')
-        .select()
-        .eq('hotel_id', restaurantId)
-        .maybeSingle();
+// // ✅ ADD THIS METHOD if it doesn't exist, or REPLACE if it exists
+// Future<Restaurant?> getRestaurantById(String restaurantId) async {
+//   try {
+//     final response = await _client
+//         .from('restaurant')
+//         .select()
+//         .eq('hotel_id', restaurantId)
+//         .maybeSingle();
 
-    if (response == null) {
-      print('Restaurant not found with ID: $restaurantId');
-      return null;
-    }
+//     if (response == null) {
+//       print('Restaurant not found with ID: $restaurantId');
+//       return null;
+//     }
 
-    return Restaurant.fromJson(response);
-  } catch (e) {
-    print('Error getting restaurant by ID: $e');
-    return null;
-  }
-}
+//     return Restaurant.fromJson(response);
+//   } catch (e) {
+//     print('Error getting restaurant by ID: $e');
+//     return null;
+//   }
+// }
 
 // ✅ KEEP THIS METHOD (already exists in your file at line 594)
 // This method is used by OrderDetailScreen but not by OrderService
@@ -872,4 +872,68 @@ Future<Map<String, dynamic>?> getRestaurantDetails(String restaurantId) async {
     return null;
   }
 }
+
+/// Fetch restaurants by admin email - ADD THIS METHOD
+Future<List<Restaurant>> getRestaurantsByAdminEmail(String email) async {
+  try {
+    print('🔍 [RestaurantService] Fetching restaurants for admin email: $email');
+    
+    final response = await client
+        .from('restaurant')
+        .select()
+        .eq('adminemail', email)
+        .order('created_at', ascending: false);
+
+    print('✅ [RestaurantService] Found ${(response as List).length} restaurants');
+    
+    return (response)
+        .map((json) => Restaurant.fromJson(json))
+        .toList();
+  } catch (e) {
+    print('❌ [RestaurantService] Error fetching restaurants by admin email: $e');
+    throw Exception('Failed to fetch restaurants: $e');
+  }
+}
+
+/// Fetch single restaurant by ID - ADD THIS METHOD IF NOT EXISTS
+Future<Restaurant?> getRestaurantById(String restaurantId) async {
+  try {
+    print('🔍 [RestaurantService] Fetching restaurant by ID: $restaurantId');
+    
+    final response = await client
+        .from('restaurant')
+        .select()
+        .eq('hotel_id', restaurantId)
+        .maybeSingle();
+
+    if (response == null) {
+      print('⚠️ [RestaurantService] Restaurant not found with ID: $restaurantId');
+      return null;
+    }
+
+    print('✅ [RestaurantService] Restaurant found: ${response['name']}');
+    return Restaurant.fromJson(response);
+  } catch (e) {
+    print('❌ [RestaurantService] Error fetching restaurant by ID: $e');
+    throw Exception('Failed to fetch restaurant: $e');
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

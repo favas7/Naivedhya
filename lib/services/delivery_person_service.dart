@@ -1,5 +1,5 @@
 // services/delivery_personnel_service.dart
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/models/delivery_history_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

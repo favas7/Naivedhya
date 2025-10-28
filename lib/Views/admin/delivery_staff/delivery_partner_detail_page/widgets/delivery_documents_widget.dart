@@ -1,6 +1,6 @@
 // views/admin/delivery_staff/widgets/delivery_documents_widget.dart
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 

@@ -5,7 +5,7 @@ import 'package:naivedhya/Views/admin/delivery_staff/delivery_partner_detail_pag
 import 'package:naivedhya/Views/admin/delivery_staff/delivery_partner_detail_page/widgets/delivery_history_widget.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/delivery_partner_detail_page/widgets/delivery_info_card.dart';
 import 'package:naivedhya/models/delivery_history_model.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/services/delivery_person_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';

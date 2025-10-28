@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 
 class DeliveryStaffCard extends StatefulWidget {

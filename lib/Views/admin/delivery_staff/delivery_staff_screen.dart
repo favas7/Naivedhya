@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/delivery_partner_detail_page/delivery_partner_detail_page.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/widgets/delivery_staff_card.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/widgets/dialogue_components.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';

@@ -143,10 +143,31 @@ class MenuItem {
     this.updatedAt,
   });
 
-  // Check if item is in stock
-  bool get isInStock => stockQuantity > 0;
-  bool get isLowStock =>
-      stockQuantity > 0 && stockQuantity <= lowStockThreshold;
+  // ✅ FIXED: Check if item is in stock
+  // Primary check: is_available flag (user-controlled availability)
+  // Secondary check: stock_quantity (only matters if > 0, meaning inventory tracking is enabled)
+  bool get isInStock {
+    // If item is marked as not available, it's out of stock
+    if (!isAvailable) return false;
+    
+    // If stock quantity is 0 or null, assume unlimited stock (no inventory tracking)
+    // This allows items to be available even without explicit stock tracking
+    if (stockQuantity == 0) return true;
+    
+    // If stock tracking is enabled (quantity > 0), check if stock exists
+    return stockQuantity > 0;
+  }
+  
+  // ✅ FIXED: Only show low stock warning if inventory tracking is actually enabled
+  bool get isLowStock {
+    // Only consider low stock if:
+    // 1. Item is available
+    // 2. Stock tracking is enabled (quantity > 0)
+    // 3. Stock is below threshold
+    return isAvailable && 
+           stockQuantity > 0 && 
+           stockQuantity <= lowStockThreshold;
+  }
 
   // Factory constructor to create MenuItem from JSON
   factory MenuItem.fromJson(Map<String, dynamic> json) {

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/services/delivery_person_service.dart';
 
 class DeliveryPersonnelProvider extends ChangeNotifier {

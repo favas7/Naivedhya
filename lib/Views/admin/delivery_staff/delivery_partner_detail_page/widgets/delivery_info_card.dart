@@ -1,7 +1,7 @@
 // views/admin/delivery_staff/widgets/delivery_info_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_person_model.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:intl/intl.dart';
 

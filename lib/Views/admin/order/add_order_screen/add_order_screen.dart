@@ -1,16 +1,21 @@
 // lib/Views/admin/order/add_order_screen/add_order_screen.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:naivedhya/Views/admin/order/add_order_screen/widget/add_order_dialogs.dart';
-import 'package:naivedhya/Views/admin/order/add_order_screen/widget/add_order_form_sections.dart';
-import 'package:naivedhya/Views/admin/order/add_order_screen/widget/add_order_list_items.dart';
-import 'package:naivedhya/Views/admin/order/add_order_screen/widget/add_order_validators.dart';
+import 'package:naivedhya/models/address_model.dart';
 import 'package:naivedhya/models/customer_model.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/models/order_item_model.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
-import 'package:naivedhya/models/ventor_model.dart';
-import 'package:naivedhya/models/simple_delivery_person_model.dart';
-
+import 'package:naivedhya/models/user_model.dart';
+import 'package:naivedhya/services/adress_service.dart';
+import 'package:naivedhya/services/customer_service.dart';
+import 'package:naivedhya/services/menu_service.dart';
+import 'package:naivedhya/services/order/order_service.dart';
+import 'package:naivedhya/services/restaurant_service.dart';
+import 'package:naivedhya/services/ventor_service.dart';
+import 'package:uuid/uuid.dart';
 
 class AddOrderScreen extends StatefulWidget {
   const AddOrderScreen({super.key});
@@ -20,273 +25,373 @@ class AddOrderScreen extends StatefulWidget {
 }
 
 class _AddOrderScreenState extends State<AddOrderScreen> {
-  // Form key for validation
-  final _formKey = GlobalKey<FormState>();
-
-  // Selected items
-  Restaurant? selectedRestaurant;
-  Vendor? selectedVendor;
-  Customer? selectedCustomer;
-  String selectedPaymentMethod = 'Cash';
-  String selectedDeliveryStatus = 'Pending';
-  String? selectedDeliveryPersonId;
-  DateTime? proposedDeliveryTime;
-
-  // Text controllers
-  final customerSearchController = TextEditingController();
-  final newCustomerNameController = TextEditingController();
-  final newCustomerMobileController = TextEditingController();
-  final newCustomerEmailController = TextEditingController();
-  final newCustomerAddressController = TextEditingController();
-  final guestNameController = TextEditingController();
-  final guestMobileController = TextEditingController();
-  final guestAddressController = TextEditingController();
-  final specialInstructionsController = TextEditingController();
-
-  // Order items list
-  List<OrderItem> orderItems = [];
+  // Services
+  final RestaurantService _restaurantService = RestaurantService();
+  final VendorService _vendorService = VendorService();
+  final CustomerService _customerService = CustomerService();
+  final MenuService _menuService = MenuService();
+  final AddressService _addressService = AddressService();
+  final OrderService _orderService = OrderService();
 
   // Loading states
-  bool isLoadingRestaurantData = false;
-  bool isCreatingOrder = false;
+  bool _isLoadingRestaurants = false;
+  bool _isLoadingVendors = false;
+  bool _isSubmitting = false;
 
-  // Sample data (replace with actual API calls)
-  List<Restaurant> restaurants = [];
-  List<Vendor> vendors = [];
-  List<Customer> customers = [];
-  List<MenuItem> menuItems = [];
-  List<DeliveryPersonnel> deliveryPersons = [];
+  // Data lists
+  List<Restaurant> _restaurants = [];
+  List<Map<String, dynamic>> _vendors = [];
+  List<UserModel> _customers = [];
+  List<MenuItem> _menuItems = [];
+  List<Address> _customerAddresses = [];
+
+  // Selected values
+  Restaurant? _selectedRestaurant;
+  Map<String, dynamic>? _selectedVendor;
+  UserModel? _selectedCustomer;
+  Address? _selectedAddress;
+  final List<OrderItem> _orderItems = [];
+
+  // Guest details
+  bool _isGuestOrder = false;
+  String? _guestName;
+  String? _guestMobile;
+  String? _guestAddress;
+
+  // Order details
+  String _paymentMethod = 'Cash';
+  String? _specialInstructions;
+  DateTime? _proposedDeliveryTime;
+
+  // Text controllers for dialogs
+  final _customerNameController = TextEditingController();
+  final _customerMobileController = TextEditingController();
+  final _customerEmailController = TextEditingController();
+  final _customerAddressController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    _loadRestaurants();
   }
 
-  // Load initial data from backend
-  Future<void> _loadInitialData() async {
-    // TODO: Replace with actual API calls
-    // await _loadRestaurants();
-    // await _loadCustomers();
+  @override
+  void dispose() {
+    _customerNameController.dispose();
+    _customerMobileController.dispose();
+    _customerEmailController.dispose();
+    _customerAddressController.dispose();
+    super.dispose();
   }
 
-  // MARK: - Restaurant Selection
-  void _onRestaurantSelected(Restaurant? restaurant) {
-    setState(() {
-      selectedRestaurant = restaurant;
-      selectedVendor = null;
-      orderItems.clear();
-      menuItems.clear();
-    });
+  /// Load restaurants filtered by current admin email
+  Future<void> _loadRestaurants() async {
+    setState(() => _isLoadingRestaurants = true);
 
-    if (restaurant != null) {
-      _loadVendorsForRestaurant(restaurant);
-    }
-  }
-
-  Future<void> _loadVendorsForRestaurant(Restaurant restaurant) async {
-    setState(() => isLoadingRestaurantData = true);
     try {
-      // TODO: Replace with actual API call
-      // vendors = await vendorRepository.getVendorsByRestaurant(restaurant.id);
-      setState(() {});
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || currentUser.email == null) {
+        throw Exception('No authenticated user found');
+      }
+
+      print('🔍 Loading restaurants for email: ${currentUser.email}');
+      _restaurants =
+          await _restaurantService.getRestaurantsByAdminEmail(currentUser.email!);
+
+      print('✅ Loaded ${_restaurants.length} restaurants');
+
+      // Auto-select if only one restaurant
+      if (_restaurants.length == 1) {
+        _selectedRestaurant = _restaurants.first;
+        await _loadVendors();
+        await _loadMenuItems();
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to load vendors: $e');
+      print('❌ Error loading restaurants: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading restaurants: $e')),
+        );
+      }
     } finally {
-      setState(() => isLoadingRestaurantData = false);
+      if (mounted) setState(() => _isLoadingRestaurants = false);
     }
   }
 
-  // MARK: - Vendor Selection
-  void _onVendorSelected(Vendor? vendor) {
-    setState(() {
-      selectedVendor = vendor;
-      orderItems.clear();
-    });
+  /// Load vendors for selected restaurant
+  Future<void> _loadVendors() async {
+    if (_selectedRestaurant == null) return;
 
-    if (vendor != null) {
-      _loadMenuItemsForVendor(vendor);
-    }
-  }
+    setState(() => _isLoadingVendors = true);
 
-  Future<void> _loadMenuItemsForVendor(Vendor vendor) async {
-    setState(() => isLoadingRestaurantData = true);
     try {
-      // TODO: Replace with actual API call
-      // menuItems = await menuRepository.getMenuItemsByVendor(vendor.id);
-      setState(() {});
+      print('🔍 Loading vendors for restaurant: ${_selectedRestaurant!.id}');
+      _vendors = await _vendorService
+          .fetchVendorsByRestaurant(_selectedRestaurant!.id!);
+
+      print('✅ Loaded ${_vendors.length} vendors');
+
+      // Auto-select if only one vendor
+      if (_vendors.length == 1) {
+        _selectedVendor = _vendors.first;
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to load menu items: $e');
+      print('❌ Error loading vendors: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading vendors: $e')),
+        );
+      }
     } finally {
-      setState(() => isLoadingRestaurantData = false);
+      if (mounted) setState(() => _isLoadingVendors = false);
     }
   }
 
-  // MARK: - Customer Selection
-  void _showCustomerSelectionDialog() {
+  /// Load menu items for selected restaurant
+  Future<void> _loadMenuItems() async {
+    if (_selectedRestaurant == null) return;
+
+
+    try {
+      print('🔍 Loading menu items for restaurant: ${_selectedRestaurant!.id}');
+      _menuItems = await _menuService.getMenuItems(_selectedRestaurant!.id!);
+
+      print('✅ Loaded ${_menuItems.length} menu items');
+    } catch (e) {
+      print('❌ Error loading menu items: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading menu items: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() {
+        // just to refresh UI
+      });
+
+    }
+  }
+
+  /// Load customers for selection
+  Future<void> _loadCustomers() async {
+
+    try {
+      print('🔍 Loading customers...');
+      _customers = await _customerService.getAllCustomers();
+      print('✅ Loaded ${_customers.length} customers');
+    } catch (e) {
+      print('❌ Error loading customers: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+        // just to refresh UI
+      });
+      }
+    }
+  }
+
+  /// Load addresses for selected customer
+  Future<void> _loadCustomerAddresses() async {
+    if (_selectedCustomer == null) return;
+
+    try {
+      print('🔍 Loading addresses for customer: ${_selectedCustomer!.id}');
+      _customerAddresses =
+          await _addressService.getAddressesByUserId(_selectedCustomer!.id!);
+
+      print('✅ Loaded ${_customerAddresses.length} addresses');
+
+      // Auto-select default address
+      final defaultAddress = _customerAddresses.firstWhere(
+        (addr) => addr.isDefault,
+        orElse: () => _customerAddresses.isNotEmpty
+            ? _customerAddresses.first
+            : Address(userId: _selectedCustomer!.id!, fullAddress: ''),
+      );
+
+      setState(() => _selectedAddress = defaultAddress);
+    } catch (e) {
+      print('❌ Error loading addresses: $e');
+    }
+  }
+
+  /// Show customer selection dialog
+  void _showCustomerSelection() async {
+    await _loadCustomers();
+
+    if (!mounted) return;
+
+    final customers = _customers
+        .map((user) => Customer.fromUserModel(user))
+        .toList();
+
     AddOrderDialogs.showCustomerSelection(
       context: context,
       customers: customers,
       onCustomerSelected: (customer) {
         setState(() {
-          selectedCustomer = customer;
-          customerSearchController.clear();
+          _selectedCustomer =
+              _customers.firstWhere((user) => user.id == customer.id);
+          _isGuestOrder = false;
         });
+        _loadCustomerAddresses();
       },
-      onAddNewCustomer: _showAddNewCustomerDialog,
-      onContinueAsGuest: _showAddGuestDetailsDialog,
+      onAddNewCustomer: _showAddNewCustomer,
+      onContinueAsGuest: _showGuestDetails,
     );
   }
 
-  void _showAddNewCustomerDialog() {
-    // Clear controllers
-    newCustomerNameController.clear();
-    newCustomerMobileController.clear();
-    newCustomerEmailController.clear();
-    newCustomerAddressController.clear();
+  /// Show add new customer dialog
+  void _showAddNewCustomer() {
+    _customerNameController.clear();
+    _customerMobileController.clear();
+    _customerEmailController.clear();
+    _customerAddressController.clear();
 
     AddOrderDialogs.showAddNewCustomer(
       context: context,
-      nameController: newCustomerNameController,
-      mobileController: newCustomerMobileController,
-      emailController: newCustomerEmailController,
-      addressController: newCustomerAddressController,
-      onSubmit: _submitNewCustomer,
+      nameController: _customerNameController,
+      mobileController: _customerMobileController,
+      emailController: _customerEmailController,
+      addressController: _customerAddressController,
+      onSubmit: _createNewCustomer,
     );
   }
 
-  Future<void> _submitNewCustomer() async {
-    // Validate inputs
-    if (newCustomerNameController.text.isEmpty ||
-        newCustomerMobileController.text.isEmpty ||
-        newCustomerAddressController.text.isEmpty) {
-      _showErrorSnackBar('Please fill all required fields');
+  /// Create new customer
+  Future<void> _createNewCustomer() async {
+    if (_customerNameController.text.trim().isEmpty ||
+        _customerMobileController.text.trim().isEmpty ||
+        _customerAddressController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please fill all required fields')),
+      );
       return;
     }
 
     try {
-      // TODO: Replace with actual API call to create customer
-      // final newCustomer = await customerRepository.createCustomer(
-      //   name: newCustomerNameController.text,
-      //   phone: newCustomerMobileController.text,
-      //   email: newCustomerEmailController.text,
-      //   address: newCustomerAddressController.text,
-      // );
-
-      // For now, create a local customer object
-      final newCustomer = Customer(
-        name: newCustomerNameController.text,
-        phone: newCustomerMobileController.text,
-        email: newCustomerEmailController.text,
-        address: newCustomerAddressController.text, 
-        id: '',
+      final newCustomer = await _customerService.createCustomer(
+        name: _customerNameController.text.trim(),
+        mobile: _customerMobileController.text.trim(),
+        address: _customerAddressController.text.trim(),
+        email: _customerEmailController.text.trim().isEmpty
+            ? null
+            : _customerEmailController.text.trim(),
       );
 
+      // Create address for the new customer
+      await _addressService.createAddress(Address(
+        userId: newCustomer.id!,
+        fullAddress: _customerAddressController.text.trim(),
+        label: 'Home',
+        isDefault: true,
+      ));
+
       setState(() {
-        selectedCustomer = newCustomer;
-        customers.add(newCustomer);
+        _selectedCustomer = newCustomer;
+        _isGuestOrder = false;
       });
 
-      Navigator.pop(context);
-      _showSuccessSnackBar('Customer created successfully');
+      await _loadCustomerAddresses();
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Customer created successfully')),
+        );
+      }
     } catch (e) {
-      _showErrorSnackBar('Failed to create customer: $e');
+      print('❌ Error creating customer: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating customer: $e')),
+        );
+      }
     }
   }
 
-  void _showAddGuestDetailsDialog() {
-    guestNameController.clear();
-    guestMobileController.clear();
-    guestAddressController.clear();
+  /// Show guest details dialog
+  void _showGuestDetails() {
+    _customerNameController.clear();
+    _customerMobileController.clear();
+    _customerAddressController.clear();
 
     AddOrderDialogs.showAddGuestDetails(
       context: context,
-      nameController: guestNameController,
-      mobileController: guestMobileController,
-      addressController: guestAddressController,
-      onSubmit: _submitGuestDetails,
+      nameController: _customerNameController,
+      mobileController: _customerMobileController,
+      addressController: _customerAddressController,
+      onSubmit: _continueAsGuest,
     );
   }
 
-  void _submitGuestDetails() {
-    // Validate guest inputs
-    final nameError = AddOrderValidators.validateGuestName(guestNameController.text);
-    final phoneError = AddOrderValidators.validateGuestPhone(guestMobileController.text);
-    final addressError = AddOrderValidators.validateDeliveryAddress(guestAddressController.text);
-
-    if (nameError != null || phoneError != null || addressError != null) {
-      _showErrorSnackBar(nameError ?? phoneError ?? addressError ?? 'Validation error');
+  /// Continue as guest
+  void _continueAsGuest() {
+    if (_customerNameController.text.trim().isEmpty ||
+        _customerMobileController.text.trim().isEmpty ||
+        _customerAddressController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
       return;
     }
 
-    // Create guest customer
-    final guestCustomer = Customer(
-      name: guestNameController.text,
-      phone: guestMobileController.text,
-      address: guestAddressController.text,
-       id: '', email: '',
-    );
+    setState(() {
+      _isGuestOrder = true;
+      _guestName = _customerNameController.text.trim();
+      _guestMobile = _customerMobileController.text.trim();
+      _guestAddress = _customerAddressController.text.trim();
+      _selectedCustomer = null;
+      _selectedAddress = null;
+    });
 
-    setState(() => selectedCustomer = guestCustomer);
-    Navigator.pop(context);
-    _showSuccessSnackBar('Proceeding as guest');
+    Navigator.of(context).pop();
   }
 
-  // MARK: - Menu Items
-  void _showMenuSelectionDialog() {
-    if (selectedRestaurant == null || selectedVendor == null) {
-      _showErrorSnackBar('Please select restaurant and vendor first');
+  /// Show menu item selection dialog
+  void _showMenuItemSelection() {
+    if (_selectedRestaurant == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a restaurant first')),
+      );
       return;
     }
 
     AddOrderDialogs.showMenuItemSelection(
       context: context,
-      restaurantName: selectedRestaurant!.name,
-      menuItems: menuItems,
-      currentOrderItems: orderItems,
-      onAddItem: _addMenuItemToOrder,
+      restaurantName: _selectedRestaurant!.name,
+      menuItems: _menuItems,
+      currentOrderItems: _orderItems,
+      onAddItem: _addMenuItem,
     );
   }
 
-  void _addMenuItemToOrder(MenuItem menuItem) {
-    final existingIndex = orderItems.indexWhere(
-      (item) => item.itemId == menuItem.itemId,
+  /// Add menu item to order
+  void _addMenuItem(MenuItem item) {
+    final orderItem = OrderItem(
+      itemId: item.itemId!,
+      itemName: item.name,
+      quantity: 1,
+       orderId: '', 
+       price: item.price,
+
+
     );
 
-    if (existingIndex >= 0) {
-      // Item already exists, show customization dialog if needed
-      _showItemCustomizationDialog(menuItem, existingIndex);
-    } else {
-      // Add new item
-      setState(() {
-        orderItems.add(
-          OrderItem(
-            itemId: menuItem.itemId ?? '',
-            itemName: menuItem.name,
-            price: menuItem.price,
-            quantity: 1,
-            selectedCustomizations: [], orderId: '',
-          ),
-        );
-      });
-      Navigator.pop(context);
-      _showSuccessSnackBar('${menuItem.name} added to order');
-    }
+    setState(() {
+      _orderItems.add(orderItem);
+    });
   }
 
-  void _showItemCustomizationDialog(MenuItem menuItem, int itemIndex) {
-    // TODO: Implement customization dialog if your app supports it
-    // This would show customization options for the menu item
-    Navigator.pop(context);
-    _showInfoSnackBar('Item already added to order');
-  }
-
-  // MARK: - Order Items Management
+  /// Remove item from order
   void _removeOrderItem(int index) {
-    setState(() => orderItems.removeAt(index));
-    _showInfoSnackBar('Item removed from order');
+    setState(() {
+      _orderItems.removeAt(index);
+    });
   }
 
+  /// Update item quantity
   void _updateItemQuantity(int index, int newQuantity) {
     if (newQuantity <= 0) {
       _removeOrderItem(index);
@@ -294,312 +399,673 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     }
 
     setState(() {
-      final item = orderItems[index];
-      item.quantity = newQuantity;
-      orderItems[index] = item;
+      final item = _orderItems[index];
+      _orderItems[index] = item.copyWith(
+        quantity: newQuantity,
+      );
     });
   }
 
-  // MARK: - Delivery Time Selection
-  Future<void> _selectDeliveryTime() async {
-    final now = DateTime.now();
-    final tomorrow = now.add(const Duration(days: 1));
-
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: tomorrow,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 30)),
-    );
-
-    if (selectedDate != null) {
-      if (!mounted) return;
-      final selectedTime = await showTimePicker(
-        context: context,
-        initialTime: const TimeOfDay(hour: 12, minute: 0),
-      );
-
-      if (selectedTime != null) {
-        setState(() {
-          proposedDeliveryTime = DateTime(
-            selectedDate.year,
-            selectedDate.month,
-            selectedDate.day,
-            selectedTime.hour,
-            selectedTime.minute,
-          );
-        });
-      }
-    }
+  /// Calculate total amount
+  double get _totalAmount {
+    return _orderItems.fold(0.0, (sum, item) => sum + item.totalPrice);
   }
 
-  // // MARK: - Delivery Person Selection
-  // Future<void> _loadDeliveryPersons() async {
-  //   if (selectedRestaurant == null) return;
+  /// Generate order number (ORD-YYYYMMDD-NNN)
+  String _generateOrderNumber() {
+    final now = DateTime.now();
+    final dateStr = DateFormat('yyyyMMdd').format(now);
+    final randomNum = (DateTime.now().millisecondsSinceEpoch % 1000)
+        .toString()
+        .padLeft(3, '0');
+    return 'ORD-$dateStr-$randomNum';
+  }
 
-  //   try {
-  //     // TODO: Replace with actual API call
-  //     // deliveryPersons = await deliveryRepository.getDeliveryPersonsByRestaurant(
-  //     //   selectedRestaurant!.id,
-  //     // );
-  //     setState(() {});
-  //   } catch (e) {
-  //     _showErrorSnackBar('Failed to load delivery partners: $e');
-  //   }
-  // }
-
-  // MARK: - Order Creation
-  Future<void> _createOrder() async {
-    // Validate form
-    if (!_formKey.currentState!.validate()) {
-      _showErrorSnackBar('Please fill all required fields');
+  /// Submit order
+  Future<void> _submitOrder() async {
+    // Validation
+    if (_selectedRestaurant == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a restaurant')),
+      );
       return;
     }
 
-    // Validate order
-    final validationError = AddOrderValidators.getOrderCreationError(
-      selectedRestaurant: selectedRestaurant,
-      selectedVendor: selectedVendor,
-      selectedCustomer: selectedCustomer,
-      orderItems: orderItems,
-    );
-
-    if (validationError != null) {
-      _showErrorSnackBar(validationError);
+    if (_selectedVendor == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a vendor')),
+      );
       return;
     }
 
-    setState(() => isCreatingOrder = true);
+    if (!_isGuestOrder && _selectedCustomer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a customer')),
+      );
+      return;
+    }
+
+    if (_isGuestOrder &&
+        (_guestName == null || _guestMobile == null || _guestAddress == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please provide guest details')),
+      );
+      return;
+    }
+
+    if (_orderItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one item')),
+      );
+      return;
+    }
+
+    if (!_isGuestOrder && _selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a delivery address')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
 
     try {
-      // TODO: Replace with actual API call to create order
-      // final order = Order(
-      //   restaurantId: selectedRestaurant!.id,
-      //   vendorId: selectedVendor!.id,
-      //   customerId: selectedCustomer!.customerId,
-      //   items: orderItems,
-      //   totalAmount: _calculateTotalAmount(),
-      //   paymentMethod: selectedPaymentMethod,
-      //   deliveryStatus: selectedDeliveryStatus,
-      //   deliveryPersonId: selectedDeliveryPersonId,
-      //   proposedDeliveryTime: proposedDeliveryTime,
-      //   specialInstructions: specialInstructionsController.text,
-      // );
-      //
-      // await orderRepository.createOrder(order);
+      String? customerId;
+      String? addressId;
 
-      _showSuccessSnackBar('Order created successfully');
-      
+      // Handle guest order - create customer first
+      if (_isGuestOrder) {
+        final guestCustomer = await _customerService.createCustomer(
+          name: _guestName!,
+          mobile: _guestMobile!,
+          address: _guestAddress!,
+        );
+
+        customerId = guestCustomer.id;
+
+        // Create address for guest
+        final guestAddressObj = await _addressService.createAddress(Address(
+          userId: customerId!,
+          fullAddress: _guestAddress!,
+          label: 'Guest Address',
+          isDefault: true,
+        ));
+
+        addressId = guestAddressObj.addressId;
+      } else {
+        customerId = _selectedCustomer!.id;
+        addressId = _selectedAddress!.addressId;
+      }
+
+      // Generate order number
+      final orderNumber = _generateOrderNumber();
+
+      // Prepare order data
+      final orderData = {
+        'order_id': const Uuid().v4(),
+        'customer_id': customerId,
+        'vendor_id': _selectedVendor!['vendor_id'],
+        'hotel_id': _selectedRestaurant!.id,
+        'order_number': orderNumber,
+        'total_amount': _totalAmount,
+        'status': 'Pending',
+        'customer_name': _isGuestOrder ? _guestName : _selectedCustomer!.name,
+        'delivery_address': addressId,
+        'payment_method': _paymentMethod,
+        'special_instructions': _specialInstructions,
+        'proposed_delivery_time': _proposedDeliveryTime?.toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      print('📦 Creating order with data: $orderData');
+
+      // Create order
+      final newOrder = await _orderService.createOrder(orderData);
+
+      print('✅ Order created: ${newOrder.orderNumber}');
+
+      // TODO: Create order items in order_items table
+      // This would require an order items service
+
       if (mounted) {
-        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Order ${newOrder.orderNumber} created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
-      _showErrorSnackBar('Failed to create order: $e');
-    } finally {
+      print('❌ Error creating order: $e');
       if (mounted) {
-        setState(() => isCreatingOrder = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating order: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
-  }
-
-  // MARK: - Helper Methods
-  double _calculateTotalAmount() {
-    return orderItems.fold(0, (sum, item) => sum + item.totalPrice);
-  }
-
-  void _clearCustomer() {
-    setState(() {
-      selectedCustomer = null;
-      customerSearchController.clear();
-    });
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red[600],
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green[600],
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.blue[600],
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    customerSearchController.dispose();
-    newCustomerNameController.dispose();
-    newCustomerMobileController.dispose();
-    newCustomerEmailController.dispose();
-    newCustomerAddressController.dispose();
-    guestNameController.dispose();
-    guestMobileController.dispose();
-    guestAddressController.dispose();
-    specialInstructionsController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalAmount = _calculateTotalAmount();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Order'),
+        title: const Text('Create New Order'),
         elevation: 0,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Restaurant Selection
-              AddOrderFormSections.buildSectionHeader('Restaurant & Vendor'),
-              const SizedBox(height: 16),
-              AddOrderFormSections.buildRestaurantSelection(
-                selectedRestaurant: selectedRestaurant,
-                restaurants: restaurants,
-                onChanged: _onRestaurantSelected,
-                validator: AddOrderValidators.validateRestaurant,
-              ),
-              const SizedBox(height: 16),
-
-              // Vendor Selection
-              if (selectedRestaurant != null)
-                AddOrderFormSections.buildVendorSelection(
-                  selectedVendor: selectedVendor,
-                  vendors: vendors,
-                  onChanged: _onVendorSelected,
-                  validator: AddOrderValidators.validateVendor,
+      body: _isLoadingRestaurants
+          ? const Center(child: CircularProgressIndicator())
+          : _restaurants.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.restaurant, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No restaurants found for your account',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _loadRestaurants,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildRestaurantSection(),
+                      const SizedBox(height: 20),
+                      _buildVendorSection(),
+                      const SizedBox(height: 20),
+                      _buildCustomerSection(),
+                      const SizedBox(height: 20),
+                      _buildMenuItemsSection(),
+                      const SizedBox(height: 20),
+                      _buildOrderSummary(),
+                      const SizedBox(height: 20),
+                      _buildAdditionalDetails(),
+                      const SizedBox(height: 32),
+                      _buildSubmitButton(),
+                    ],
+                  ),
                 ),
-              const SizedBox(height: 24),
+    );
+  }
 
-              // Customer Selection
-              AddOrderFormSections.buildSectionHeader('Customer Information'),
-              const SizedBox(height: 16),
-              AddOrderFormSections.buildCustomerSearch(
-                controller: customerSearchController,
-                onChanged: (value) {
-                  // TODO: Implement customer search filtering
-                },
-                onAddNewCustomer: _showCustomerSelectionDialog,
-                validator: (value) => AddOrderValidators.validateCustomer(
-                  selectedCustomer,
-                  selectedCustomer != null,
-                ),
+  Widget _buildRestaurantSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Restaurant',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<Restaurant>(
+              value: _selectedRestaurant,
+              decoration: const InputDecoration(
+                labelText: 'Select Restaurant',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.restaurant),
               ),
-              if (selectedCustomer != null)
-                AddOrderFormSections.buildCustomerInfo(
-                  customer: selectedCustomer!,
-                  onClear: _clearCustomer,
-                ),
-              const SizedBox(height: 24),
-
-              // Menu Items
-              AddOrderFormSections.buildSectionHeader('Order Items'),
-              const SizedBox(height: 16),
-              AddOrderListItems.buildMenuItemsSection(
-                hasSelectedRestaurant: selectedRestaurant != null,
-                hasSelectedVendor: selectedVendor != null,
-                isLoadingRestaurantData: isLoadingRestaurantData,
-                onAddMenuItems: _showMenuSelectionDialog,
-                orderItems: orderItems,
-                onRemoveItem: _removeOrderItem,
-                onUpdateQuantity: _updateItemQuantity,
-              ),
-              const SizedBox(height: 24),
-
-              // Special Instructions
-              AddOrderFormSections.buildSectionHeader('Additional Details'),
-              const SizedBox(height: 16),
-              AddOrderFormSections.buildSpecialInstructionsField(
-                controller: specialInstructionsController,
-                onChanged: (value) => setState(() {}),
-              ),
-              const SizedBox(height: 16),
-
-              // Payment Method
-              AddOrderFormSections.buildPaymentMethodField(
-                selectedPaymentMethod: selectedPaymentMethod,
-                onChanged: (method) {
-                  if (method != null) {
-                    setState(() => selectedPaymentMethod = method);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Delivery Status
-              AddOrderFormSections.buildDeliveryStatusDropdown(
-                selectedStatus: selectedDeliveryStatus,
-                statusOptions: ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivering', 'Delivered'],
-                onChanged: (status) {
-                  if (status != null) {
-                    setState(() => selectedDeliveryStatus = status);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Delivery Person
-              AddOrderFormSections.buildDeliveryPersonDropdown(
-                selectedPersonId: selectedDeliveryPersonId,
-                deliveryPersons: deliveryPersons,
-                hasSelectedRestaurant: selectedRestaurant != null,
-                onChanged: (personId) {
-                  setState(() => selectedDeliveryPersonId = personId);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Delivery Time
-              AddOrderFormSections.buildDeliveryTimeField(
-                proposedDeliveryTime: proposedDeliveryTime,
-                onTap: _selectDeliveryTime,
-              ),
-              const SizedBox(height: 24),
-
-              // Order Summary
-              AddOrderFormSections.buildOrderSummary(
-                selectedRestaurant: selectedRestaurant,
-                selectedVendor: selectedVendor,
-                selectedCustomer: selectedCustomer,
-                orderItemsCount: orderItems.length,
-                totalAmount: totalAmount,
-              ),
-              const SizedBox(height: 24),
-
-              // Action Buttons
-              AddOrderListItems.buildActionButtons(
-                isLoading: isCreatingOrder,
-                onCancel: () => Navigator.pop(context),
-                onCreate: _createOrder,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+              items: _restaurants.map((restaurant) {
+                return DropdownMenuItem(
+                  value: restaurant,
+                  child: Text(restaurant.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedRestaurant = value;
+                  _selectedVendor = null;
+                  _vendors.clear();
+                  _menuItems.clear();
+                  _orderItems.clear();
+                });
+                if (value != null) {
+                  _loadVendors();
+                  _loadMenuItems();
+                }
+              },
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildVendorSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Vendor',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            if (_isLoadingVendors)
+              const Center(child: CircularProgressIndicator())
+            else if (_vendors.isEmpty && _selectedRestaurant != null)
+              const Text(
+                'No vendors available for this restaurant',
+                style: TextStyle(color: Colors.grey),
+              )
+            else
+              DropdownButtonFormField<Map<String, dynamic>>(
+                value: _selectedVendor,
+                decoration: const InputDecoration(
+                  labelText: 'Select Vendor',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.business),
+                ),
+                items: _vendors.map((vendor) {
+                  return DropdownMenuItem(
+                    value: vendor,
+                    child: Text(vendor['name'] ?? 'Unknown Vendor'),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedVendor = value);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomerSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Customer',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                TextButton.icon(
+                  onPressed: _showCustomerSelection,
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('Select Customer'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_selectedCustomer != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _selectedCustomer!.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_selectedCustomer!.phone.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text('Phone: ${_selectedCustomer!.phone}'),
+                    ],
+                    if (_selectedCustomer!.email.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text('Email: ${_selectedCustomer!.email}'),
+                    ],
+                  ],
+                ),
+              )
+            else if (_isGuestOrder)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person_outline, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Guest Order',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('Name: $_guestName'),
+                    Text('Phone: $_guestMobile'),
+                    Text('Address: $_guestAddress'),
+                  ],
+                ),
+              )
+            else
+              const Text(
+                'No customer selected',
+                style: TextStyle(color: Colors.grey),
+              ),
+            if (_selectedCustomer != null && _customerAddresses.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Delivery Address',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<Address>(
+                value: _selectedAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Select Address',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+
+                items: _customerAddresses.map((address) {
+                  return DropdownMenuItem(
+                    value: address,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (address.label != null)
+                          Text(
+                            address.label!,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        Text(
+                          address.fullAddress,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedAddress = value);
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItemsSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Order Items',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _selectedRestaurant == null
+                      ? null
+                      : _showMenuItemSelection,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Items'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_orderItems.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text(
+                    'No items added yet',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _orderItems.length,
+                itemBuilder: (context, index) {
+                  final item = _orderItems[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(item.itemName ?? 'Unknown Item'),
+                      subtitle: Text(
+                        '₹${item.price.toStringAsFixed(2)} × ${item.quantity}',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () =>
+                                _updateItemQuantity(index, item.quantity - 1),
+                          ),
+                          Text(
+                            item.quantity.toString(),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: () =>
+                                _updateItemQuantity(index, item.quantity + 1),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _removeOrderItem(index),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrderSummary() {
+    return Card(
+      color: Colors.blue[50],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Order Summary',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Items:', style: TextStyle(fontSize: 16)),
+                Text(
+                  _orderItems.length.toString(),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total Amount:', style: TextStyle(fontSize: 18)),
+                Text(
+                  '₹${_totalAmount.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdditionalDetails() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Additional Details',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _paymentMethod,
+              decoration: const InputDecoration(
+                labelText: 'Payment Method',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.payment),
+              ),
+              items: ['Cash', 'Card', 'UPI', 'Online']
+                  .map((method) => DropdownMenuItem(
+                        value: method,
+                        child: Text(method),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() => _paymentMethod = value ?? 'Cash');
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Special Instructions (Optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.note),
+              ),
+              maxLines: 3,
+              onChanged: (value) => _specialInstructions = value,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.access_time),
+              title: const Text('Proposed Delivery Time (Optional)'),
+              subtitle: _proposedDeliveryTime != null
+                  ? Text(DateFormat('MMM dd, yyyy - hh:mm a')
+                      .format(_proposedDeliveryTime!))
+                  : const Text('Not set'),
+              trailing: IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 30)),
+                  );
+
+                  if (date != null && mounted) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+
+                    if (time != null && mounted) {
+                      setState(() {
+                        _proposedDeliveryTime = DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                          time.hour,
+                          time.minute,
+                        );
+                      });
+                    }
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _isSubmitting ? null : _submitOrder,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        child: _isSubmitting
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                'Create Order',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
       ),
     );
   }
