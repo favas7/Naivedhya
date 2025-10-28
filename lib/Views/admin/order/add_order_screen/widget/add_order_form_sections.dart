@@ -408,7 +408,7 @@ class AddOrderFormSections {
   // Delivery Person Dropdown
   static Widget buildDeliveryPersonDropdown({
     required String? selectedPersonId,
-    required List<SimpleDeliveryPersonnel> deliveryPersons,
+    required List<DeliveryPersonnel> deliveryPersons,
     required bool hasSelectedRestaurant,
     required Function(String?) onChanged,
   }) {

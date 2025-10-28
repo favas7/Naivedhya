@@ -55,7 +55,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   List<Vendor> vendors = [];
   List<Customer> customers = [];
   List<MenuItem> menuItems = [];
-  List<SimpleDeliveryPersonnel> deliveryPersons = [];
+  List<DeliveryPersonnel> deliveryPersons = [];
 
   @override
   void initState() {

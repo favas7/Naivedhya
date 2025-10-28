@@ -1,11 +1,12 @@
-// services/delivery_personnel_service.dart (Fixed)
+// services/delivery_personnel_service.dart
 import 'package:naivedhya/models/simple_delivery_person_model.dart';
+import 'package:naivedhya/models/delivery_history_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DeliveryPersonnelService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<SimpleDeliveryPersonnel>> fetchAvailableDeliveryPersonnel() async {
+  Future<List<DeliveryPersonnel>> fetchAvailableDeliveryPersonnel() async {
     try {
       final response = await _supabase
           .from('delivery_personnel')
@@ -15,14 +16,14 @@ class DeliveryPersonnelService {
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => SimpleDeliveryPersonnel.fromJson(json))
+          .map((json) => DeliveryPersonnel.fromJson(json))
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch delivery personnel: ${e.toString()}');
     }
   }
 
-  Future<List<SimpleDeliveryPersonnel>> fetchAllDeliveryPersonnel() async {
+  Future<List<DeliveryPersonnel>> fetchAllDeliveryPersonnel() async {
     try {
       final response = await _supabase
           .from('delivery_personnel')
@@ -30,14 +31,14 @@ class DeliveryPersonnelService {
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => SimpleDeliveryPersonnel.fromJson(json))
+          .map((json) => DeliveryPersonnel.fromJson(json))
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch delivery personnel: ${e.toString()}');
     }
   }
 
-  Future<SimpleDeliveryPersonnel?> fetchDeliveryPersonnelById(String userId) async {
+  Future<DeliveryPersonnel?> fetchDeliveryPersonnelById(String userId) async {
     try {
       final response = await _supabase
           .from('delivery_personnel')
@@ -45,9 +46,147 @@ class DeliveryPersonnelService {
           .eq('user_id', userId)
           .single();
 
-      return SimpleDeliveryPersonnel.fromJson(response);
+      return DeliveryPersonnel.fromJson(response);
     } catch (e) {
       throw Exception('Failed to fetch delivery personnel: ${e.toString()}');
+    }
+  }
+
+  // NEW: Fetch detailed delivery personnel information
+  Future<DeliveryPersonnel?> fetchDetailedDeliveryPersonnel(String userId) async {
+    try {
+      final response = await _supabase
+          .from('delivery_personnel')
+          .select()
+          .eq('user_id', userId)
+          .single();
+
+      return DeliveryPersonnel.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to fetch detailed delivery personnel: ${e.toString()}');
+    }
+  }
+
+  // NEW: Fetch delivery history for a specific delivery person
+  Future<List<DeliveryHistory>> fetchDeliveryHistory(
+    String deliveryPersonId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('delivery_history')
+          .select()
+          .eq('delivery_person_id', deliveryPersonId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      return (response as List)
+          .map((json) => DeliveryHistory.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch delivery history: ${e.toString()}');
+    }
+  }
+
+  // NEW: Fetch delivery statistics for analytics
+  Future<Map<String, dynamic>> fetchDeliveryStatistics(
+    String deliveryPersonId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      var query = _supabase
+          .from('delivery_history')
+          .select()
+          .eq('delivery_person_id', deliveryPersonId);
+
+      if (startDate != null) {
+        query = query.gte('created_at', startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        query = query.lte('created_at', endDate.toIso8601String());
+      }
+
+      final response = await query;
+      final deliveries = (response as List)
+          .map((json) => DeliveryHistory.fromJson(json))
+          .toList();
+
+      // Calculate statistics
+      int totalDeliveries = deliveries.length;
+      int completedDeliveries = deliveries
+          .where((d) => d.isCompleted)
+          .length;
+      double totalEarnings = deliveries
+          .fold(0.0, (sum, d) => sum + d.totalEarnings);
+      double totalDistance = deliveries
+          .fold(0.0, (sum, d) => sum + d.distanceKm);
+
+      // Group by date for daily statistics
+      Map<String, int> deliveriesPerDay = {};
+      for (var delivery in deliveries) {
+        String dateKey = delivery.createdAt.toIso8601String().split('T')[0];
+        deliveriesPerDay[dateKey] = (deliveriesPerDay[dateKey] ?? 0) + 1;
+      }
+
+      return {
+        'total_deliveries': totalDeliveries,
+        'completed_deliveries': completedDeliveries,
+        'total_earnings': totalEarnings,
+        'total_distance': totalDistance,
+        'deliveries_per_day': deliveriesPerDay,
+        'average_deliveries_per_day': totalDeliveries > 0 
+            ? totalDeliveries / (deliveriesPerDay.length > 0 ? deliveriesPerDay.length : 1) 
+            : 0.0,
+      };
+    } catch (e) {
+      throw Exception('Failed to fetch delivery statistics: ${e.toString()}');
+    }
+  }
+
+  // NEW: Update delivery personnel information
+  Future<DeliveryPersonnel> updateDeliveryPersonnel(
+    String userId,
+    Map<String, dynamic> updates,
+  ) async {
+    try {
+      updates['updated_at'] = DateTime.now().toIso8601String();
+      
+      final response = await _supabase
+          .from('delivery_personnel')
+          .update(updates)
+          .eq('user_id', userId)
+          .select()
+          .single();
+
+      return DeliveryPersonnel.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to update delivery personnel: ${e.toString()}');
+    }
+  }
+
+  // NEW: Update verification status
+  Future<DeliveryPersonnel> updateVerificationStatus(
+    String userId,
+    bool isVerified,
+    String verificationStatus,
+  ) async {
+    try {
+      final response = await _supabase
+          .from('delivery_personnel')
+          .update({
+            'is_verified': isVerified,
+            'verification_status': verificationStatus,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('user_id', userId)
+          .select()
+          .single();
+
+      return DeliveryPersonnel.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to update verification status: ${e.toString()}');
     }
   }
 
@@ -138,7 +277,7 @@ class DeliveryPersonnelService {
     }
   }
 
-  Future<List<SimpleDeliveryPersonnel>> searchDeliveryPersonnel({
+  Future<List<DeliveryPersonnel>> searchDeliveryPersonnel({
     String? searchQuery,
     bool? isAvailable,
     bool? isVerified,
@@ -167,14 +306,14 @@ class DeliveryPersonnelService {
       final response = await query.order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => SimpleDeliveryPersonnel.fromJson(json))
+          .map((json) => DeliveryPersonnel.fromJson(json))
           .toList();
     } catch (e) {
       throw Exception('Failed to search delivery personnel: ${e.toString()}');
     }
   }
 
-  Future<SimpleDeliveryPersonnel> updateDeliveryPersonnelAvailability(
+  Future<DeliveryPersonnel> updateDeliveryPersonnelAvailability(
     String userId, 
     bool isAvailable
   ) async {
@@ -189,17 +328,17 @@ class DeliveryPersonnelService {
           .select()
           .single();
 
-      return SimpleDeliveryPersonnel.fromJson(response);
+      return DeliveryPersonnel.fromJson(response);
     } catch (e) {
       throw Exception('Failed to update delivery personnel availability: ${e.toString()}');
     }
   }
 
-  Stream<List<SimpleDeliveryPersonnel>> getDeliveryPersonnelStream() {
+  Stream<List<DeliveryPersonnel>> getDeliveryPersonnelStream() {
     return _supabase
         .from('delivery_personnel')
         .stream(primaryKey: ['user_id'])
         .order('created_at', ascending: false)
-        .map((data) => data.map((json) => SimpleDeliveryPersonnel.fromJson(json)).toList());
+        .map((data) => data.map((json) => DeliveryPersonnel.fromJson(json)).toList());
   }
 }

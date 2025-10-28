@@ -5,11 +5,11 @@ import 'package:naivedhya/services/delivery_person_service.dart';
 class DeliveryPersonnelProvider extends ChangeNotifier {
   final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
   
-  List<SimpleDeliveryPersonnel> _deliveryPersonnel = [];
+  List<DeliveryPersonnel> _deliveryPersonnel = [];
   bool _isLoading = false;
   String? _error;
 
-  List<SimpleDeliveryPersonnel> get deliveryPersonnel => _deliveryPersonnel;
+  List<DeliveryPersonnel> get deliveryPersonnel => _deliveryPersonnel;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -142,7 +142,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
   }
 
   // Get personnel by ID
-  SimpleDeliveryPersonnel? getPersonnelById(String userId) {
+  DeliveryPersonnel? getPersonnelById(String userId) {
     try {
       return _deliveryPersonnel.firstWhere((p) => p.userId == userId);
     } catch (e) {
@@ -151,27 +151,27 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
   }
 
   // Get available personnel
-  List<SimpleDeliveryPersonnel> get availablePersonnel {
+  List<DeliveryPersonnel> get availablePersonnel {
     return _deliveryPersonnel.where((p) => p.isAvailable).toList();
   }
 
   // Get busy personnel
-  List<SimpleDeliveryPersonnel> get busyPersonnel {
+  List<DeliveryPersonnel> get busyPersonnel {
     return _deliveryPersonnel.where((p) => !p.isAvailable).toList();
   }
 
   // Get verified personnel
-  List<SimpleDeliveryPersonnel> get verifiedPersonnel {
+  List<DeliveryPersonnel> get verifiedPersonnel {
     return _deliveryPersonnel.where((p) => p.isVerified).toList();
   }
 
   // Get personnel by verification status
-  List<SimpleDeliveryPersonnel> getPersonnelByVerificationStatus(String status) {
+  List<DeliveryPersonnel> getPersonnelByVerificationStatus(String status) {
     return _deliveryPersonnel.where((p) => p.verificationStatus == status).toList();
   }
 
   // Stream for real-time updates
-  Stream<List<SimpleDeliveryPersonnel>> getDeliveryPersonnelStream() {
+  Stream<List<DeliveryPersonnel>> getDeliveryPersonnelStream() {
     return _deliveryService.getDeliveryPersonnelStream();
   }
 

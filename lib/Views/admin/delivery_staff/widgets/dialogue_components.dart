@@ -157,7 +157,7 @@ class DeliveryStaffDialogs {
     );
   }
 
-  static void showAssignOrderDialog(BuildContext context, SimpleDeliveryPersonnel staff) {
+  static void showAssignOrderDialog(BuildContext context, DeliveryPersonnel staff) {
     final orderIdController = TextEditingController();
 
     showDialog(
@@ -206,7 +206,7 @@ class DeliveryStaffDialogs {
     );
   }
 
-  static void showBulkActionDialog(BuildContext context, List<SimpleDeliveryPersonnel> selectedStaff) {
+  static void showBulkActionDialog(BuildContext context, List<DeliveryPersonnel> selectedStaff) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -334,7 +334,7 @@ class DeliveryStaffDialogs {
 
   static Future<void> _handleBulkAvailability(
     BuildContext context,
-    List<SimpleDeliveryPersonnel> selectedStaff,
+    List<DeliveryPersonnel> selectedStaff,
     bool availability,
   ) async {
     Navigator.pop(context);

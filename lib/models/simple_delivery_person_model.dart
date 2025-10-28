@@ -1,5 +1,5 @@
 // models/delivery_personnel_model.dart
-class SimpleDeliveryPersonnel {
+class DeliveryPersonnel {
   final String userId;
   final String name;
   final String email;
@@ -21,8 +21,10 @@ class SimpleDeliveryPersonnel {
   final String verificationStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final double rating;
+  final int totalDeliveries;
 
-  SimpleDeliveryPersonnel({
+  DeliveryPersonnel({
     required this.userId,
     required this.name,
     required this.email,
@@ -44,10 +46,12 @@ class SimpleDeliveryPersonnel {
     required this.verificationStatus,
     required this.createdAt,
     required this.updatedAt,
+    required this.rating,
+    required this.totalDeliveries,
   });
 
-  factory SimpleDeliveryPersonnel.fromJson(Map<String, dynamic> json) {
-    return SimpleDeliveryPersonnel(
+  factory DeliveryPersonnel.fromJson(Map<String, dynamic> json) {
+    return DeliveryPersonnel(
       userId: json['user_id'],
       name: json['name'],
       email: json['email'],
@@ -69,6 +73,8 @@ class SimpleDeliveryPersonnel {
       verificationStatus: json['verification_status'] ?? 'pending',
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      totalDeliveries: (json['total_deliveries'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -95,10 +101,12 @@ class SimpleDeliveryPersonnel {
       'verification_status': verificationStatus,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'rating': rating,
+      'total_deliveries': totalDeliveries,
     };
   }
 
-  SimpleDeliveryPersonnel copyWith({
+  DeliveryPersonnel copyWith({
     String? userId,
     String? name,
     String? email,
@@ -120,8 +128,10 @@ class SimpleDeliveryPersonnel {
     String? verificationStatus,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? rating,
+    int? totalDeliveries,
   }) {
-    return SimpleDeliveryPersonnel(
+    return DeliveryPersonnel(
       userId: userId ?? this.userId,
       name: name ?? this.name,
       email: email ?? this.email,
@@ -143,10 +153,21 @@ class SimpleDeliveryPersonnel {
       verificationStatus: verificationStatus ?? this.verificationStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rating: rating ?? this.rating,
+      totalDeliveries: totalDeliveries ?? this.totalDeliveries,
     );
   }
 
   String get displayName => fullName.isNotEmpty ? fullName : name;
   String get vehicleInfo => '$vehicleType - $vehicleModel ($numberPlate)';
   int get activeOrdersCount => assignedOrders.length;
+  int get age {
+    final now = DateTime.now();
+    int age = now.year - dateOfBirth.year;
+    if (now.month < dateOfBirth.month || 
+        (now.month == dateOfBirth.month && now.day < dateOfBirth.day)) {
+      age--;
+    }
+    return age;
+  }
 }
