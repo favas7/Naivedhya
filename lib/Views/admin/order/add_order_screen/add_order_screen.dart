@@ -3,6 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:naivedhya/Views/admin/order/add_order_screen/widget/add_order_dialogs.dart';
+import 'package:naivedhya/Views/admin/order/add_order_screen/widget/additional_details_card.dart';
+import 'package:naivedhya/Views/admin/order/add_order_screen/widget/customer_section_card.dart';
+import 'package:naivedhya/Views/admin/order/add_order_screen/widget/order_items_section_card.dart';
+import 'package:naivedhya/Views/admin/order/add_order_screen/widget/order_summary_card.dart';
+import 'package:naivedhya/Views/admin/order/add_order_screen/widget/restaurant_selector_card.dart';
+import 'package:naivedhya/Views/admin/order/add_order_screen/widget/vendor_selector_card.dart';
 import 'package:naivedhya/models/address_model.dart';
 import 'package:naivedhya/models/customer_model.dart';
 import 'package:naivedhya/models/menu_model.dart';
@@ -13,6 +19,7 @@ import 'package:naivedhya/services/adress_service.dart';
 import 'package:naivedhya/services/customer_service.dart';
 import 'package:naivedhya/services/menu_service.dart';
 import 'package:naivedhya/services/order/order_service.dart';
+import 'package:naivedhya/services/order/order_validation_service.dart';
 import 'package:naivedhya/services/restaurant_service.dart';
 import 'package:naivedhya/services/ventor_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';
@@ -152,11 +159,9 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   Future<void> _loadMenuItems() async {
     if (_selectedRestaurant == null) return;
 
-
     try {
       print('🔍 Loading menu items for restaurant: ${_selectedRestaurant!.id}');
       _menuItems = await _menuService.getMenuItems(_selectedRestaurant!.id!);
-
       print('✅ Loaded ${_menuItems.length} menu items');
     } catch (e) {
       print('❌ Error loading menu items: $e');
@@ -166,16 +171,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() {
-        // just to refresh UI
-      });
-
+      if (mounted) setState(() {});
     }
   }
 
   /// Load customers for selection
   Future<void> _loadCustomers() async {
-
     try {
       print('🔍 Loading customers...');
       _customers = await _customerService.getAllCustomers();
@@ -183,11 +184,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     } catch (e) {
       print('❌ Error loading customers: $e');
     } finally {
-      if (mounted) {
-        setState(() {
-        // just to refresh UI
-      });
-      }
+      if (mounted) setState(() {});
     }
   }
 
@@ -261,12 +258,15 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
   /// Create new customer
   Future<void> _createNewCustomer() async {
-    if (_customerNameController.text.trim().isEmpty ||
-        _customerMobileController.text.trim().isEmpty ||
-        _customerAddressController.text.trim().isEmpty) {
+    final validation = OrderValidationService.validateCustomerForm(
+      name: _customerNameController.text,
+      mobile: _customerMobileController.text,
+      address: _customerAddressController.text,
+    );
+
+    if (!validation.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please fill all required fields')),
+        SnackBar(content: Text(validation.errorMessage!)),
       );
       return;
     }
@@ -329,11 +329,15 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
   /// Continue as guest
   void _continueAsGuest() {
-    if (_customerNameController.text.trim().isEmpty ||
-        _customerMobileController.text.trim().isEmpty ||
-        _customerAddressController.text.trim().isEmpty) {
+    final validation = OrderValidationService.validateCustomerForm(
+      name: _customerNameController.text,
+      mobile: _customerMobileController.text,
+      address: _customerAddressController.text,
+    );
+
+    if (!validation.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+        SnackBar(content: Text(validation.errorMessage!)),
       );
       return;
     }
@@ -374,10 +378,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       itemId: item.itemId!,
       itemName: item.name,
       quantity: 1,
-       orderId: '', 
-       price: item.price,
-
-
+      orderId: '',
+      price: item.price,
     );
 
     setState(() {
@@ -401,9 +403,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
     setState(() {
       final item = _orderItems[index];
-      _orderItems[index] = item.copyWith(
-        quantity: newQuantity,
-      );
+      _orderItems[index] = item.copyWith(quantity: newQuantity);
     });
   }
 
@@ -425,45 +425,21 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   /// Submit order
   Future<void> _submitOrder() async {
     // Validation
-    if (_selectedRestaurant == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a restaurant')),
-      );
-      return;
-    }
+    final validation = OrderValidationService.validateAddOrder(
+      selectedRestaurant: _selectedRestaurant,
+      selectedVendor: _selectedVendor,
+      isGuestOrder: _isGuestOrder,
+      selectedCustomer: _selectedCustomer,
+      guestName: _guestName,
+      guestMobile: _guestMobile,
+      guestAddress: _guestAddress,
+      orderItems: _orderItems,
+      selectedAddress: _selectedAddress,
+    );
 
-    if (_selectedVendor == null) {
+    if (!validation.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a vendor')),
-      );
-      return;
-    }
-
-    if (!_isGuestOrder && _selectedCustomer == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a customer')),
-      );
-      return;
-    }
-
-    if (_isGuestOrder &&
-        (_guestName == null || _guestMobile == null || _guestAddress == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide guest details')),
-      );
-      return;
-    }
-
-    if (_orderItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one item')),
-      );
-      return;
-    }
-
-    if (!_isGuestOrder && _selectedAddress == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a delivery address')),
+        SnackBar(content: Text(validation.errorMessage!)),
       );
       return;
     }
@@ -527,13 +503,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       print('✅ Order created: ${newOrder.orderNumber}');
 
       // TODO: Create order items in order_items table
-      // This would require an order items service
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Order ${newOrder.orderNumber} created successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.success,
           ),
         );
 
@@ -546,7 +521,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error creating order: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }
@@ -557,529 +532,308 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppTheme.of(context);
+
     return Scaffold(
+      backgroundColor: themeColors.background,
       appBar: AppBar(
         title: const Text('Create New Order'),
-        elevation: 0,
+        backgroundColor: themeColors.surface,
+        elevation: 1,
       ),
       body: _isLoadingRestaurants
           ? const Center(child: CircularProgressIndicator())
           : _restaurants.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.restaurant, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No restaurants found for your account',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+              ? _buildEmptyState(themeColors)
+              : Column(
+                  children: [
+                    // Header Section
+                    _buildHeaderSection(themeColors),
+                    
+                    // Scrollable Form Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader(
+                              'Restaurant & Vendor',
+                              Icons.restaurant_menu,
+                              themeColors,
+                            ),
+                            const SizedBox(height: 12),
+                            RestaurantSelectorCard(
+                              restaurants: _restaurants,
+                              selectedRestaurant: _selectedRestaurant,
+                              onRestaurantChanged: _onRestaurantChanged,
+                            ),
+                            const SizedBox(height: 12),
+                            VendorSelectorCard(
+                              vendors: _vendors,
+                              selectedVendor: _selectedVendor,
+                              onVendorChanged: (value) => setState(() => _selectedVendor = value),
+                              isLoading: _isLoadingVendors,
+                              hasSelectedRestaurant: _selectedRestaurant != null,
+                            ),
+                            
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(
+                              'Customer Information',
+                              Icons.person,
+                              themeColors,
+                            ),
+                            const SizedBox(height: 12),
+                            CustomerSectionCard(
+                              selectedCustomer: _selectedCustomer,
+                              isGuestOrder: _isGuestOrder,
+                              guestName: _guestName,
+                              guestMobile: _guestMobile,
+                              guestAddress: _guestAddress,
+                              customerAddresses: _customerAddresses,
+                              selectedAddress: _selectedAddress,
+                              onSelectCustomer: _showCustomerSelection,
+                              onAddressChanged: (value) => setState(() => _selectedAddress = value),
+                            ),
+                            
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(
+                              'Order Items',
+                              Icons.shopping_bag,
+                              themeColors,
+                            ),
+                            const SizedBox(height: 12),
+                            OrderItemsSectionCard(
+                              orderItems: _orderItems,
+                              onAddItems: _showMenuItemSelection,
+                              onRemoveItem: _removeOrderItem,
+                              onUpdateQuantity: _updateItemQuantity,
+                              canAddItems: _selectedRestaurant != null,
+                            ),
+                            
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(
+                              'Order Summary',
+                              Icons.receipt_long,
+                              themeColors,
+                            ),
+                            const SizedBox(height: 12),
+                            OrderSummaryCard(
+                              itemCount: _orderItems.length,
+                              totalAmount: _totalAmount,
+                            ),
+                            
+                            const SizedBox(height: 24),
+                            _buildSectionHeader(
+                              'Additional Details',
+                              Icons.info_outline,
+                              themeColors,
+                            ),
+                            const SizedBox(height: 12),
+                            AdditionalDetailsCard(
+                              paymentMethod: _paymentMethod,
+                              onPaymentMethodChanged: (value) =>
+                                  setState(() => _paymentMethod = value ?? 'Cash'),
+                              onSpecialInstructionsChanged: (value) =>
+                                  _specialInstructions = value,
+                              proposedDeliveryTime: _proposedDeliveryTime,
+                              onDeliveryTimeChanged: (value) =>
+                                  setState(() => _proposedDeliveryTime = value),
+                              initialInstructions: _specialInstructions,
+                            ),
+                            
+                            const SizedBox(height: 32),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _loadRestaurants,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildRestaurantSection(),
-                      const SizedBox(height: 20),
-                      _buildVendorSection(),
-                      const SizedBox(height: 20),
-                      _buildCustomerSection(),
-                      const SizedBox(height: 20),
-                      _buildMenuItemsSection(),
-                      const SizedBox(height: 20),
-                      _buildOrderSummary(context),
-                      const SizedBox(height: 20),
-                      _buildAdditionalDetails(),
-                      const SizedBox(height: 32),
-                      _buildSubmitButton(),
-                    ],
-                  ),
+                    ),
+                    
+                    // Bottom Submit Button
+                    _buildBottomSubmitBar(themeColors),
+                  ],
                 ),
     );
   }
 
-  Widget _buildRestaurantSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Restaurant',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<Restaurant>(
-              value: _selectedRestaurant,
-              decoration: const InputDecoration(
-                labelText: 'Select Restaurant',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.restaurant),
-              ),
-              items: _restaurants.map((restaurant) {
-                return DropdownMenuItem(
-                  value: restaurant,
-                  child: Text(restaurant.name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedRestaurant = value;
-                  _selectedVendor = null;
-                  _vendors.clear();
-                  _menuItems.clear();
-                  _orderItems.clear();
-                });
-                if (value != null) {
-                  _loadVendors();
-                  _loadMenuItems();
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVendorSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Vendor',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            if (_isLoadingVendors)
-              const Center(child: CircularProgressIndicator())
-            else if (_vendors.isEmpty && _selectedRestaurant != null)
-              const Text(
-                'No vendors available for this restaurant',
-                style: TextStyle(color: Colors.grey),
-              )
-            else
-              DropdownButtonFormField<Map<String, dynamic>>(
-                value: _selectedVendor,
-                decoration: const InputDecoration(
-                  labelText: 'Select Vendor',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.business),
-                ),
-                items: _vendors.map((vendor) {
-                  return DropdownMenuItem(
-                    value: vendor,
-                    child: Text(vendor['name'] ?? 'Unknown Vendor'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedVendor = value);
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-Widget _buildCustomerSection() {
-  return Card(
-    child: Padding(
+  Widget _buildHeaderSection(AppThemeColors themeColors) {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: themeColors.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: themeColors.background.withAlpha(50),
+            width: 1,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Customer',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              TextButton.icon(
-                onPressed: _showCustomerSelection,
-                icon: const Icon(Icons.person_add),
-                label: const Text('Select Customer'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_selectedCustomer != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.person, color: Colors.blue),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _selectedCustomer!.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_selectedCustomer!.phone.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text('Phone: ${_selectedCustomer!.phone}'),
-                  ],
-                  if (_selectedCustomer!.email.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text('Email: ${_selectedCustomer!.email}'),
-                  ],
-                ],
-              ),
-            )
-          else if (_isGuestOrder)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange[200]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.person_outline, color: Colors.orange),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Guest Order',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text('Name: $_guestName'),
-                  Text('Phone: $_guestMobile'),
-                  Text('Address: $_guestAddress'),
-                ],
-              ),
-            )
-          else
-            const Text(
-              'No customer selected',
-              style: TextStyle(color: Colors.grey),
-            ),
-          if (_selectedCustomer != null && _customerAddresses.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            const Text(
-              'Delivery Address',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<Address>(
-              value: _selectedAddress,
-              decoration: const InputDecoration(
-                labelText: 'Select Address',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on),
-              ),
-              items: _customerAddresses.map((address) {
-                return DropdownMenuItem(
-                  value: address,
-                  child: Text(
-                    address.label ?? 'Address ${_customerAddresses.indexOf(address) + 1}',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() => _selectedAddress = value);
-              },
-            ),
-            if (_selectedAddress != null) ...[
-              const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: AppTheme.primary.withAlpha(25),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
                 ),
+                child: Icon(
+                  Icons.add_shopping_cart,
+                  color: AppTheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.green),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _selectedAddress!.label ?? 'Selected Address',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
                     Text(
-                      _selectedAddress!.fullAddress,
-                      style: const TextStyle(fontSize: 14),
+                      'New Order',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: themeColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Fill in the details below to create a new order',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: themeColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
-          ],
+          ),
         ],
-      ),
-    ),
-  );
-}
-
-  Widget _buildMenuItemsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Order Items',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _selectedRestaurant == null
-                      ? null
-                      : _showMenuItemSelection,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Items'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (_orderItems.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text(
-                    'No items added yet',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _orderItems.length,
-                itemBuilder: (context, index) {
-                  final item = _orderItems[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text(item.itemName ?? 'Unknown Item'),
-                      subtitle: Text(
-                        '₹${item.price.toStringAsFixed(2)} × ${item.quantity}',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () =>
-                                _updateItemQuantity(index, item.quantity - 1),
-                          ),
-                          Text(
-                            item.quantity.toString(),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline),
-                            onPressed: () =>
-                                _updateItemQuantity(index, item.quantity + 1),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _removeOrderItem(index),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-          ],
-        ),
       ),
     );
   }
 
-Widget _buildOrderSummary(BuildContext context) {
-  final theme = AppTheme.of(context);
-  final textTheme = Theme.of(context).textTheme;
+  Widget _buildSectionHeader(
+    String title,
+    IconData icon,
+    AppThemeColors themeColors,
+  ) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: AppTheme.primary,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: themeColors.textPrimary,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: themeColors.background.withAlpha(50),
+          ),
+        ),
+      ],
+    );
+  }
 
-  return Card(
-    color: theme.info.withOpacity(0.08),
-    surfaceTintColor: Colors.transparent,
-    elevation: 0,
-    child: Padding(
+  Widget _buildBottomSubmitBar(AppThemeColors themeColors) {
+    return Container(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Order Summary',
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.textPrimary,
-            ),
+      decoration: BoxDecoration(
+        color: themeColors.surface,
+        border: Border(
+          top: BorderSide(
+            color: themeColors.background.withAlpha(50),
+            width: 1,
           ),
-          const Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Items:',
-                style: textTheme.bodyLarge?.copyWith(color: theme.textPrimary),
-              ),
-              Text(
-                _orderItems.length.toString(),
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total Amount:',
-                style: textTheme.titleMedium?.copyWith(color: theme.textPrimary),
-              ),
-              Text(
-                '₹${_totalAmount.toStringAsFixed(2)}',
-                style: textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.info,
-                ),
-              ),
-            ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(13),
+            offset: const Offset(0, -2),
+            blurRadius: 8,
           ),
         ],
       ),
-    ),
-  );
-}
-
-
-  Widget _buildAdditionalDetails() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        child: Row(
           children: [
-            const Text(
-              'Additional Details',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _paymentMethod,
-              decoration: const InputDecoration(
-                labelText: 'Payment Method',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.payment),
+            // Order Info Summary
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${_orderItems.length} ${_orderItems.length == 1 ? 'Item' : 'Items'}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: themeColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '₹${_totalAmount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: themeColors.textPrimary,
+                    ),
+                  ),
+                ],
               ),
-              items: ['Cash', 'Card', 'UPI', 'Online']
-                  .map((method) => DropdownMenuItem(
-                        value: method,
-                        child: Text(method),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() => _paymentMethod = value ?? 'Cash');
-              },
             ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Special Instructions (Optional)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.note),
-              ),
-              maxLines: 3,
-              onChanged: (value) => _specialInstructions = value,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.access_time),
-              title: const Text('Proposed Delivery Time (Optional)'),
-              subtitle: _proposedDeliveryTime != null
-                  ? Text(DateFormat('MMM dd, yyyy - hh:mm a')
-                      .format(_proposedDeliveryTime!))
-                  : const Text('Not set'),
-              trailing: IconButton(
-                icon: const Icon(Icons.calendar_today),
-                onPressed: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 30)),
-                  );
-
-                  if (date != null && mounted) {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.now(),
-                    );
-
-                    if (time != null && mounted) {
-                      setState(() {
-                        _proposedDeliveryTime = DateTime(
-                          date.year,
-                          date.month,
-                          date.day,
-                          time.hour,
-                          time.minute,
-                        );
-                      });
-                    }
-                  }
-                },
+            const SizedBox(width: 16),
+            // Submit Button
+            Expanded(
+              flex: 2,
+              child: SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitOrder,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.check_circle_outline, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Create Order',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
             ),
           ],
@@ -1088,22 +842,76 @@ Widget _buildOrderSummary(BuildContext context) {
     );
   }
 
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isSubmitting ? null : _submitOrder,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        ),
-        child: _isSubmitting
-            ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Create Order',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  void _onRestaurantChanged(Restaurant? value) {
+    setState(() {
+      _selectedRestaurant = value;
+      _selectedVendor = null;
+      _vendors.clear();
+      _menuItems.clear();
+      _orderItems.clear();
+    });
+    if (value != null) {
+      _loadVendors();
+      _loadMenuItems();
+    }
+  }
+
+  Widget _buildEmptyState(AppThemeColors themeColors) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: themeColors.background,
+                shape: BoxShape.circle,
+              ), 
+              child: Icon(
+                Icons.restaurant_outlined,
+                size: 64,
+                color: themeColors.textSecondary,
               ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No Restaurants Found',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: themeColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No restaurants are associated with your account.\nPlease contact support for assistance.',
+              style: TextStyle(
+                fontSize: 14,
+                color: themeColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadRestaurants,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

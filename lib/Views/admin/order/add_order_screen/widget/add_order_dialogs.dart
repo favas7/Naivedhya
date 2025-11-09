@@ -1,8 +1,9 @@
-// lib/Views/admin/order/add_order_screen/widgets/add_order_dialogs.dart
+// lib/Views/admin/order/add_order_screen/widget/add_order_dialogs.dart
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/customer_model.dart';
 import 'package:naivedhya/models/menu_model.dart';
 import 'package:naivedhya/models/order_item_model.dart';
+import 'package:naivedhya/utils/color_theme.dart';
 
 class AddOrderDialogs {
   // Customer Selection Dialog with Guest Option
@@ -13,46 +14,123 @@ class AddOrderDialogs {
     required VoidCallback onAddNewCustomer,
     VoidCallback? onContinueAsGuest,
   }) {
+    final themeColors = AppTheme.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Customer'),
+        backgroundColor: themeColors.surface,
+        title: Text(
+          'Select Customer',
+          style: TextStyle(
+            color: themeColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: SizedBox(
           width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: customers.length,
-            itemBuilder: (context, index) {
-              final customer = customers[index];
-              return ListTile(
-                title: Text(customer.name),
-                subtitle: Text(customer.phone ?? 'No mobile'),
-                onTap: () {
-                  onCustomerSelected(customer);
-                  Navigator.of(context).pop();
-                },
-              );
-            },
-          ),
+          child: customers.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.person_off_outlined,
+                        size: 48,
+                        color: themeColors.textSecondary.withAlpha(128),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No customers found',
+                        style: TextStyle(
+                          color: themeColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: customers.length,
+                  itemBuilder: (context, index) {
+                    final customer = customers[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: themeColors.background,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: themeColors.background.withAlpha(50),
+                        ),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: AppTheme.primary.withAlpha(25),
+                          child: Icon(
+                            Icons.person,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          customer.name,
+                          style: TextStyle(
+                            color: themeColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        subtitle: Text(
+                          customer.phone ?? 'No mobile',
+                          style: TextStyle(
+                            color: themeColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: themeColors.textSecondary,
+                        ),
+                        onTap: () {
+                          onCustomerSelected(customer);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    );
+                  },
+                ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: themeColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               onAddNewCustomer();
             },
-            child: const Text('Add New Customer'),
+            child: Text(
+              'Add New Customer',
+              style: TextStyle(color: AppTheme.primary),
+            ),
           ),
           if (onContinueAsGuest != null)
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 onContinueAsGuest();
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.warning,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Continue as Guest'),
             ),
         ],
@@ -69,45 +147,90 @@ class AddOrderDialogs {
     required TextEditingController addressController,
     required VoidCallback onSubmit,
   }) {
+    final themeColors = AppTheme.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add New Customer'),
+        backgroundColor: themeColors.surface,
+        title: Text(
+          'Add New Customer',
+          style: TextStyle(
+            color: themeColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Customer Name *',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: mobileController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Mobile Number *',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.phone,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
                 ),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Email (Optional)',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.email,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: addressController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Delivery Address *',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.location_on,
+                    color: AppTheme.primary,
+                    size: 20,
+                  ),
                 ),
                 maxLines: 2,
               ),
@@ -117,10 +240,17 @@ class AddOrderDialogs {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: themeColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: onSubmit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Create Customer'),
           ),
         ],
@@ -136,36 +266,72 @@ class AddOrderDialogs {
     required TextEditingController addressController,
     required VoidCallback onSubmit,
   }) {
+    final themeColors = AppTheme.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Guest Order Details'),
+        backgroundColor: themeColors.surface,
+        title: Text(
+          'Guest Order Details',
+          style: TextStyle(
+            color: themeColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Guest Name *',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.person_outline,
+                    color: AppTheme.warning,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: mobileController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Mobile Number *',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.phone,
+                    color: AppTheme.warning,
+                    size: 20,
+                  ),
                 ),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: addressController,
-                decoration: const InputDecoration(
+                style: TextStyle(color: themeColors.textPrimary),
+                decoration: InputDecoration(
                   labelText: 'Delivery Address *',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: themeColors.textSecondary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.location_on,
+                    color: AppTheme.warning,
+                    size: 20,
+                  ),
                 ),
                 maxLines: 2,
               ),
@@ -173,18 +339,27 @@ class AddOrderDialogs {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  border: Border.all(color: Colors.blue[200]!),
-                  borderRadius: BorderRadius.circular(6),
+                  color: AppTheme.info.withAlpha(13),
+                  border: Border.all(
+                    color: AppTheme.info.withAlpha(51),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: Colors.blue[700], size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: AppTheme.info,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'This guest will be converted to a customer after order completion.',
-                        style: TextStyle(fontSize: 12, color: Colors.black87),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: themeColors.textPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -196,10 +371,17 @@ class AddOrderDialogs {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: themeColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: onSubmit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.warning,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Continue as Guest'),
           ),
         ],
@@ -215,32 +397,96 @@ class AddOrderDialogs {
     required List<OrderItem> currentOrderItems,
     required Function(MenuItem) onAddItem,
   }) {
+    final themeColors = AppTheme.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Add Menu Items - $restaurantName'),
+        backgroundColor: themeColors.surface,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Add Menu Items',
+              style: TextStyle(
+                color: themeColors.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.restaurant,
+                  size: 14,
+                  color: AppTheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    restaurantName,
+                    style: TextStyle(
+                      color: themeColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
         content: SizedBox(
           width: double.maxFinite,
           height: 400,
-          child: ListView.builder(
-            itemCount: menuItems.length,
-            itemBuilder: (context, index) {
-              final item = menuItems[index];
-              final isAdded = currentOrderItems.any(
-                (orderItem) => orderItem.itemId == item.itemId,
-              );
-              
-              return _buildMenuItemTile(
-                item: item,
-                isAdded: isAdded,
-                onAddItem: onAddItem,
-              );
-            },
-          ),
+          child: menuItems.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.restaurant_menu_outlined,
+                        size: 48,
+                        color: themeColors.textSecondary.withAlpha(128),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No menu items available',
+                        style: TextStyle(
+                          color: themeColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: menuItems.length,
+                  itemBuilder: (context, index) {
+                    final item = menuItems[index];
+                    final isAdded = currentOrderItems.any(
+                      (orderItem) => orderItem.itemId == item.itemId,
+                    );
+
+                    return _buildMenuItemTile(
+                      item: item,
+                      isAdded: isAdded,
+                      onAddItem: onAddItem,
+                      themeColors: themeColors,
+                    );
+                  },
+                ),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Done'),
           ),
         ],
@@ -252,28 +498,60 @@ class AddOrderDialogs {
     required MenuItem item,
     required bool isAdded,
     required Function(MenuItem) onAddItem,
+    required AppThemeColors themeColors,
   }) {
     final isOutOfStock = !item.isInStock;
     final isLowStock = item.isLowStock;
 
+    // Determine colors based on stock status
+    Color borderColor;
+    Color backgroundColor;
+    Color textColor;
+
+    if (isOutOfStock) {
+      borderColor = AppTheme.error.withAlpha(51);
+      backgroundColor = AppTheme.error.withAlpha(13);
+      textColor = AppTheme.error;
+    } else if (isAdded) {
+      borderColor = AppTheme.success.withAlpha(51);
+      backgroundColor = AppTheme.success.withAlpha(13);
+      textColor = themeColors.textPrimary;
+    } else {
+      borderColor = themeColors.background.withAlpha(50);
+      backgroundColor = themeColors.background;
+      textColor = themeColors.textPrimary;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: isOutOfStock ? Colors.red[200]! : Colors.grey[300]!,
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(6),
-        color: isOutOfStock ? Colors.red[50] : Colors.white,
+        border: Border.all(color: borderColor, width: 1),
+        borderRadius: BorderRadius.circular(8),
+        color: backgroundColor,
       ),
       child: ListTile(
         enabled: !isOutOfStock && !isAdded,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isOutOfStock
+                ? AppTheme.error.withAlpha(25)
+                : AppTheme.primary.withAlpha(25),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.fastfood,
+            size: 20,
+            color: isOutOfStock ? AppTheme.error : AppTheme.primary,
+          ),
+        ),
         title: Text(
           item.name,
           style: TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isOutOfStock ? Colors.red[700] : Colors.black87,
+            fontWeight: FontWeight.w600,
+            color: isOutOfStock ? AppTheme.error : textColor,
             decoration: isOutOfStock ? TextDecoration.lineThrough : null,
           ),
         ),
@@ -281,50 +559,126 @@ class AddOrderDialogs {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 4),
             Text(
               '₹${item.price.toStringAsFixed(2)}',
               style: TextStyle(
-                color: Colors.blue[600],
+                color: AppTheme.primary,
                 fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
-            if (isOutOfStock)
-              const Text(
-                'Out of Stock',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            else if (isLowStock)
-              Text(
-                'Low Stock: ${item.stockQuantity} left',
-                style: TextStyle(
-                  color: Colors.orange[700],
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            else
-              Text(
-                'In Stock: ${item.stockQuantity}',
-                style: TextStyle(
-                  color: Colors.green[700],
-                  fontSize: 11,
-                ),
-              ),
+            const SizedBox(height: 4),
+            _buildStockBadge(
+              isOutOfStock: isOutOfStock,
+              isLowStock: isLowStock,
+              stockQuantity: item.stockQuantity,
+            ),
           ],
         ),
-        trailing: isAdded
-            ? Icon(Icons.check_circle, color: Colors.green[600], size: 24)
-            : isOutOfStock
-                ? Icon(Icons.block, color: Colors.red[400], size: 24)
-                : IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () => onAddItem(item),
-                  ),
+        trailing: _buildTrailingWidget(
+          isAdded: isAdded,
+          isOutOfStock: isOutOfStock,
+          onAddItem: () => onAddItem(item),
+        ),
       ),
+    );
+  }
+
+  static Widget _buildStockBadge({
+    required bool isOutOfStock,
+    required bool isLowStock,
+    required int stockQuantity,
+  }) {
+    Color badgeColor;
+    String badgeText;
+    IconData badgeIcon;
+
+    if (isOutOfStock) {
+      badgeColor = AppTheme.error;
+      badgeText = 'Out of Stock';
+      badgeIcon = Icons.block;
+    } else if (isLowStock) {
+      badgeColor = AppTheme.warning;
+      badgeText = 'Low Stock: $stockQuantity left';
+      badgeIcon = Icons.warning_amber;
+    } else {
+      badgeColor = AppTheme.success;
+      badgeText = 'In Stock: $stockQuantity';
+      badgeIcon = Icons.check_circle;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: badgeColor.withAlpha(25),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            badgeIcon,
+            size: 12,
+            color: badgeColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            badgeText,
+            style: TextStyle(
+              color: badgeColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildTrailingWidget({
+    required bool isAdded,
+    required bool isOutOfStock,
+    required VoidCallback onAddItem,
+  }) {
+    if (isAdded) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.success.withAlpha(25),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.check,
+          color: AppTheme.success,
+          size: 20,
+        ),
+      );
+    }
+
+    if (isOutOfStock) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.error.withAlpha(25),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.block,
+          color: AppTheme.error,
+          size: 20,
+        ),
+      );
+    }
+
+    return IconButton(
+      icon: Icon(
+        Icons.add_circle,
+        color: AppTheme.primary,
+        size: 28,
+      ),
+      onPressed: onAddItem,
+      tooltip: 'Add to order',
     );
   }
 }
