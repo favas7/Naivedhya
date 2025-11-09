@@ -151,11 +151,32 @@ class _VendorScreenState extends State<VendorScreen> {
   }
 
   Future<void> _showEditVendorDialog(Vendor vendor) async {
-    // TODO: Implement edit dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit functionality coming soon')),
-    );
+  // Find the restaurant for this vendor
+  Restaurant? vendorRestaurant;
+  if (vendor.restaurantId != null) {
+    try {
+      vendorRestaurant = _restaurants.firstWhere(
+        (r) => r.id == vendor.restaurantId,
+      );
+    } catch (e) {
+      // Restaurant not found
+      vendorRestaurant = null;
+    }
   }
+
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (context) => AddVendorDialog(
+      vendor: vendor,
+      restaurant: vendorRestaurant,
+      availableRestaurants: _restaurants,
+    ),
+  );
+
+  if (result == true) {
+    _loadData();
+  }
+}
 
   Future<void> _deleteVendor(Vendor vendor) async {
     final confirmed = await showDialog<bool>(
@@ -534,7 +555,7 @@ void _showVendorDetails(Vendor vendor) {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: colors.primary.withOpacity(0.1),
+              color: colors.primary.withAlpha(10),
               shape: BoxShape.circle,
             ),
             child: Icon(

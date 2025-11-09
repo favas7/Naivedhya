@@ -93,28 +93,34 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
     }
   }
 
-  Future<void> _loadLocations() async {
-    if (widget.restaurant.id == null) return;
-    
-    setState(() {
-      _isLoadingLocations = true;
-      _locationsError = null;
-    });
-
-    try {
-      // Get location for this restaurant
-      final location = await _locationService.getLocationByrestaurantId(widget.restaurant.id!);
-      setState(() {
-        _locations = location != null ? [location] : [];
-        _isLoadingLocations = false;
-      });
-    } catch (e) {
-      setState(() {
-        _locationsError = e.toString();
-        _isLoadingLocations = false;
-      });
-    }
+// Updated _loadLocations to fetch list
+Future<void> _loadLocations() async {
+  if (widget.restaurant.id == null) {
+    print('Restaurant ID is null');
+    return;
   }
+  
+  setState(() {
+    _isLoadingLocations = true;
+    _locationsError = null;
+  });
+
+  try {
+    print('Fetching locations for restaurant: ${widget.restaurant.id}');
+    final locations = await _locationService.getLocationsByRestaurantId(widget.restaurant.id!);  // ✅ Now fetches List
+    print('Locations fetched: ${locations.length}');
+    setState(() {
+      _locations = locations;  // ✅ Direct assignment (no [location] wrapper)
+      _isLoadingLocations = false;
+    });
+  } catch (e) {
+    print('Error loading locations: $e');
+    setState(() {
+      _locationsError = e.toString();
+      _isLoadingLocations = false;
+    });
+  }
+}
 
   Future<void> _loadMenuItems() async {
     if (widget.restaurant.id == null) return;
@@ -546,53 +552,56 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
     );
   }
 
-  Widget _buildOverviewTab(AppThemeColors colors) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Restaurant Overview',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
-            ),
+// Updated _buildOverviewTab to handle multiple locations safely
+Widget _buildOverviewTab(AppThemeColors colors) {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Restaurant Overview',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: colors.textPrimary,
           ),
-          const SizedBox(height: 16),
-          
-          // Quick summary cards
-          _buildSummaryCard(
-            'Manager Summary',
-            _managers.isEmpty 
-              ? 'No manager assigned' 
-              : '${_managers.first.name} - ${_managers.first.email}',
-            Icons.person,
-            colors,
-          ),
-          const SizedBox(height: 12),
-          
-          _buildSummaryCard(
-            'Location Summary',
-            _locations.isEmpty 
-              ? 'No location added' 
-              : '${_locations.first}, ${_locations.first.city}, ${_locations.first.state}',
-            Icons.location_on,
-            colors,
-          ),
-          const SizedBox(height: 12),
-          
-          _buildSummaryCard(
-            'Menu Summary',
-            '${_stats['availableMenuItems'] ?? 0} available items out of ${_stats['totalMenuItems'] ?? 0} total items',
-            Icons.restaurant_menu,
-            colors,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 16),
+        
+        // Quick summary cards
+        _buildSummaryCard(
+          'Manager Summary',
+          _managers.isEmpty 
+            ? 'No manager assigned' 
+            : '${_managers.first.name} - ${_managers.first.email}',
+          Icons.person,
+          colors,
+        ),
+        const SizedBox(height: 12),
+        
+        _buildSummaryCard(
+          'Location Summary',
+          _locations.isEmpty 
+            ? 'No locations added' 
+            : _locations.length > 1 
+                ? '${_locations.length} locations (Primary: ${_locations.first.city}, ${_locations.first.state})'  // ✅ Handle multiple: show count + first
+                : '${_locations.first.city}, ${_locations.first.state}',  // Single case
+          Icons.location_on,
+          colors,
+        ),
+        const SizedBox(height: 12),
+        
+        _buildSummaryCard(
+          'Menu Summary',
+          '${_stats['availableMenuItems'] ?? 0} available items out of ${_stats['totalMenuItems'] ?? 0} total items',
+          Icons.restaurant_menu,
+          colors,
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSummaryCard(String title, String content, IconData icon, AppThemeColors colors) {
     return Container(

@@ -243,7 +243,7 @@ class AppTheme {
   static Color getOrderStatusBgColor(String status, bool isDark) {
     final color = getOrderStatusColor(status, isDark);
     return color.withAlpha(25);
-  }
+  } 
 }
 
 class AppThemeColors {

@@ -7,13 +7,13 @@ import 'package:naivedhya/services/ventor_Service.dart';
 class AddVendorDialog extends StatefulWidget {
   final Restaurant? restaurant;
   final Vendor? vendor;
-  final List<Restaurant>? availableRestaurants; // ✅ NEW: Accept restaurants list
+  final List<Restaurant>? availableRestaurants;
   
   const AddVendorDialog({
     super.key, 
     this.restaurant, 
     this.vendor,
-    this.availableRestaurants, // ✅ NEW
+    this.availableRestaurants,
   });
 
   @override
@@ -92,14 +92,102 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                 ),
                 const SizedBox(height: 24),
 
-                // ✅ UPDATED: Restaurant Selection (if not pre-selected)
-                if (widget.restaurant == null && !_isEditMode) ...[
+                // Restaurant Selection/Display
+                if (_isEditMode) ...[
+                  // Show restaurant as read-only in edit mode
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colors.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.restaurant, color: colors.primary, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Restaurant',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _selectedRestaurant?.name ?? 'No Restaurant Assigned',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.primary,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Locked',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else if (widget.restaurant != null) ...[
+                  // Show pre-selected restaurant in add mode
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colors.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.restaurant, color: colors.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Restaurant: ${widget.restaurant!.name}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  // Show dropdown for restaurant selection in add mode
                   Builder(
                     builder: (context) {
-                      // Use passed restaurants or empty list
                       final restaurants = widget.availableRestaurants ?? [];
                       
-                      // Show empty state if no restaurants
                       if (restaurants.isEmpty) {
                         return Container(
                           padding: const EdgeInsets.all(12),
@@ -122,8 +210,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                           ),
                         );
                       }
-                      
-                      // Show dropdown with restaurants
+                       
                       return DropdownButtonFormField<Restaurant>(
                         value: _selectedRestaurant,
                         decoration: InputDecoration(
@@ -151,33 +238,6 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                         },
                       );
                     },
-                  ),
-                  const SizedBox(height: 16),
-                ] else if (widget.restaurant != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: colors.primary.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.restaurant, color: colors.primary),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Restaurant: ${widget.restaurant!.name}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: colors.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -308,7 +368,9 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Vendor will be notified via email about registration',
+                          _isEditMode
+                              ? 'Changes will be saved immediately'
+                              : 'Vendor will be notified via email about registration',
                           style: TextStyle(
                             fontSize: 12,
                             color: colors.info,
@@ -385,6 +447,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
           serviceType: _serviceTypeController.text.trim(),
+          updatedAt: DateTime.now(),
         );
         
         await vendorService.updateVendor(updatedVendor);
@@ -392,8 +455,8 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
         if (mounted) {
           Navigator.of(context).pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Vendor updated successfully!'),
+            SnackBar(
+              content: Text('Vendor "${_nameController.text.trim()}" updated successfully!'),
               backgroundColor: Colors.green,
             ),
           );

@@ -40,10 +40,13 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppTheme.of(context);
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
+      backgroundColor: colors.surface,
       child: Container(
         padding: const EdgeInsets.all(24),
         constraints: const BoxConstraints(maxWidth: 500),
@@ -53,19 +56,50 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Edit Restaurant Information',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.edit,
+                      color: colors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Edit Restaurant',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Update restaurant information',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: colors.textSecondary),
+                    tooltip: 'Close',
                   ),
                 ],
               ),
@@ -74,24 +108,46 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
               // Restaurant Name Field
               TextFormField(
                 controller: _nameController,
+                enabled: !_isLoading,
+                style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Restaurant Name',
-                  hintText: 'Enter Restaurant name',
-                  prefixIcon: const Icon(Icons.restaurant, color: AppTheme.primary),
+                  labelStyle: TextStyle(color: colors.textSecondary),
+                  hintText: 'Enter restaurant name',
+                  hintStyle: TextStyle(color: colors.textSecondary.withOpacity(0.5)),
+                  prefixIcon: Icon(Icons.restaurant, color: colors.primary),
+                  filled: true,
+                  fillColor: colors.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primary),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: colors.textSecondary.withOpacity(0.1),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                    borderSide: BorderSide(color: colors.primary, width: 2),
                   ),
-                  filled: true,
-                  fillColor: AppTheme.textPrimary,
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.error),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.error, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter Restaurant name';
+                    return 'Please enter restaurant name';
                   }
                   if (value.trim().length < 3) {
                     return 'Restaurant name must be at least 3 characters';
@@ -105,25 +161,50 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
               // Restaurant Address Field
               TextFormField(
                 controller: _addressController,
+                enabled: !_isLoading,
                 maxLines: 3,
+                style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Restaurant Address',
-                  hintText: 'Enter complete Restaurant address',
-                  prefixIcon: const Icon(Icons.location_on, color: AppTheme.primary),
+                  labelStyle: TextStyle(color: colors.textSecondary),
+                  hintText: 'Enter complete restaurant address',
+                  hintStyle: TextStyle(color: colors.textSecondary.withOpacity(0.5)),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(bottom: 48),
+                    child: Icon(Icons.location_on, color: colors.primary),
+                  ),
+                  filled: true,
+                  fillColor: colors.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primary),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: colors.textSecondary.withOpacity(0.1),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                    borderSide: BorderSide(color: colors.primary, width: 2),
                   ),
-                  filled: true,
-                  fillColor: AppTheme.textPrimary,
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.error),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.error, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter Restaurant address';
+                    return 'Please enter restaurant address';
                   }
                   if (value.trim().length < 10) {
                     return 'Please enter a complete address';
@@ -141,15 +222,19 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                     child: OutlinedButton(
                       onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppTheme.primary),
+                        side: BorderSide(color: colors.textSecondary.withOpacity(0.3)),
+                        foregroundColor: colors.textPrimary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
-                        style: TextStyle(color: AppTheme.primary),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                   ),
@@ -158,12 +243,13 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _updateRestaurant,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
+                        backgroundColor: colors.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -174,7 +260,13 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Text('Update'),
+                          : Text(
+                              'Update Restaurant',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -202,24 +294,52 @@ class _EditRestaurantBasicInfoDialogState extends State<EditRestaurantBasicInfoD
 
       if (updatedRestaurant != null) {
         if (mounted) {
+          final colors = AppTheme.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Restaurant updated successfully'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  const Text('Restaurant updated successfully'),
+                ],
+              ),
+              backgroundColor: colors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
           );
           Navigator.of(context).pop();
           widget.onSuccess?.call();
         }
       } else {
-        throw Exception('Failed to update Restaurant');
+        throw Exception('Failed to update restaurant');
       }
     } catch (e) {
       if (mounted) {
+        final colors = AppTheme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    e.toString().replaceAll('Exception: ', ''),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: colors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }

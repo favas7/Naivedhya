@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:naivedhya/Views/admin/restaurant/location/add_location_dialogue.dart';
+import 'package:naivedhya/Views/admin/restaurant/manager/add_manager_dialogue.dart';
 import 'package:naivedhya/Views/admin/restaurant/restaurant_detail_screen/restaurant_detail_screen.dart';
+import 'package:naivedhya/Views/admin/restaurant/widgets/edithotel_basic_info.dart';
 import 'package:naivedhya/Views/admin/restaurant/widgets/restaurant_action_button.dart';
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/utils/color_theme.dart';
@@ -235,17 +238,40 @@ class _EnhancedRestaurantCardState extends State<EnhancedRestaurantCard> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'edit_basic',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 18, color: colors.textSecondary),
-                                      const SizedBox(width: 12),
-                                      const Text('Edit Details'),
-                                    ],
-                                  ),
+                              PopupMenuItem(
+                                value: 'edit_basic',
+                                onTap: () {
+                                  // Use Future.delayed to avoid popup menu closing conflict
+                                  Future.delayed(Duration.zero, () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => EditRestaurantBasicInfoDialog(
+                                        restaurant: widget.restaurant,
+                                        onSuccess: widget.onRestaurantUpdated,
+                                      ),
+                                    );
+                                  });
+                                },
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.edit, size: 18, color: colors.textSecondary),
+                                    const SizedBox(width: 12),
+                                    const Text('Edit Details'),
+                                  ],
                                 ),
+                              ),
                                 PopupMenuItem(
+                                  onTap: () {
+                                  // Use Future.delayed to avoid popup menu closing conflict
+                                  Future.delayed(Duration.zero, () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AddManagerDialog(
+                                        restaurant: widget.restaurant,
+                                      ),
+                                    );
+                                  });                                  
+                                  },
                                   value: 'add_manager',
                                   child: Row(
                                     children: [
@@ -257,6 +283,17 @@ class _EnhancedRestaurantCardState extends State<EnhancedRestaurantCard> {
                                 ),
                                 PopupMenuItem(
                                   value: 'add_location',
+                                  onTap: () {
+                                                                      // Use Future.delayed to avoid popup menu closing conflict
+                                  Future.delayed(Duration.zero, () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AddLocationDialog(
+                                        restaurant: widget.restaurant,
+                                      ), 
+                                    );
+                                  });  
+                                  },
                                   child: Row(
                                     children: [
                                       Icon(Icons.add_location, size: 18, color: colors.textSecondary),

@@ -82,6 +82,21 @@ Future<void> updateLocation(Location location) async {
       throw Exception('Failed to get location: $e');
     }
   }
+  Future<List<Location>> getLocationsByRestaurantId(String restaurantId) async {
+    try {
+      final response = await _supabase
+          .from('locations')
+          .select()
+          .eq('hotel_id', restaurantId)
+          .order('created_at', ascending: false);  // Sort by newest first (optional but consistent)
+      
+      return (response as List)
+          .map((json) => Location.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get locations by Restaurant ID: $e');
+    }
+  }
 
   Future<Location?> getLocationByrestaurantId(String restaurantId) async {
     try {
