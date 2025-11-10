@@ -16,10 +16,10 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
-
-class _LoginScreenState extends State<LoginScreen> {
+ 
+class LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -105,6 +105,321 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Breakpoint: 768px for web layout
+        final isWebLayout = constraints.maxWidth > 768;
+        
+        return isWebLayout 
+          ? _buildWebLayout(context)
+          : _buildMobileLayout(context);
+      },
+    );
+  }
+
+  // ============ WEB LAYOUT ============
+  Widget _buildWebLayout(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Scaffold(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [
+                    AppTheme.darkBackground,
+                    AppTheme.darkPrimary.withOpacity(0.3),
+                    AppTheme.darkBackground,
+                  ]
+                : [
+                    AppTheme.accent,
+                    AppTheme.primary.withOpacity(0.6),
+                    AppTheme.primaryLight.withOpacity(0.4),
+                  ],
+            ),
+          ),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Container(
+                width: 450,
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: isDark ? AppTheme.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.5 : 0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Back button and Welcome text
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.arrow_back_ios,
+                              color: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
+                              size: 20,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 400),
+                                child: Text(
+                                  _topText,
+                                  key: ValueKey(_topText),
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 32),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Subtitle
+                      Text(
+                        'Welcome Back!',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Email Field
+                      CustomTextField(
+                        label: 'Email',
+                        controller: _emailController,
+                        validator: Validator.validateEmail,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Password Field
+                      CustomTextField(
+                        label: 'Password',
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        validator: Validator.validatePassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword 
+                              ? Icons.visibility_off 
+                              : Icons.visibility,
+                            color: theme.colorScheme.primary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Forgot Password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _forgotPassword,
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Login Button
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) {
+                          return authProvider.isLoading
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              )
+                            : CustomButton(
+                                text: 'Sign In',
+                                onPressed: _login,
+                              );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Divider with "or"
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: isDark 
+                                ? AppTheme.darkTextHint 
+                                : AppTheme.textHint,
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'or',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: isDark 
+                                  ? AppTheme.darkTextSecondary 
+                                  : AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: isDark 
+                                ? AppTheme.darkTextHint 
+                                : AppTheme.textHint,
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Google Sign In
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) {
+                          if (authProvider.isLoading) return const SizedBox.shrink();
+                          
+                          return GestureDetector(
+                            onTap: () async {
+                              try {
+                                final success = await authProvider.googleSignIn();
+                                if (success) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const BottomNavigator(),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.toString())),
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppTheme.darkSurfaceVariant : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isDark 
+                                    ? AppTheme.darkTextHint 
+                                    : AppTheme.textHint.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/Google_Logo/google-logo.png',
+                                    height: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Continue with Google',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Sign Up Link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SignUpScreen(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Sign up now!',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============ MOBILE LAYOUT (ORIGINAL) ============
+  Widget _buildMobileLayout(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
