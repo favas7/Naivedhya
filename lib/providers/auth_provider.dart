@@ -12,6 +12,8 @@ class AuthProvider with ChangeNotifier {
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
 
+  get currentUser => null;
+
   Future<void> checkAuthStatus() async {
     try {
       final firebaseUser = _firebaseService.currentUser;
@@ -189,4 +191,6 @@ class AuthProvider with ChangeNotifier {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
+
+  void refreshUser() {}
 }
