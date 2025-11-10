@@ -16,6 +16,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 768;
     final isTablet = screenWidth > 480 && screenWidth <= 768;
@@ -28,11 +29,11 @@ class _MapScreenState extends State<MapScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withAlpha(0),
+                  color: Colors.black.withOpacity(0.05),
                   spreadRadius: 1,
                   blurRadius: 10,
                 ),
@@ -41,20 +42,17 @@ class _MapScreenState extends State<MapScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Live Location Tracking',
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   'Real-time tracking of delivery staff, customers, and Restaurants',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: theme.textSecondary,
                   ),
                 ),
               ],
@@ -71,12 +69,12 @@ class _MapScreenState extends State<MapScreen> {
                 Container(
                   width: 300,
                   margin: const EdgeInsets.only(right: 20),
-                  child: _buildControlPanel(),
+                  child: _buildControlPanel(theme),
                 ),
               
               // Map Container
               Expanded(
-                child: _buildMapContainer(isDesktop, isTablet),
+                child: _buildMapContainer(theme, isDesktop, isTablet),
               ),
             ],
           ),
@@ -84,32 +82,32 @@ class _MapScreenState extends State<MapScreen> {
           // Mobile Control Panel
           if (!isDesktop) ...[
             const SizedBox(height: 20),
-            _buildControlPanel(),
+            _buildControlPanel(theme),
           ],
           
           const SizedBox(height: 20),
           
           // Statistics Cards
-          _buildStatisticsCards(isDesktop, isTablet),
+          _buildStatisticsCards(theme, isDesktop, isTablet),
           
           const SizedBox(height: 20),
           
           // Recent Activity
-          _buildRecentActivity(isDesktop),
+          _buildRecentActivity(theme, isDesktop),
         ],
       ),
     );
   }
 
-  Widget _buildControlPanel() {
+  Widget _buildControlPanel(AppThemeColors theme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(0),
+            color: Colors.black.withOpacity(0.05),
             spreadRadius: 1,
             blurRadius: 10,
           ),
@@ -118,13 +116,9 @@ class _MapScreenState extends State<MapScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Map Controls',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 20),
           
@@ -150,50 +144,55 @@ class _MapScreenState extends State<MapScreen> {
           const SizedBox(height: 20),
           
           // Toggle Switches
-          const Text(
+          Text(
             'Show on Map',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 10),
           
           SwitchListTile(
             title: const Text('Delivery Staff'),
-            subtitle: const Text('Active delivery personnel'),
+            subtitle: Text(
+              'Active delivery personnel',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             value: showDeliveryStaff,
             onChanged: (value) {
               setState(() {
                 showDeliveryStaff = value;
               });
             },
-            activeColor: AppTheme.primary,
+            activeColor: theme.primary,
           ),
           
           SwitchListTile(
             title: const Text('Customers'),
-            subtitle: const Text('Customer locations'),
+            subtitle: Text(
+              'Customer locations',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             value: showCustomers,
             onChanged: (value) {
               setState(() {
                 showCustomers = value;
               });
             },
-            activeColor: AppTheme.primary,
+            activeColor: theme.primary,
           ),
           
           SwitchListTile(
             title: const Text('Restaurants'),
-            subtitle: const Text('Partner Restaurants'),
+            subtitle: Text(
+              'Partner Restaurants',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             value: showRestaurants,
             onChanged: (value) {
               setState(() {
                 showRestaurants = value;
               });
             },
-            activeColor: AppTheme.primary,
+            activeColor: theme.primary,
           ),
           
           const SizedBox(height: 20),
@@ -208,8 +207,6 @@ class _MapScreenState extends State<MapScreen> {
               icon: const Icon(Icons.refresh),
               label: const Text('Refresh Map'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
@@ -219,15 +216,15 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildMapContainer(bool isDesktop, bool isTablet) {
+  Widget _buildMapContainer(AppThemeColors theme, bool isDesktop, bool isTablet) {
     return Container(
       height: isDesktop ? 500 : 400,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(0),
+            color: Colors.black.withOpacity(0.05),
             spreadRadius: 1,
             blurRadius: 10,
           ),
@@ -239,31 +236,30 @@ class _MapScreenState extends State<MapScreen> {
           children: [
             // Map placeholder
             Container(
-              color: Colors.grey[200],
-              child: const Center(
+              color: theme.isDark 
+                ? AppTheme.darkSurfaceVariant 
+                : Colors.grey[200],
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.map,
                       size: 64,
-                      color: Colors.grey,
+                      color: theme.textSecondary,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       'Interactive Map View',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: theme.textSecondary,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Integrate with Google Maps or similar service',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: theme.textSecondary,
                       ),
                     ),
                   ],
@@ -278,11 +274,11 @@ class _MapScreenState extends State<MapScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.surface,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withAlpha(0),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 4,
                     ),
                   ],
@@ -291,17 +287,16 @@ class _MapScreenState extends State<MapScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Legend',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildLegendItem(Colors.blue, 'Delivery Staff'),
-                    _buildLegendItem(Colors.green, 'Customers'),
-                    _buildLegendItem(Colors.orange, 'Restaurants'),
+                    _buildLegendItem(theme.info, 'Delivery Staff'),
+                    _buildLegendItem(theme.success, 'Customers'),
+                    _buildLegendItem(theme.warning, 'Restaurants'),
                   ],
                 ),
               ),
@@ -336,7 +331,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildStatisticsCards(bool isDesktop, bool isTablet) {
+  Widget _buildStatisticsCards(AppThemeColors theme, bool isDesktop, bool isTablet) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -345,23 +340,23 @@ class _MapScreenState extends State<MapScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: isDesktop ? 1.5 : (isTablet ? 2 : 3),
       children: [
-        _buildStatCard('Active Delivery Staff', '24', Icons.delivery_dining, Colors.blue),
-        _buildStatCard('Online Customers', '156', Icons.people, Colors.green),
-        _buildStatCard('Partner Restaurants', '48', Icons.home_work, Colors.orange),
-        _buildStatCard('Active Orders', '32', Icons.shopping_cart, Colors.red),
+        _buildStatCard(theme, 'Active Delivery Staff', '24', Icons.delivery_dining, theme.info),
+        _buildStatCard(theme, 'Online Customers', '156', Icons.people, theme.success),
+        _buildStatCard(theme, 'Partner Restaurants', '48', Icons.restaurant, theme.warning),
+        _buildStatCard(theme, 'Active Orders', '32', Icons.shopping_cart, theme.error),
       ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(AppThemeColors theme, String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(0),
+            color: Colors.black.withOpacity(0.05),
             spreadRadius: 1,
             blurRadius: 10,
           ),
@@ -374,18 +369,16 @@ class _MapScreenState extends State<MapScreen> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: theme.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -394,15 +387,15 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildRecentActivity(bool isDesktop) {
+  Widget _buildRecentActivity(AppThemeColors theme, bool isDesktop) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(0),
+            color: Colors.black.withOpacity(0.05),
             spreadRadius: 1,
             blurRadius: 10,
           ),
@@ -411,13 +404,9 @@ class _MapScreenState extends State<MapScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Recent Activity',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 16),
           
@@ -425,30 +414,37 @@ class _MapScreenState extends State<MapScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: 5,
-            separatorBuilder: (context, index) => const Divider(),
+            separatorBuilder: (context, index) => Divider(
+              color: theme.textSecondary.withOpacity(0.2),
+            ),
             itemBuilder: (context, index) {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
-                  backgroundColor: AppTheme.primary.withAlpha(0),
+                  backgroundColor: theme.primary.withOpacity(0.1),
                   child: Icon(
                     Icons.location_on,
-                    color: AppTheme.primary,
+                    color: theme.primary,
                   ),
                 ),
-                title: Text('Delivery Staff #${index + 1} location updated'),
-                subtitle: Text('${index + 1} minutes ago'),
+                title: Text(
+                  'Delivery Staff #${index + 1} location updated',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                subtitle: Text(
+                  '${index + 1} minutes ago',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green.withAlpha(0),
+                    color: theme.success.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Active',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 12,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: theme.success,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -460,4 +456,4 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
   }
-}
+} 
