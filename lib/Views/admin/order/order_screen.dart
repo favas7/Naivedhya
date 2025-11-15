@@ -1,12 +1,13 @@
-// screens/orders_screen.dart - REFACTORED WITH GRID/LIST VIEW
+// screens/orders_screen.dart - REFACTORED WITH COMPACT SINGLE-LINE LIST
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/order/add_order_screen/add_order_screen.dart';
 import 'package:naivedhya/Views/admin/order/edit_order/edit_order_screen.dart';
 import 'package:naivedhya/Views/admin/order/order_detail_dialog.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_card.dart';
+import 'package:naivedhya/Views/admin/order/widget/order_list_item.dart';
+import 'package:naivedhya/Views/admin/order/widget/compact_stats_card.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_filter_chip.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_search_bar.dart';
-import 'package:naivedhya/Views/admin/order/widget/order_stats_card.dart';
 import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/providers/order_provider.dart';
@@ -23,13 +24,12 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
-  bool _isGridView = true; // Toggle between grid and list
+  bool _isGridView = false; // Default to list view
 
   Map<String, dynamic>? _parseVendor(dynamic vendorData) {
     if (vendorData == null) return null;
     if (vendorData is Map<String, dynamic>) return vendorData;
 
-    // If it's a Vendor object, try to convert it
     try {
       if (vendorData is Vendor) {
         return {
@@ -56,11 +56,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     print('📱 [OrdersScreen] Setting up post-frame callback for initialization');
 
-    // Initialize provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print('🚀 [OrdersScreen] Post-frame callback executing...');
-      print(
-          '📍 [OrdersScreen] Calling OrderProvider.initialize(useEnrichedData: true)');
+      print('📍 [OrdersScreen] Calling OrderProvider.initialize(useEnrichedData: true)');
 
       try {
         context.read<OrderProvider>().initialize(useEnrichedData: true);
@@ -99,8 +97,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
               controller: _scrollController,
               child: Column(
                 children: [
-                  // Stats Cards Section
-                  _buildStatsSection(themeColors),
+                  // Compact Stats Section
+                  _buildCompactStatsSection(themeColors),
 
                   // Search and Filter Section
                   _buildSearchAndFilters(themeColors),
@@ -145,7 +143,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Manage and track all orders across your enterprise',
+                  'Track and manage all orders',
                   style: TextStyle(
                     fontSize: 14,
                     color: themeColors.textSecondary,
@@ -159,26 +157,37 @@ class _OrdersScreenState extends State<OrdersScreen> {
             decoration: BoxDecoration(
               color: themeColors.background,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: themeColors.isDark
+                    ? Colors.grey[700]!
+                    : Colors.grey[300]!,
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
                 IconButton(
                   icon: Icon(
-                    Icons.grid_view,
-                    color:
-                        _isGridView ? themeColors.primary : themeColors.textSecondary,
-                  ),
-                  onPressed: () => setState(() => _isGridView = true),
-                  tooltip: 'Grid View',
-                ),
-                IconButton(
-                  icon: Icon(
                     Icons.view_list,
-                    color:
-                        !_isGridView ? themeColors.primary : themeColors.textSecondary,
+                    color: !_isGridView ? themeColors.primary : themeColors.textSecondary,
                   ),
                   onPressed: () => setState(() => _isGridView = false),
                   tooltip: 'List View',
+                ),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: themeColors.isDark
+                      ? Colors.grey[700]
+                      : Colors.grey[300],
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.grid_view,
+                    color: _isGridView ? themeColors.primary : themeColors.textSecondary,
+                  ),
+                  onPressed: () => setState(() => _isGridView = true),
+                  tooltip: 'Grid View',
                 ),
               ],
             ),
@@ -189,16 +198,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                onPressed: () =>
-                    context.read<OrderProvider>().refreshOrders(),
+                onPressed: () => context.read<OrderProvider>().refreshOrders(),
                 tooltip: 'Refresh Orders',
               ),
               IconButton(
                 icon: const Icon(Icons.download),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Export feature coming soon')),
+                    const SnackBar(content: Text('Export feature coming soon')),
                   );
                 },
                 tooltip: 'Export',
@@ -230,55 +237,56 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Widget _buildStatsSection(AppThemeColors themeColors) {
+  Widget _buildCompactStatsSection(AppThemeColors themeColors) {
     return Consumer<OrderProvider>(
       builder: (context, orderProvider, child) {
-        // Calculate dynamic stats from orders
         final totalOrders = orderProvider.ordersWithDetails.length;
         final pendingOrders = orderProvider.ordersWithDetails
             .where((od) => (od['order'] as Order).status == 'pending')
             .length;
-        final inTransitOrders = orderProvider.ordersWithDetails
-            .where((od) =>
-                ['confirmed', 'preparing', 'ready'].contains(
-                    (od['order'] as Order).status))
+        final activeOrders = orderProvider.ordersWithDetails
+            .where((od) => ['confirmed', 'preparing', 'ready', 'picked up', 'delivering']
+                .contains((od['order'] as Order).status))
             .length;
-        final deliveredOrders = orderProvider.ordersWithDetails
-            .where((od) => (od['order'] as Order).status == 'delivered')
+        final completedOrders = orderProvider.ordersWithDetails
+            .where((od) => (od['order'] as Order).status == 'completed')
             .length;
 
-        return Padding(
-          padding: const EdgeInsets.all(16),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                OrderStatsCard(
-                  title: 'Total Orders',
+                CompactStatsCard(
+                  label: 'Total Orders',
                   value: totalOrders.toString(),
-                  badge: 'All Time',
-                  badgeColor: AppTheme.primary,
+                  icon: Icons.shopping_bag_outlined,
+                  color: AppTheme.primary,
                   themeColors: themeColors,
                 ),
-                OrderStatsCard(
-                  title: 'Pending',
+                const SizedBox(width: 12),
+                CompactStatsCard(
+                  label: 'Pending',
                   value: pendingOrders.toString(),
-                  badge: 'Urgent',
-                  badgeColor: AppTheme.warning,
+                  icon: Icons.pending_outlined,
+                  color: AppTheme.warning,
                   themeColors: themeColors,
                 ),
-                OrderStatsCard(
-                  title: 'In Transit',
-                  value: inTransitOrders.toString(),
-                  badge: 'Active',
-                  badgeColor: AppTheme.info,
+                const SizedBox(width: 12),
+                CompactStatsCard(
+                  label: 'Active',
+                  value: activeOrders.toString(),
+                  icon: Icons.local_shipping_outlined,
+                  color: AppTheme.info,
                   themeColors: themeColors,
                 ),
-                OrderStatsCard(
-                  title: 'Delivered',
-                  value: deliveredOrders.toString(),
-                  badge: 'Completed',
-                  badgeColor: AppTheme.success,
+                const SizedBox(width: 12),
+                CompactStatsCard(
+                  label: 'Completed',
+                  value: completedOrders.toString(),
+                  icon: Icons.check_circle_outline,
+                  color: AppTheme.success,
                   themeColors: themeColors,
                 ),
               ],
@@ -313,46 +321,32 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     children: [
                       OrderFilterChip(
                         label: 'All',
-                        isSelected: context
-                                .watch<OrderProvider>()
-                                .selectedStatusFilter ==
-                            null,
-                        onTap: () => context
-                            .read<OrderProvider>()
-                            .setStatusFilter(null),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == null,
+                        onTap: () => context.read<OrderProvider>().setStatusFilter(null),
                         themeColors: themeColors,
                       ),
                       OrderFilterChip(
                         label: 'Pending',
-                        isSelected: context
-                                .watch<OrderProvider>()
-                                .selectedStatusFilter ==
-                            'pending',
-                        onTap: () => context
-                            .read<OrderProvider>()
-                            .setStatusFilter('pending'),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'pending',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('pending'),
                         themeColors: themeColors,
                       ),
                       OrderFilterChip(
                         label: 'Confirmed',
-                        isSelected: context
-                                .watch<OrderProvider>()
-                                .selectedStatusFilter ==
-                            'confirmed',
-                        onTap: () => context
-                            .read<OrderProvider>()
-                            .setStatusFilter('confirmed'),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'confirmed',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('confirmed'),
                         themeColors: themeColors,
                       ),
                       OrderFilterChip(
                         label: 'Preparing',
-                        isSelected: context
-                                .watch<OrderProvider>()
-                                .selectedStatusFilter ==
-                            'preparing',
-                        onTap: () => context
-                            .read<OrderProvider>()
-                            .setStatusFilter('preparing'),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'preparing',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('preparing'),
+                        themeColors: themeColors,
+                      ),
+                      OrderFilterChip(
+                        label: 'Completed',
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'completed',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('completed'),
                         themeColors: themeColors,
                       ),
                     ],
@@ -378,23 +372,20 @@ class _OrdersScreenState extends State<OrdersScreen> {
       builder: (context, orderProvider, child) {
         print('\n🎨 [OrdersScreen] Building orders list section');
         print('📊 [OrdersScreen] State:');
-        print(
-            '   - Orders with Details: ${orderProvider.ordersWithDetails.length}');
+        print('   - Orders with Details: ${orderProvider.ordersWithDetails.length}');
         print('   - Is Loading: ${orderProvider.isLoading}');
         print('   - Error Message: ${orderProvider.errorMessage}');
         print('   - Has More Pages: ${orderProvider.hasMorePages}');
 
         // Check if there's an error
         if (orderProvider.errorMessage != null) {
-          print(
-              '❌ [OrdersScreen] ERROR STATE: ${orderProvider.errorMessage}');
+          print('❌ [OrdersScreen] ERROR STATE: ${orderProvider.errorMessage}');
           return Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.error_outline,
-                      size: 48, color: AppTheme.error),
+                  Icon(Icons.error_outline, size: 48, color: AppTheme.error),
                   const SizedBox(height: 16),
                   Text(
                     'Error Loading Orders',
@@ -431,16 +422,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
           );
         }
 
-        if (orderProvider.ordersWithDetails.isEmpty &&
-            !orderProvider.isLoading) {
+        if (orderProvider.ordersWithDetails.isEmpty && !orderProvider.isLoading) {
           print('ℹ️ [OrdersScreen] EMPTY STATE: No orders to display');
           return Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.inbox_outlined,
-                      size: 48, color: themeColors.textSecondary),
+                  Icon(Icons.inbox_outlined, size: 48, color: themeColors.textSecondary),
                   const SizedBox(height: 16),
                   Text(
                     'No orders found',
@@ -465,30 +454,43 @@ class _OrdersScreenState extends State<OrdersScreen> {
           );
         }
 
-        print(
-            '✅ [OrdersScreen] Rendering ${orderProvider.ordersWithDetails.length} orders');
+        print('✅ [OrdersScreen] Rendering ${orderProvider.ordersWithDetails.length} orders');
 
         return Container(
           color: themeColors.background,
           child: Column(
             children: [
+              // Order count header
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Text(
-                  '${orderProvider.ordersWithDetails.length} Orders',
-                  style: TextStyle(
-                    color: themeColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Text(
+                      '${orderProvider.ordersWithDetails.length} Orders',
+                      style: TextStyle(
+                        color: themeColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (!_isGridView)
+                      Text(
+                        'Showing list view',
+                        style: TextStyle(
+                          color: themeColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
+
+              // Orders content
               _isGridView
                   ? _buildGridView(orderProvider, themeColors)
-                  : _buildListView(orderProvider, themeColors),
-              
+                  : _buildCompactListView(orderProvider, themeColors),
+
               // Loading indicator for pagination
               if (orderProvider.isLoading)
                 const Padding(
@@ -504,10 +506,56 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Widget _buildGridView(
-      OrderProvider orderProvider, AppThemeColors themeColors) {
+  Widget _buildCompactListView(OrderProvider orderProvider, AppThemeColors themeColors) {
+    print('🎨 [OrdersScreen] Building COMPACT LIST view');
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: orderProvider.ordersWithDetails.length,
+      itemBuilder: (context, index) {
+        final orderData = orderProvider.ordersWithDetails[index];
+
+        print('\n📦 [OrdersScreen] Building compact list order #$index');
+        print('   - Order Data Keys: ${orderData.keys.join(", ")}');
+
+        // Extract data with null safety
+        final order = orderData['order'] as Order?;
+        final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
+        final vendor = _parseVendor(orderData['vendor']);
+
+        if (order == null) {
+          print('⚠️ [OrdersScreen] Order is NULL at index $index!');
+          return const SizedBox.shrink();
+        }
+
+        print('   - Order: ${order.orderNumber}');
+        print('   - Restaurant: ${restaurant?['name'] ?? 'null'}');
+        print('   - Vendor: ${vendor?['name'] ?? 'null'}');
+
+        return OrderListItem(
+          order: order,
+          restaurant: restaurant,
+          vendor: vendor,
+          themeColors: themeColors,
+          onTap: () {
+            print('👆 [OrdersScreen] Order list item tapped: ${order.orderNumber}');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OrderDetailScreen(order: order),
+              ),
+            );
+          },
+          onShowMenu: _showOrderMenu,
+        );
+      },
+    );
+  }
+
+  Widget _buildGridView(OrderProvider orderProvider, AppThemeColors themeColors) {
     print('🎨 [OrdersScreen] Building GRID view');
-    
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -517,7 +565,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         childAspectRatio: 1.0,
         crossAxisSpacing: 24,
         mainAxisSpacing: 24,
-        mainAxisExtent: 320, // Slightly taller than vendor cards to fit all info
+        mainAxisExtent: 320,
       ),
       itemCount: orderProvider.ordersWithDetails.length,
       itemBuilder: (context, index) {
@@ -526,7 +574,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
         print('\n📦 [OrdersScreen] Building grid order card #$index');
         print('   - Order Data Keys: ${orderData.keys.join(", ")}');
 
-        // Extract data with null safety
         final order = orderData['order'] as Order?;
         final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
         final vendor = _parseVendor(orderData['vendor']);
@@ -549,8 +596,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           orderItems: orderItems,
           themeColors: themeColors,
           onTap: () {
-            print(
-                '👆 [OrdersScreen] Order card tapped: ${order.orderNumber}');
+            print('👆 [OrdersScreen] Order card tapped: ${order.orderNumber}');
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -564,61 +610,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Widget _buildListView(
-      OrderProvider orderProvider, AppThemeColors themeColors) {
-    print('🎨 [OrdersScreen] Building LIST view');
-    
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: orderProvider.ordersWithDetails.length,
-      itemBuilder: (context, index) {
-        final orderData = orderProvider.ordersWithDetails[index];
-
-        print('\n📦 [OrdersScreen] Building list order card #$index');
-        print('   - Order Data Keys: ${orderData.keys.join(", ")}');
-
-        // Extract data with null safety
-        final order = orderData['order'] as Order?;
-        final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
-        final vendor = _parseVendor(orderData['vendor']);
-        final orderItems = orderData['orderItems'] as List? ?? [];
-
-        if (order == null) {
-          print('⚠️ [OrdersScreen] Order is NULL at index $index!');
-          return const SizedBox.shrink();
-        }
-
-        print('   - Order: ${order.orderNumber}');
-        print('   - Restaurant: ${restaurant?['name'] ?? 'null'}');
-        print('   - Vendor: ${vendor?['name'] ?? 'null'}');
-        print('   - Items: ${orderItems.length}');
-
-        return OrderCard(
-          order: order,
-          restaurant: restaurant,
-          vendor: vendor,
-          orderItems: orderItems,
-          themeColors: themeColors,
-          onTap: () {
-            print(
-                '👆 [OrdersScreen] Order card tapped: ${order.orderNumber}');
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OrderDetailScreen(order: order),
-              ),
-            );
-          },
-          onShowMenu: _showOrderMenu,
-        );
-      },
-    );
-  }
-
-  void _showOrderMenu(
-      BuildContext context, Order order, AppThemeColors themeColors) {
+  void _showOrderMenu(BuildContext context, Order order, AppThemeColors themeColors) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -645,8 +637,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        EditOrderScreen(orderId: order.orderId),
+                    builder: (context) => EditOrderScreen(orderId: order.orderId),
                   ),
                 );
               },
@@ -657,8 +648,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Message feature coming soon')),
+                  const SnackBar(content: Text('Message feature coming soon')),
                 );
               },
             ),
@@ -690,13 +680,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
           ),
           TextButton(
             onPressed: () {
-              context
-                  .read<OrderProvider>()
-                  .updateOrderStatus(order.orderId, 'cancelled');
+              context.read<OrderProvider>().updateOrderStatus(order.orderId, 'cancelled');
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Order cancelled successfully')),
+                const SnackBar(content: Text('Order cancelled successfully')),
               );
             },
             child: const Text('Yes, Cancel'),
@@ -705,4 +692,4 @@ class _OrdersScreenState extends State<OrdersScreen> {
       ),
     );
   }
-}
+} 
