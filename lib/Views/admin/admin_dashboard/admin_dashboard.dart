@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:naivedhya/Views/admin/restaurant/restaurant_screen.dart';
 import 'package:naivedhya/providers/auth_provider.dart';
 import 'package:naivedhya/providers/theme_provider.dart';
 import 'package:naivedhya/Views/admin/analytics/analatics_screen.dart';
@@ -13,7 +12,6 @@ import 'package:naivedhya/Views/admin/order/order_screen.dart';
 import 'package:naivedhya/Views/admin/payment/payment_screen.dart';
 import 'package:naivedhya/Views/admin/pos/pos_integration_screen.dart';
 import 'package:naivedhya/Views/admin/settings/settings_screen.dart';
-import 'package:naivedhya/Views/admin/vendors/vendors_screen.dart';
 import 'package:naivedhya/Views/auth/login/login_screen.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
@@ -33,8 +31,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Dashboard',
     'Live Map',
     'Orders',
-    'Restaurants',
-    'Vendors',
+    // 'Restaurants',
+    // 'Vendors',
     'Delivery Staff',
     'Customers',
     'Payments',
@@ -318,23 +316,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return Icons.location_on;
       case 2:
         return Icons.shopping_cart;
+      // case 3:
+      //   return Icons.home_work_outlined;
+      // case 4:
+      //   return Icons.playlist_add_check;
       case 3:
-        return Icons.home_work_outlined;
-      case 4:
-        return Icons.playlist_add_check;
-      case 5:
         return Icons.delivery_dining;
-      case 6:
+      case 4:
         return Icons.man;
-      case 7:
+      case 5:
         return Icons.payment;
-      case 8:
+      case 6:
         return Icons.analytics;
-      case 9:
+      case 7:
         return Icons.polyline_sharp;
-      case 10:
+      case 8:
         return Icons.notifications_active;
-      case 11:
+      case 9:
         return Icons.settings;
       default:
         return Icons.circle;
@@ -349,23 +347,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return const MapScreen();
       case 2:
         return const OrdersScreen();
+      // case 3:
+      //   return  const RestaurantScreenEnhanced();
+      // case 4:
+      //   return const VendorScreen();
       case 3:
-        return  const RestaurantScreenEnhanced();
-      case 4:
-        return const VendorScreen();
-      case 5:
         return const DeliveryStaffScreen();
-      case 6:
+      case 4:
         return const CustomerScreen();
-      case 7:
+      case 5:
         return const PaymentScreen();
-      case 8:
+      case 6:
         return const AnalyticsScreen();
-      case 9:
+      case 7:
         return const POSIntegrationScreen();
-      case 10:
+      case 8:
         return const NotificationScreen();
-      case 11:
+      case 9:
         return const SettingsScreen();
       default:
         return const DashboardScreen();

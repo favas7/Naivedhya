@@ -25,7 +25,7 @@ class AuthProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Check auth status error: $e');
+      ///('Check auth status error: $e');
     }
   }
 
@@ -38,7 +38,7 @@ class AuthProvider with ChangeNotifier {
       }
       return null;
     } catch (e) {
-      debugPrint('Get user type error: $e');
+      ///('Get user type error: $e');
       return 'user'; // Default to user if error
     }
   }
@@ -49,22 +49,22 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
     
     try {
-      debugPrint('Attempting sign-in for $email');
+      ///('Attempting sign-in for $email');
       final firebaseUser = await _firebaseService.signIn(email, password);
-      debugPrint('Sign-in result: $firebaseUser');
+      ///('Sign-in result: $firebaseUser');
       
       if (firebaseUser != null) {
-        debugPrint('Fetching user data for UID: ${firebaseUser.uid}');
+        ///('Fetching user data for UID: ${firebaseUser.uid}');
         final userData = await _firebaseService.getUser(firebaseUser.uid);
-        debugPrint('User data result: $userData');
+        ///('User data result: $userData');
         
         if (userData != null) {
           _user = UserModel.fromJson(userData);
           
           // Check usertype from Supabase profiles table
-          debugPrint('Checking user type for UID: ${firebaseUser.uid}');
+          ///('Checking user type for UID: ${firebaseUser.uid}');
           final usertype = await checkUserType(firebaseUser.uid);
-          debugPrint('User type result: $usertype');
+          ///('User type result: $usertype');
           
           _isLoading = false;
           notifyListeners();
@@ -86,7 +86,7 @@ class AuthProvider with ChangeNotifier {
       };
       
     } catch (e) {
-      debugPrint('Login error: $e');
+      ///('Login error: $e');
       _isLoading = false;
       notifyListeners();
       throw Exception(e.toString().replaceAll('Exception: ', ''));
@@ -110,7 +110,7 @@ class AuthProvider with ChangeNotifier {
       // Default to 'user' if no usertype found
       return 'user';
     } catch (e) {
-      debugPrint('Error checking user type: $e');
+      ///('Error checking user type: $e');
       // Default to 'user' if there's an error
       return 'user';
     }
@@ -130,13 +130,13 @@ class AuthProvider with ChangeNotifier {
         return true;
       }
       
-      debugPrint('SignUp failed: No user returned');
+      ///('SignUp failed: No user returned');
       _isLoading = false;
       notifyListeners();
       return false;
       
     } catch (e) {
-      debugPrint('SignUp error: $e');
+      ///('SignUp error: $e');
       _isLoading = false;
       notifyListeners();
       throw Exception(e.toString().replaceAll('Exception: ', ''));
@@ -149,7 +149,7 @@ class AuthProvider with ChangeNotifier {
       _user = null;
       notifyListeners();
     } catch (e) {
-      debugPrint('Logout error: $e');
+      ///('Logout error: $e');
     }
   }
 
@@ -170,13 +170,13 @@ class AuthProvider with ChangeNotifier {
         return true;
       }
       
-      debugPrint('Google SignIn failed: No user returned');
+      ///('Google SignIn failed: No user returned');
       _isLoading = false;
       notifyListeners();
       return false;
       
     } catch (e) {
-      debugPrint('Google SignIn error: $e');
+      ///('Google SignIn error: $e');
       _isLoading = false;
       notifyListeners();
       throw Exception(e.toString().replaceAll('Exception: ', ''));
@@ -187,7 +187,7 @@ class AuthProvider with ChangeNotifier {
     try {
       await _firebaseService.sendPasswordResetEmail(email);
     } catch (e) {
-      debugPrint('Password reset error: $e');
+      ///('Password reset error: $e');
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }

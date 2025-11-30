@@ -341,4 +341,150 @@ class DeliveryPersonnelService {
         .order('created_at', ascending: false)
         .map((data) => data.map((json) => DeliveryPersonnel.fromJson(json)).toList());
   }
+
+
+
+
+  
+  // ============ NEW METHODS FOR MAP FUNCTIONALITY ============
+
+  /// Fetch delivery personnel with location data for map display
+  Future<List<DeliveryPersonnel>> fetchDeliveryPersonnelWithLocation() async {
+    try {
+      final response = await _supabase
+          .from('delivery_personnel')
+          .select('*')  // Get all fields including current_location
+          .not('current_location', 'is', null)  // Only personnel with location
+          .order('updated_at', ascending: false);
+
+      return (response as List)
+          .map((json) => DeliveryPersonnel.fromJson(json))
+          .where((person) => person.hasLocation)  // Double-check location validity
+          .toList();
+    } catch (e) {
+      print('Error fetching delivery personnel with location: $e');
+      return [];
+    }
+  }
+
+  /// Subscribe to real-time location updates
+  RealtimeChannel subscribeToLocationUpdates(
+    Function(DeliveryPersonnel) onInsert,
+    Function(DeliveryPersonnel) onUpdate,
+    Function(String) onDelete,
+  ) {
+    final channel = _supabase
+        .channel('delivery_personnel_locations')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'delivery_personnel',
+          callback: (payload) {
+            try {
+              final person = DeliveryPersonnel.fromJson(payload.newRecord);
+              if (person.hasLocation) {
+                onInsert(person);
+              }
+            } catch (e) {
+              print('Error processing insert: $e');
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'delivery_personnel',
+          callback: (payload) {
+            try {
+              final person = DeliveryPersonnel.fromJson(payload.newRecord);
+              if (person.hasLocation) {
+                onUpdate(person);
+              }
+            } catch (e) {
+              print('Error processing update: $e');
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'delivery_personnel',
+          callback: (payload) {
+            try {
+              final userId = payload.oldRecord['user_id'] as String;
+              onDelete(userId);
+            } catch (e) {
+              print('Error processing delete: $e');
+            }
+          },
+        )
+        .subscribe();
+
+    return channel;
+  }
+
+  /// Unsubscribe from real-time updates
+  Future<void> unsubscribeFromLocationUpdates(RealtimeChannel channel) async {
+    try {
+      await _supabase.removeChannel(channel);
+    } catch (e) {
+      print('Error unsubscribing: $e');
+    }
+  }
+
+  /// Update delivery personnel location (for testing or manual updates)
+  Future<DeliveryPersonnel> updateLocation(
+    String userId,
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      // Supabase PostGIS expects POINT(longitude latitude) format
+      final response = await _supabase
+          .from('delivery_personnel')
+          .update({
+            'current_location': 'POINT($longitude $latitude)',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('user_id', userId)
+          .select()
+          .single();
+
+      return DeliveryPersonnel.fromJson(response);
+    } catch (e) {
+      throw Exception('Failed to update location: ${e.toString()}');
+    }
+  }
+
+  /// Fetch delivery personnel near a location (requires PostGIS functions)
+  Future<List<DeliveryPersonnel>> fetchNearbyDeliveryPersonnel({
+    required double latitude,
+    required double longitude,
+    double radiusKm = 5.0,
+  }) async {
+    try {
+      // Using PostGIS ST_DWithin for proximity search
+      // Note: 111.32 km ≈ 1 degree at equator
+      final _ = radiusKm / 111.32;
+      
+      final response = await _supabase.rpc(
+        'find_nearby_delivery_personnel',
+        params: {
+          'lat': latitude,
+          'lng': longitude,
+          'radius_km': radiusKm,
+        },
+      );
+
+      return (response as List)
+          .map((json) => DeliveryPersonnel.fromJson(json))
+          .where((person) => person.hasLocation)
+          .toList();
+    } catch (e) {
+      print('Error fetching nearby personnel (falling back to all): $e');
+      // Fallback: return all personnel with location
+      return fetchDeliveryPersonnelWithLocation();
+    }
+  }
+
 }

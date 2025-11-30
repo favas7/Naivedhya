@@ -47,7 +47,7 @@ class DashboardProvider extends ChangeNotifier {
 
     } catch (e) {
       _error = 'Failed to load dashboard data: ${e.toString()}';
-      print('Dashboard error: $e');
+      ///('Dashboard error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -62,7 +62,7 @@ class DashboardProvider extends ChangeNotifier {
           .select('id');
       return response.length;
     } catch (e) {
-      print('Error fetching total users: $e');
+      ///('Error fetching total users: $e');
       return 0;
     }
   }
@@ -75,7 +75,7 @@ class DashboardProvider extends ChangeNotifier {
           .select('order_id');
       return response.length;
     } catch (e) {
-      print('Error fetching total orders: $e');
+      ///('Error fetching total orders: $e');
       return 0;
     }
   }
@@ -88,7 +88,7 @@ class DashboardProvider extends ChangeNotifier {
           .select('hotel_id');
       return response.length;
     } catch (e) {
-      print('Error fetching active Restaurants: $e');
+      ///('Error fetching active Restaurants: $e');
       return 0;
     }
   }
@@ -101,7 +101,7 @@ class DashboardProvider extends ChangeNotifier {
           .select('user_id');
       return response.length;
     } catch (e) {
-      print('Error fetching delivery staff: $e');
+      ///('Error fetching delivery staff: $e');
       return 0;
     }
   }
@@ -114,7 +114,7 @@ class DashboardProvider extends ChangeNotifier {
           .select('vendor_id');
       return response.length;
     } catch (e) {
-      print('Error fetching total vendors: $e');
+      ///('Error fetching total vendors: $e');
       return 0;
     }
   }

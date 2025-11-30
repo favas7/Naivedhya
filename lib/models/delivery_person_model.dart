@@ -1,4 +1,4 @@
-// models/delivery_personnel_model.dart
+
 class DeliveryPersonnel {
   final String userId;
   final String name;
@@ -14,6 +14,8 @@ class DeliveryPersonnel {
   final String numberPlate;
   final String? licenseImageUrl;
   final String? aadhaarImageUrl;
+  final double? latitude;
+  final double? longitude;
   final bool isAvailable;
   final List<String> assignedOrders;
   final double earnings;
@@ -39,6 +41,8 @@ class DeliveryPersonnel {
     required this.numberPlate,
     this.licenseImageUrl,
     this.aadhaarImageUrl,
+    this.latitude,
+    this.longitude,
     required this.isAvailable,
     required this.assignedOrders,
     required this.earnings,
@@ -50,7 +54,40 @@ class DeliveryPersonnel {
     required this.totalDeliveries,
   });
 
+
+  
   factory DeliveryPersonnel.fromJson(Map<String, dynamic> json) {
+    // Handle PostGIS geography type for current_location
+    double? lat;
+    double? lng;
+    
+    if (json['current_location'] != null) {
+      final location = json['current_location'];
+      
+      if (location is Map && location['coordinates'] != null) {
+        // GeoJSON format: {"type": "Point", "coordinates": [lng, lat]}
+        final coords = location['coordinates'] as List;
+        lng = (coords[0] as num).toDouble();
+        lat = (coords[1] as num).toDouble();
+      } else if (location is String) {
+        // WKT format: "POINT(lng lat)" or "(lng,lat)"
+        final pointRegex = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)');
+        final match = pointRegex.firstMatch(location);
+        if (match != null) {
+          lng = double.tryParse(match.group(1)!);
+          lat = double.tryParse(match.group(2)!);
+        } else {
+          // Try coordinate format: "(lng,lat)"
+          final coordRegex = RegExp(r'\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)');
+          final coordMatch = coordRegex.firstMatch(location);
+          if (coordMatch != null) {
+            lng = double.tryParse(coordMatch.group(1)!);
+            lat = double.tryParse(coordMatch.group(2)!);
+          }
+        }
+      }
+    }
+
     return DeliveryPersonnel(
       userId: json['user_id'],
       name: json['name'],
@@ -66,6 +103,8 @@ class DeliveryPersonnel {
       numberPlate: json['number_plate'],
       licenseImageUrl: json['license_image_url'],
       aadhaarImageUrl: json['aadhaar_image_url'],
+      latitude: lat,
+      longitude: lng,
       isAvailable: json['is_available'] ?? true,
       assignedOrders: List<String>.from(json['assigned_orders'] ?? []),
       earnings: (json['earnings'] as num?)?.toDouble() ?? 0.0,
@@ -79,7 +118,7 @@ class DeliveryPersonnel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    Map<String, dynamic> json = {
       'user_id': userId,
       'name': name,
       'email': email,
@@ -104,6 +143,13 @@ class DeliveryPersonnel {
       'rating': rating,
       'total_deliveries': totalDeliveries,
     };
+
+    // Add location if available (as GeoJSON for Supabase)
+    if (latitude != null && longitude != null) {
+      json['current_location'] = 'POINT($longitude $latitude)';
+    }
+
+    return json;
   }
 
   DeliveryPersonnel copyWith({
@@ -121,6 +167,8 @@ class DeliveryPersonnel {
     String? numberPlate,
     String? licenseImageUrl,
     String? aadhaarImageUrl,
+    double? latitude,
+    double? longitude,
     bool? isAvailable,
     List<String>? assignedOrders,
     double? earnings,
@@ -146,6 +194,8 @@ class DeliveryPersonnel {
       numberPlate: numberPlate ?? this.numberPlate,
       licenseImageUrl: licenseImageUrl ?? this.licenseImageUrl,
       aadhaarImageUrl: aadhaarImageUrl ?? this.aadhaarImageUrl,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       isAvailable: isAvailable ?? this.isAvailable,
       assignedOrders: assignedOrders ?? this.assignedOrders,
       earnings: earnings ?? this.earnings,
@@ -158,6 +208,7 @@ class DeliveryPersonnel {
     );
   }
 
+  // Existing getters
   String get displayName => fullName.isNotEmpty ? fullName : name;
   String get vehicleInfo => '$vehicleType - $vehicleModel ($numberPlate)';
   int get activeOrdersCount => assignedOrders.length;
@@ -169,5 +220,29 @@ class DeliveryPersonnel {
       age--;
     }
     return age;
+  }
+
+  // Location functionality getters
+  bool get hasLocation => latitude != null && longitude != null;
+  
+  String get status {
+    if (!isAvailable) return 'Inactive';
+    if (assignedOrders.isNotEmpty) return 'Delivering';
+    return 'Active';
+  }
+
+  bool matchesFilter(String filter) {
+    switch (filter) {
+      case 'All':
+        return true;
+      case 'Active':
+        return isAvailable && assignedOrders.isEmpty;
+      case 'Inactive':
+        return !isAvailable;
+      case 'Delivering':
+        return assignedOrders.isNotEmpty;
+      default:
+        return true;
+    }
   }
 }

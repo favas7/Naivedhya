@@ -46,7 +46,7 @@ class LocationProvider extends ChangeNotifier {
         
         if (updatedRestaurant == null) {
           // Log warning but don't fail the entire operation
-          print('Warning: Location created but Restaurant update failed');
+          ///('Warning: Location created but Restaurant update failed');
         }
       }
       

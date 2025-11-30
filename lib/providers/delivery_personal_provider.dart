@@ -23,7 +23,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
       _deliveryPersonnel = await _deliveryService.fetchAllDeliveryPersonnel();
     } catch (e) {
       _error = 'Failed to fetch delivery personnel: $e';
-      print(_error);
+      ///(_error);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -40,7 +40,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
       _deliveryPersonnel = await _deliveryService.fetchAvailableDeliveryPersonnel();
     } catch (e) {
       _error = 'Failed to fetch available delivery personnel: $e';
-      print(_error);
+      ///(_error);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -65,7 +65,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
       );
     } catch (e) {
       _error = 'Failed to search delivery personnel: $e';
-      print(_error);
+      ///(_error);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -89,7 +89,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _error = 'Failed to update availability: $e';
-      print(_error);
+      ///(_error);
       notifyListeners();
       return false;
     }
@@ -109,7 +109,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       _error = 'Failed to assign order: $e';
-      print(_error);
+      ///(_error);
       notifyListeners();
       return false;
     }
@@ -129,7 +129,7 @@ class DeliveryPersonnelProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       _error = 'Failed to unassign order: $e';
-      print(_error);
+      ///(_error);
       notifyListeners();
       return false;
     }
