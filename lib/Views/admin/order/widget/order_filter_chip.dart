@@ -8,6 +8,7 @@ class OrderFilterChip extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final AppThemeColors themeColors;
+  final Color? color; // ✅ ADD THIS LINE
 
   const OrderFilterChip({
     super.key,
@@ -15,10 +16,13 @@ class OrderFilterChip extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.themeColors,
+    this.color, // ✅ ADD THIS LINE
   });
 
   @override
   Widget build(BuildContext context) {
+    final chipColor = color ?? themeColors.primary; // ✅ USE CUSTOM COLOR IF PROVIDED
+    
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
@@ -26,14 +30,17 @@ class OrderFilterChip extends StatelessWidget {
         selected: isSelected,
         onSelected: (_) => onTap(),
         backgroundColor: themeColors.surface,
-        selectedColor: AppTheme.primary.withAlpha(200),
+        selectedColor: chipColor.withOpacity(0.15), // ✅ USE chipColor
+        checkmarkColor: chipColor, // ✅ USE chipColor
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : themeColors.textPrimary,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+          color: isSelected ? chipColor : themeColors.textPrimary, // ✅ USE chipColor
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 13,
         ),
         side: BorderSide(
-          color: isSelected ? AppTheme.primary : themeColors.background.withAlpha(50),
+          color: isSelected 
+              ? chipColor.withOpacity(0.5) // ✅ USE chipColor
+              : themeColors.textSecondary.withOpacity(0.2),
         ),
       ),
     );

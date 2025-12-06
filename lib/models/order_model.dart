@@ -4,11 +4,12 @@ import 'package:naivedhya/models/order_item_model.dart';
 class Order {
   final String orderId;
   final String? customerId;
-  final String vendorId;
-  final String restaurantId;
+  final String? vendorId;  // ✅ Must be nullable
+  final String restaurantId;  // ✅ This stays required
   final String orderNumber;
   final double totalAmount;
   final String status;
+  final String? orderType; // ✅ NEW: "Dine In", "Delivery", "Takeaway"
   final String? customerName;
   final String? deliveryStatus;
   final String? deliveryPersonId;
@@ -21,7 +22,21 @@ class Order {
   final String? specialInstructions;
   final String? paymentMethod;
   
-  // ✅ NEW: Order items array
+  // ✅ Petpooja-specific fields
+  final int? petpoojaOrderId;
+  final String? petpoojaRestId;
+  final String? tableNo;
+  final double? discountTotal;
+  final double? taxTotal;
+  final double? packagingCharge;
+  final double? serviceCharge;
+  final String? biller;
+  final String? assignee;
+  final dynamic partPayments; // jsonb
+  final DateTime? petpoojaCreatedAt;
+  final dynamic petpoojaRawPayload; // jsonb
+  
+  // Order items array
   final List<OrderItem> orderItems;
 
   // Additional enriched data (not from DB)
@@ -32,11 +47,12 @@ class Order {
   Order({
     required this.orderId,
     this.customerId,
-    required this.vendorId,
-    required this.restaurantId,
+    this.vendorId,
+    required this.restaurantId,  // Keep this required - we always have hotel_id
     required this.orderNumber,
     required this.totalAmount,
     required this.status,
+    this.orderType,
     this.customerName,
     this.deliveryStatus,
     this.deliveryPersonId,
@@ -48,7 +64,19 @@ class Order {
     this.deliveryAddress,
     this.specialInstructions,
     this.paymentMethod,
-    this.orderItems = const [], // ✅ Default empty array
+    this.petpoojaOrderId,
+    this.petpoojaRestId,
+    this.tableNo,
+    this.discountTotal,
+    this.taxTotal,
+    this.packagingCharge,
+    this.serviceCharge,
+    this.biller,
+    this.assignee,
+    this.partPayments,
+    this.petpoojaCreatedAt,
+    this.petpoojaRawPayload,
+    this.orderItems = const [],
     this.restaurant,
     this.vendor,
     this.deliveryPerson,
@@ -58,25 +86,31 @@ class Order {
     // Parse order items from JSONB array
     List<OrderItem> items = [];
     if (json['order_items'] != null && json['order_items'] is List) {
-      items = (json['order_items'] as List)
-          .map((item) => OrderItem.fromJson({
-                ...item,
-                'order_id': json['order_id'], // Ensure order_id is set
-              }))
-          .toList();
+      try {
+        items = (json['order_items'] as List)
+            .map((item) => OrderItem.fromJson({
+                  ...item,
+                  'order_id': json['order_id'],
+                }))
+            .toList();
+      } catch (e) {
+        print('⚠️ Error parsing order items: $e');
+        items = [];
+      }
     }
 
     return Order(
-      orderId: json['order_id'],
-      customerId: json['customer_id'],
-      vendorId: json['vendor_id'],
-      restaurantId: json['hotel_id'],
-      orderNumber: json['order_number'],
+      orderId: json['order_id'] as String,
+      customerId: json['customer_id'] as String?,  // ✅ Explicitly cast as nullable
+      vendorId: json['vendor_id'] as String?,      // ✅ Explicitly cast as nullable
+      restaurantId: json['hotel_id'] as String,
+      orderNumber: json['order_number'] as String,
       totalAmount: (json['total_amount'] as num).toDouble(),
-      status: json['status'] ?? 'Pending',
-      customerName: json['customer_name'],
-      deliveryStatus: json['delivery_status'],
-      deliveryPersonId: json['delivery_person_id'],
+      status: json['status'] as String? ?? 'Pending',
+      orderType: json['order_type'] as String?,     // ✅ Explicitly cast as nullable
+      customerName: json['customer_name'] as String?,
+      deliveryStatus: json['delivery_status'] as String?,
+      deliveryPersonId: json['delivery_person_id'] as String?,
       proposedDeliveryTime: json['proposed_delivery_time'] != null
           ? DateTime.parse(json['proposed_delivery_time'])
           : null,
@@ -92,16 +126,37 @@ class Order {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
-      deliveryAddress: json['delivery_address'],
-      specialInstructions: json['special_instructions'],
-      paymentMethod: json['payment_method'],
-      orderItems: items, // ✅ Parse items
-      restaurant: json['restaurant'],
-      vendor: json['vendor'],
-      deliveryPerson: json['delivery_person'],
+      deliveryAddress: json['delivery_address'] as String?,
+      specialInstructions: json['special_instructions'] as String?,
+      paymentMethod: json['payment_method'] as String?,
+      petpoojaOrderId: json['petpooja_order_id'] as int?,
+      petpoojaRestId: json['petpooja_rest_id'] as String?,
+      tableNo: json['table_no'] as String?,
+      discountTotal: json['discount_total'] != null 
+          ? (json['discount_total'] as num).toDouble() 
+          : null,
+      taxTotal: json['tax_total'] != null 
+          ? (json['tax_total'] as num).toDouble() 
+          : null,
+      packagingCharge: json['packaging_charge'] != null 
+          ? (json['packaging_charge'] as num).toDouble() 
+          : null,
+      serviceCharge: json['service_charge'] != null 
+          ? (json['service_charge'] as num).toDouble() 
+          : null,
+      biller: json['biller'] as String?,
+      assignee: json['assignee'] as String?,
+      partPayments: json['part_payments'],
+      petpoojaCreatedAt: json['petpooja_created_at'] != null
+          ? DateTime.parse(json['petpooja_created_at'])
+          : null,
+      petpoojaRawPayload: json['petpooja_raw_payload'],
+      orderItems: items,
+      restaurant: json['restaurant'] as Map<String, dynamic>?,
+      vendor: json['vendor'] as Map<String, dynamic>?,
+      deliveryPerson: json['delivery_person'] as Map<String, dynamic>?,
     );
   }
-
   Map<String, dynamic> toJson() {
     return {
       'order_id': orderId,
@@ -111,6 +166,7 @@ class Order {
       'order_number': orderNumber,
       'total_amount': totalAmount,
       'status': status,
+      'order_type': orderType,
       'customer_name': customerName,
       'delivery_status': deliveryStatus,
       'delivery_person_id': deliveryPersonId,
@@ -122,11 +178,22 @@ class Order {
       'delivery_address': deliveryAddress,
       'special_instructions': specialInstructions,
       'payment_method': paymentMethod,
-      'order_items': orderItems.map((item) => item.toJsonComplete()).toList(), // ✅ Include items with item_name
+      'petpooja_order_id': petpoojaOrderId,
+      'petpooja_rest_id': petpoojaRestId,
+      'table_no': tableNo,
+      'discount_total': discountTotal,
+      'tax_total': taxTotal,
+      'packaging_charge': packagingCharge,
+      'service_charge': serviceCharge,
+      'biller': biller,
+      'assignee': assignee,
+      'part_payments': partPayments,
+      'petpooja_created_at': petpoojaCreatedAt?.toIso8601String(),
+      'petpooja_raw_payload': petpoojaRawPayload,
+      'order_items': orderItems.map((item) => item.toJsonComplete()).toList(),
     };
   }
 
-  /// Convert to JSON for database updates (without read-only fields)
   Map<String, dynamic> toJsonForUpdate() {
     return {
       'customer_id': customerId,
@@ -135,6 +202,7 @@ class Order {
       'order_number': orderNumber,
       'total_amount': totalAmount,
       'status': status,
+      'order_type': orderType,
       'customer_name': customerName,
       'delivery_status': deliveryStatus,
       'delivery_person_id': deliveryPersonId,
@@ -144,7 +212,7 @@ class Order {
       'delivery_address': deliveryAddress,
       'special_instructions': specialInstructions,
       'payment_method': paymentMethod,
-      'order_items': orderItems.map((item) => item.toJsonComplete()).toList(), // ✅ Include full items
+      'order_items': orderItems.map((item) => item.toJsonComplete()).toList(),
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -157,6 +225,7 @@ class Order {
     String? orderNumber,
     double? totalAmount,
     String? status,
+    String? orderType,
     String? customerName,
     String? deliveryStatus,
     String? deliveryPersonId,
@@ -168,7 +237,19 @@ class Order {
     String? deliveryAddress,
     String? specialInstructions,
     String? paymentMethod,
-    List<OrderItem>? orderItems, // ✅ Can update items
+    int? petpoojaOrderId,
+    String? petpoojaRestId,
+    String? tableNo,
+    double? discountTotal,
+    double? taxTotal,
+    double? packagingCharge,
+    double? serviceCharge,
+    String? biller,
+    String? assignee,
+    dynamic partPayments,
+    DateTime? petpoojaCreatedAt,
+    dynamic petpoojaRawPayload,
+    List<OrderItem>? orderItems,
     Map<String, dynamic>? restaurant,
     Map<String, dynamic>? vendor,
     Map<String, dynamic>? deliveryPerson,
@@ -181,6 +262,7 @@ class Order {
       orderNumber: orderNumber ?? this.orderNumber,
       totalAmount: totalAmount ?? this.totalAmount,
       status: status ?? this.status,
+      orderType: orderType ?? this.orderType,
       customerName: customerName ?? this.customerName,
       deliveryStatus: deliveryStatus ?? this.deliveryStatus,
       deliveryPersonId: deliveryPersonId ?? this.deliveryPersonId,
@@ -192,28 +274,57 @@ class Order {
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       paymentMethod: paymentMethod ?? this.paymentMethod,
-      orderItems: orderItems ?? this.orderItems, // ✅ Update items
+      petpoojaOrderId: petpoojaOrderId ?? this.petpoojaOrderId,
+      petpoojaRestId: petpoojaRestId ?? this.petpoojaRestId,
+      tableNo: tableNo ?? this.tableNo,
+      discountTotal: discountTotal ?? this.discountTotal,
+      taxTotal: taxTotal ?? this.taxTotal,
+      packagingCharge: packagingCharge ?? this.packagingCharge,
+      serviceCharge: serviceCharge ?? this.serviceCharge,
+      biller: biller ?? this.biller,
+      assignee: assignee ?? this.assignee,
+      partPayments: partPayments ?? this.partPayments,
+      petpoojaCreatedAt: petpoojaCreatedAt ?? this.petpoojaCreatedAt,
+      petpoojaRawPayload: petpoojaRawPayload ?? this.petpoojaRawPayload,
+      orderItems: orderItems ?? this.orderItems,
       restaurant: restaurant ?? this.restaurant,
       vendor: vendor ?? this.vendor,
       deliveryPerson: deliveryPerson ?? this.deliveryPerson,
     );
   }
 
-  // ✅ Helper: Calculate total from items
+  // Helper: Calculate total from items
   double calculateTotalFromItems() {
     return orderItems.fold(0.0, (sum, item) => sum + item.totalPrice);
   }
 
-  // ✅ Helper: Get item count
+  // Helper: Get item count
   int get itemCount => orderItems.length;
 
-  // ✅ Helper: Get total quantity
+  // Helper: Get total quantity
   int get totalQuantity =>
       orderItems.fold(0, (sum, item) => sum + item.quantity);
 
+  // Helper: Check if order is from Petpooja POS
+  bool get isPetpoojaOrder => petpoojaOrderId != null;
+
+  // Helper: Get order type icon
+  String get orderTypeIcon {
+    switch (orderType?.toLowerCase()) {
+      case 'delivery':
+        return '🚚';
+      case 'dine in':
+        return '🍽️';
+      case 'takeaway':
+        return '📦';
+      default:
+        return '📋';
+    }
+  }
+
   @override
   String toString() {
-    return 'Order(orderId: $orderId, orderNumber: $orderNumber, status: $status, items: ${orderItems.length})';
+    return 'Order(orderId: $orderId, orderNumber: $orderNumber, orderType: $orderType, status: $status, items: ${orderItems.length})';
   }
 
   @override

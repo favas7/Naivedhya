@@ -11,6 +11,8 @@ class OrderProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _ordersWithDetails = [];
   Map<String, dynamic>? _selectedOrderDetails;
   String? _selectedStatusFilter;
+  String? _selectedOrderTypeFilter; // ✅ ADD THIS LINE
+
   int _currentPage = 0;
   bool _isLoading = false;
   bool _hasMorePages = true;
@@ -22,22 +24,46 @@ class OrderProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get ordersWithDetails => _ordersWithDetails;
   Map<String, dynamic>? get selectedOrderDetails => _selectedOrderDetails;
   String? get selectedStatusFilter => _selectedStatusFilter;
+  String? get selectedOrderTypeFilter => _selectedOrderTypeFilter; // ✅ ADD THIS LINE
+
   int get currentPage => _currentPage;
   bool get isLoading => _isLoading;
   bool get hasMorePages => _hasMorePages;
   String? get errorMessage => _errorMessage;
   bool get isEmpty => _orders.isEmpty && !isLoading;
 
-  /// Initialize - fetch first page of orders with enriched data
-  Future<void> initialize({bool useEnrichedData = true}) async {
-    ///('\n🚀 [OrderProvider] ========== INITIALIZATION ==========');
-    ///('📊 [OrderProvider] Use Enriched Data: $useEnrichedData');
-    
-    _useEnrichedData = useEnrichedData;
-    await fetchOrders(page: 0);
-    
-    ///('✅ [OrderProvider] ========== INITIALIZATION COMPLETE ==========\n');
+/// Initialize - fetch first page of orders with enriched data
+Future<void> initialize({bool useEnrichedData = true}) async {
+  print('\n🚀 [OrderProvider] ========== INITIALIZATION ==========');
+  print('📊 [OrderProvider] Use Enriched Data: $useEnrichedData');
+  
+  _useEnrichedData = useEnrichedData;
+  _currentPage = 0; // ✅ RESET TO PAGE 0
+  _hasMorePages = true; // ✅ RESET FLAG
+  _orders = []; // ✅ CLEAR OLD DATA
+  _ordersWithDetails = []; // ✅ CLEAR OLD DATA
+  
+  await fetchOrders(page: 0); // ✅ EXPLICITLY FETCH PAGE 0
+  
+  print('✅ [OrderProvider] ========== INITIALIZATION COMPLETE ==========\n');
+}
+
+  /// Set order type filter and reload orders
+Future<void> setOrderTypeFilter(String? orderType) async {
+  print('\n🏷️ [OrderProvider] setOrderTypeFilter called: $orderType');
+  
+  if (_selectedOrderTypeFilter == orderType) {
+    print('ℹ️ [OrderProvider] Filter unchanged, skipping');
+    return;
   }
+
+  print('🔄 [OrderProvider] Changing filter from "$_selectedOrderTypeFilter" to "$orderType"');
+  _selectedOrderTypeFilter = orderType;
+  _currentPage = 0;
+  _hasMorePages = true;
+  
+  await fetchOrders(page: 0);
+}
 
   /// Fetch orders with optional filter and pagination
   Future<void> fetchOrders({int page = 0}) async {
@@ -85,13 +111,15 @@ class OrderProvider extends ChangeNotifier {
   /// Fetch orders with enriched data (restaurant, vendor, delivery details)
   Future<void> _fetchOrdersEnriched(int page) async {
     try {
-      ///('\n🎯 [OrderProvider] _fetchOrdersEnriched called');
-      ///('📄 [OrderProvider] Page: $page');
-      ///('🏷️ [OrderProvider] Status Filter: $_selectedStatusFilter');
+      print('\n🎯 [OrderProvider] _fetchOrdersEnriched called');
+      print('📄 [OrderProvider] Page: $page');
+      print('🏷️ [OrderProvider] Status Filter: $_selectedStatusFilter');
+      print('🏷️ [OrderProvider] OrderType Filter: $_selectedOrderTypeFilter'); // ✅ ADD THIS
       
       final newOrdersWithDetails = await _orderService.fetchOrdersWithDetails(
         page: page,
         statusFilter: _selectedStatusFilter,
+        orderTypeFilter: _selectedOrderTypeFilter, // ✅ ADD THIS LINE
       );
 
       ///('📦 [OrderProvider] Received ${newOrdersWithDetails.length} enriched orders from service');
@@ -126,14 +154,14 @@ class OrderProvider extends ChangeNotifier {
   /// Fetch orders with basic data only
   Future<void> _fetchOrdersBasic(int page) async {
     try {
-      ///('\n🎯 [OrderProvider] _fetchOrdersBasic called');
-      ///('📄 [OrderProvider] Page: $page');
+      print('\n🎯 [OrderProvider] _fetchOrdersBasic called');
+      print('📄 [OrderProvider] Page: $page');
       
       final newOrders = await _orderService.fetchOrders(
         page: page,
         statusFilter: _selectedStatusFilter,
+        orderTypeFilter: _selectedOrderTypeFilter, // ✅ ADD THIS LINE
       );
-
       ///('📦 [OrderProvider] Received ${newOrders.length} basic orders from service');
 
       if (page == 0) {

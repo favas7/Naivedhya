@@ -11,99 +11,117 @@ class OrderService {
   static const String _tableName = 'orders';
   static const int _pageSize = 10;
 
+  
+
   final _restaurantService = RestaurantService();
   final VendorService _vendorService = VendorService();
   final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
   final AddOrderItemService _orderItemService = AddOrderItemService();
 
-  /// Fetch paginated orders with optional status filter
-  /// Returns list of orders sorted by created_at (newest first)
-  Future<List<Order>> fetchOrders({
-    int page = 0,
-    String? statusFilter,
-  }) async {
-    try {
-      print('🔍 [OrderService] Fetching orders - Page: $page, Status: $statusFilter');
-      
-      int offset = page * _pageSize;
 
-      dynamic query = _supabase.from(_tableName).select();
+    Future<List<Order>> fetchOrders({
+      int page = 0,
+      String? statusFilter,
+      String? orderTypeFilter, // ✅ ADD THIS PARAMETER
+    }) async {
+      try {
+        print('🔍 [OrderService] Fetching orders - Page: $page, Status: $statusFilter, OrderType: $orderTypeFilter');
+        
+        int offset = page * _pageSize;
 
-      // Apply status filter first
-      if (statusFilter != null && statusFilter.isNotEmpty) {
-        query = query.eq('status', statusFilter);
-        print('📊 [OrderService] Applied status filter: $statusFilter');
-      } 
+        dynamic query = _supabase.from(_tableName).select();
 
-      // Apply ordering and pagination after filtering
-      query = query
-          .order('created_at', ascending: false)
-          .range(offset, offset + _pageSize - 1);
+        // Apply status filter
+        if (statusFilter != null && statusFilter.isNotEmpty) {
+          query = query.eq('status', statusFilter);
+          print('📊 [OrderService] Applied status filter: $statusFilter');
+        }
 
-      print('⏳ [OrderService] Executing query...');
-      final response = await query;
-      
-      print('✅ [OrderService] Query successful! Received ${(response as List).length} orders');
-      
-      final orders = (response)
-          .map((order) => Order.fromJson(order))
-          .toList();
-      
-      print('✅ [OrderService] Successfully parsed ${orders.length} Order objects');
-      return orders;
-    } catch (e) {
-      print('❌ [OrderService] ERROR in fetchOrders: $e');
-      print('❌ [OrderService] Stack trace: ${StackTrace.current}');
-      throw Exception('Failed to fetch orders: $e');
+        // ✅ ADD ORDER TYPE FILTER
+        if (orderTypeFilter != null && orderTypeFilter.isNotEmpty) {
+          query = query.eq('order_type', orderTypeFilter);
+          print('📊 [OrderService] Applied order_type filter: $orderTypeFilter');
+        }
+
+        // Apply ordering and pagination after filtering
+        query = query
+            .order('created_at', ascending: false)
+            .range(offset, offset + _pageSize - 1);
+
+        print('⏳ [OrderService] Executing query...');
+        final response = await query;
+        
+        print('✅ [OrderService] Query successful! Received ${(response as List).length} orders');
+        
+        final orders = (response)
+            .map((order) => Order.fromJson(order))
+            .toList();
+        
+        print('✅ [OrderService] Successfully parsed ${orders.length} Order objects');
+        return orders;
+      } catch (e) {
+        print('❌ [OrderService] ERROR in fetchOrders: $e');
+        print('❌ [OrderService] Stack trace: ${StackTrace.current}');
+        throw Exception('Failed to fetch orders: $e');
+      }
     }
-  }
 
+
+
+    
   /// Fetch orders with enriched data (restaurant, vendor, delivery details)
   Future<List<Map<String, dynamic>>> fetchOrdersWithDetails({
     int page = 0,
     String? statusFilter,
+    String? orderTypeFilter, // ✅ ADD THIS PARAMETER
   }) async {
     try {
       print('\n🚀 [OrderService] ========== FETCH ORDERS WITH DETAILS ==========');
-      print('📄 [OrderService] Page: $page, Status Filter: $statusFilter');
+      print('📄 [OrderService] Page: $page, Status Filter: $statusFilter, OrderType Filter: $orderTypeFilter');
       
-      final orders = await fetchOrders(page: page, statusFilter: statusFilter);
+      final orders = await fetchOrders(
+        page: page, 
+        statusFilter: statusFilter,
+        orderTypeFilter: orderTypeFilter, // ✅ PASS IT HERE
+      );
       print('📦 [OrderService] Fetched ${orders.length} orders, now enriching...');
       
-      List<Map<String, dynamic>> enrichedOrders = [];
+        List<Map<String, dynamic>> enrichedOrders = [];
 
-      for (int i = 0; i < orders.length; i++) {
-        final order = orders[i];
-        print('\n--- Enriching Order ${i + 1}/${orders.length} ---');
-        print('🆔 [OrderService] Order ID: ${order.orderId}');
-        print('📝 [OrderService] Order Number: ${order.orderNumber}');
-        
-        try {
-          final enriched = await enrichOrderData(order);
-          enrichedOrders.add(enriched);
-          print('✅ [OrderService] Successfully enriched order ${order.orderNumber}');
-        } catch (e) {
-          print('⚠️ [OrderService] Failed to enrich order ${order.orderNumber}: $e');
-          // Add order with null details instead of failing completely
-          enrichedOrders.add({
-            'order': order,
-            'restaurant': null,
-            'vendor': null,
-            'deliveryPersonnel': null,
-            'orderItems': [],
-          });
+        for (int i = 0; i < orders.length; i++) {
+          final order = orders[i];
+          print('\n--- Enriching Order ${i + 1}/${orders.length} ---');
+          print('🆔 [OrderService] Order ID: ${order.orderId}');
+          print('📝 [OrderService] Order Number: ${order.orderNumber}');
+          
+          try {
+            final enriched = await enrichOrderData(order);
+            enrichedOrders.add(enriched);
+            print('✅ [OrderService] Successfully enriched order ${order.orderNumber}');
+          } catch (e) {
+            print('⚠️ [OrderService] Failed to enrich order ${order.orderNumber}: $e');
+            // Add order with null details instead of failing completely
+            enrichedOrders.add({
+              'order': order,
+              'restaurant': null,
+              'vendor': null,
+              'deliveryPersonnel': null,
+              'orderItems': [],
+            });
+          }
         }
-      }
 
-      print('\n✅ [OrderService] ========== ENRICHMENT COMPLETE ==========');
-      print('📊 [OrderService] Total enriched orders: ${enrichedOrders.length}');
-      return enrichedOrders;
-    } catch (e) {
-      print('❌ [OrderService] ERROR in fetchOrdersWithDetails: $e');
-      print('❌ [OrderService] Stack trace: ${StackTrace.current}');
-      throw Exception('Failed to fetch orders with details: $e');
+        print('\n✅ [OrderService] ========== ENRICHMENT COMPLETE ==========');
+        print('📊 [OrderService] Total enriched orders: ${enrichedOrders.length}');
+        return enrichedOrders;
+      } catch (e) {
+        print('❌ [OrderService] ERROR in fetchOrdersWithDetails: $e');
+        print('❌ [OrderService] Stack trace: ${StackTrace.current}');
+        throw Exception('Failed to fetch orders with details: $e');
+      }
     }
-  }
+
+    
 
   /// Enrich single order with restaurant, vendor, and delivery details
   Future<Map<String, dynamic>> enrichOrderData(Order order) async {
@@ -138,11 +156,14 @@ class OrderService {
         print('❌ [OrderService] ERROR fetching restaurant: $e');
       }
       
-      // Fetch vendor details
-      print('\n🏪 [OrderService] Fetching vendor details...');
-      Map<String, dynamic>? vendorDetails;
+    // Fetch vendor details
+    print('\n🏪 [OrderService] Fetching vendor details...');
+    Map<String, dynamic>? vendorDetails;
+
+    // ✅ ONLY FETCH IF vendor_id EXISTS AND IS NOT NULL
+    if (order.vendorId != null && order.vendorId!.isNotEmpty) {
       try {
-        vendorDetails = await _vendorService.fetchVendorById(order.vendorId);
+        vendorDetails = await _vendorService.fetchVendorById(order.vendorId!);
         if (vendorDetails != null) {
           print('✅ [OrderService] Vendor found: ${vendorDetails['name']}');
         } else {
@@ -150,8 +171,13 @@ class OrderService {
         }
       } catch (e) {
         print('❌ [OrderService] ERROR fetching vendor: $e');
+        // Don't throw - just set to null
+        vendorDetails = null;
       }
-      
+    } else {
+      print('ℹ️ [OrderService] No vendor assigned (POS order or NULL vendor_id)');
+      vendorDetails = null;
+    }
       // Fetch order items
       print('\n📦 [OrderService] Fetching order items...');
       List orderItems = [];

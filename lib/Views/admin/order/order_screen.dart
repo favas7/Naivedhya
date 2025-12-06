@@ -1,8 +1,7 @@
-// screens/orders_screen.dart - REFACTORED WITH COMPACT SINGLE-LINE LIST
+// screens/orders_screen.dart - WITH ORDER TYPE FILTERS
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/order/add_order_screen/add_order_screen.dart';
 import 'package:naivedhya/Views/admin/order/edit_order/edit_order_screen.dart';
-import 'package:naivedhya/Views/admin/order/order_detail_dialog.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_card.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_list_item.dart';
 import 'package:naivedhya/Views/admin/order/widget/compact_stats_card.dart';
@@ -24,7 +23,7 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
-  bool _isGridView = false; // Default to list view
+  bool _isGridView = false;
 
   Map<String, dynamic>? _parseVendor(dynamic vendorData) {
     if (vendorData == null) return null;
@@ -54,18 +53,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
 
-    print('📱 [OrdersScreen] Setting up post-frame callback for initialization');
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('🚀 [OrdersScreen] Post-frame callback executing...');
-      print('📍 [OrdersScreen] Calling OrderProvider.initialize(useEnrichedData: true)');
-
-      try {
-        context.read<OrderProvider>().initialize(useEnrichedData: true);
-        print('✅ [OrdersScreen] Initialize call completed');
-      } catch (e) {
-        print('❌ [OrdersScreen] ERROR in initialize: $e');
-      }
+      context.read<OrderProvider>().initialize(useEnrichedData: true);
     });
   }
 
@@ -97,13 +86,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
               controller: _scrollController,
               child: Column(
                 children: [
-                  // Compact Stats Section
                   _buildCompactStatsSection(themeColors),
-
-                  // Search and Filter Section
                   _buildSearchAndFilters(themeColors),
-
-                  // Orders List Section
                   _buildOrdersListSection(themeColors),
                 ],
               ),
@@ -237,70 +221,77 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  Widget _buildCompactStatsSection(AppThemeColors themeColors) {
-    return Consumer<OrderProvider>(
-      builder: (context, orderProvider, child) {
-        final totalOrders = orderProvider.ordersWithDetails.length;
-        final pendingOrders = orderProvider.ordersWithDetails
-            .where((od) => (od['order'] as Order).status == 'pending')
-            .length;
-        final activeOrders = orderProvider.ordersWithDetails
-            .where((od) => ['confirmed', 'preparing', 'ready', 'picked up', 'delivering']
-                .contains((od['order'] as Order).status))
-            .length;
-        final completedOrders = orderProvider.ordersWithDetails
-            .where((od) => (od['order'] as Order).status == 'completed')
-            .length;
+Widget _buildCompactStatsSection(AppThemeColors themeColors) {
+  return Consumer<OrderProvider>(
+    builder: (context, orderProvider, child) {
+      // ✅ Count from ordersWithDetails OR orders (whichever has data)
+      final allOrders = orderProvider.ordersWithDetails.isNotEmpty 
+          ? orderProvider.ordersWithDetails 
+          : orderProvider.orders.map((o) => {'order': o}).toList();
+      
+      final totalOrders = allOrders.length;
+      
+      final pendingOrders = allOrders
+          .where((od) => (od['order'] as Order).status == 'Pending')
+          .length;
+      
+      final deliveryOrders = allOrders
+          .where((od) => (od['order'] as Order).orderType == 'Delivery')
+          .length;
+      
+      final dineInOrders = allOrders
+          .where((od) => (od['order'] as Order).orderType == 'Dine In')
+          .length;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                CompactStatsCard(
-                  label: 'Total Orders',
-                  value: totalOrders.toString(),
-                  icon: Icons.shopping_bag_outlined,
-                  color: AppTheme.primary,
-                  themeColors: themeColors,
-                ),
-                const SizedBox(width: 12),
-                CompactStatsCard(
-                  label: 'Pending',
-                  value: pendingOrders.toString(),
-                  icon: Icons.pending_outlined,
-                  color: AppTheme.warning,
-                  themeColors: themeColors,
-                ),
-                const SizedBox(width: 12),
-                CompactStatsCard(
-                  label: 'Active',
-                  value: activeOrders.toString(),
-                  icon: Icons.local_shipping_outlined,
-                  color: AppTheme.info,
-                  themeColors: themeColors,
-                ),
-                const SizedBox(width: 12),
-                CompactStatsCard(
-                  label: 'Completed',
-                  value: completedOrders.toString(),
-                  icon: Icons.check_circle_outline,
-                  color: AppTheme.success,
-                  themeColors: themeColors,
-                ),
-              ],
-            ),
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              CompactStatsCard(
+                label: 'Total Orders',
+                value: totalOrders.toString(),
+                icon: Icons.shopping_bag_outlined,
+                color: AppTheme.primary,
+                themeColors: themeColors,
+              ),
+              const SizedBox(width: 12),
+              CompactStatsCard(
+                label: 'Pending',
+                value: pendingOrders.toString(),
+                icon: Icons.pending_outlined,
+                color: AppTheme.warning,
+                themeColors: themeColors,
+              ),
+              const SizedBox(width: 12),
+              CompactStatsCard(
+                label: 'Delivery',
+                value: deliveryOrders.toString(),
+                icon: Icons.delivery_dining,
+                color: AppTheme.warning,
+                themeColors: themeColors,
+              ),
+              const SizedBox(width: 12),
+              CompactStatsCard(
+                label: 'Dine In',
+                value: dineInOrders.toString(),
+                icon: Icons.restaurant,
+                color: AppTheme.info,
+                themeColors: themeColors,
+              ),
+            ],
           ),
-        );
-      },
-    );
-  }
-
+        ),
+      );
+    },
+  );
+}
   Widget _buildSearchAndFilters(AppThemeColors themeColors) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Search Bar
           OrderSearchBar(
@@ -308,11 +299,64 @@ class _OrdersScreenState extends State<OrdersScreen> {
             onChanged: (value) => setState(() {}),
             themeColors: themeColors,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // Filter Button Row
+          // ✅ ORDER TYPE FILTERS (PRIMARY)
+          Text(
+            'Order Type',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: themeColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                OrderFilterChip(
+                  label: 'All Orders',
+                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == null,
+                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter(null),
+                  themeColors: themeColors,
+                ),
+                OrderFilterChip(
+                  label: '🚚 Delivery',
+                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Delivery',
+                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Delivery'),
+                  themeColors: themeColors,
+                  color: AppTheme.warning,
+                ),
+                OrderFilterChip(
+                  label: '🍽️ Dine In',
+                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Dine In',
+                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Dine In'),
+                  themeColors: themeColors,
+                ),
+                OrderFilterChip(
+                  label: '📦 Takeaway',
+                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Takeaway',
+                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Takeaway'),
+                  themeColors: themeColors,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // STATUS FILTERS (SECONDARY)
+          Text(
+            'Order Status',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: themeColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: SingleChildScrollView(
@@ -327,26 +371,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       ),
                       OrderFilterChip(
                         label: 'Pending',
-                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'pending',
-                        onTap: () => context.read<OrderProvider>().setStatusFilter('pending'),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'Pending',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('Pending'),
                         themeColors: themeColors,
                       ),
                       OrderFilterChip(
                         label: 'Confirmed',
-                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'confirmed',
-                        onTap: () => context.read<OrderProvider>().setStatusFilter('confirmed'),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'Confirmed',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('Confirmed'),
                         themeColors: themeColors,
                       ),
                       OrderFilterChip(
                         label: 'Preparing',
-                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'preparing',
-                        onTap: () => context.read<OrderProvider>().setStatusFilter('preparing'),
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'Preparing',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('Preparing'),
                         themeColors: themeColors,
                       ),
                       OrderFilterChip(
-                        label: 'Completed',
-                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'completed',
-                        onTap: () => context.read<OrderProvider>().setStatusFilter('completed'),
+                        label: 'Delivered',
+                        isSelected: context.watch<OrderProvider>().selectedStatusFilter == 'Delivered',
+                        onTap: () => context.read<OrderProvider>().setStatusFilter('Delivered'),
                         themeColors: themeColors,
                       ),
                     ],
@@ -370,16 +414,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Widget _buildOrdersListSection(AppThemeColors themeColors) {
     return Consumer<OrderProvider>(
       builder: (context, orderProvider, child) {
-        print('\n🎨 [OrdersScreen] Building orders list section');
-        print('📊 [OrdersScreen] State:');
-        print('   - Orders with Details: ${orderProvider.ordersWithDetails.length}');
-        print('   - Is Loading: ${orderProvider.isLoading}');
-        print('   - Error Message: ${orderProvider.errorMessage}');
-        print('   - Has More Pages: ${orderProvider.hasMorePages}');
-
-        // Check if there's an error
         if (orderProvider.errorMessage != null) {
-          print('❌ [OrdersScreen] ERROR STATE: ${orderProvider.errorMessage}');
           return Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
@@ -406,10 +441,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      print('🔄 [OrdersScreen] Retry button pressed');
-                      orderProvider.refreshOrders();
-                    },
+                    onPressed: () => orderProvider.refreshOrders(),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                     style: ElevatedButton.styleFrom(
@@ -423,7 +455,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
         }
 
         if (orderProvider.ordersWithDetails.isEmpty && !orderProvider.isLoading) {
-          print('ℹ️ [OrdersScreen] EMPTY STATE: No orders to display');
           return Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
@@ -454,13 +485,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
           );
         }
 
-        print('✅ [OrdersScreen] Rendering ${orderProvider.ordersWithDetails.length} orders');
-
         return Container(
           color: themeColors.background,
           child: Column(
             children: [
-              // Order count header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -486,12 +514,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 ),
               ),
 
-              // Orders content
               _isGridView
                   ? _buildGridView(orderProvider, themeColors)
                   : _buildCompactListView(orderProvider, themeColors),
 
-              // Loading indicator for pagination
               if (orderProvider.isLoading)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -507,31 +533,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Widget _buildCompactListView(OrderProvider orderProvider, AppThemeColors themeColors) {
-    print('🎨 [OrdersScreen] Building COMPACT LIST view');
-
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: orderProvider.ordersWithDetails.length,
       itemBuilder: (context, index) {
         final orderData = orderProvider.ordersWithDetails[index];
-
-        print('\n📦 [OrdersScreen] Building compact list order #$index');
-        print('   - Order Data Keys: ${orderData.keys.join(", ")}');
-
-        // Extract data with null safety
         final order = orderData['order'] as Order?;
         final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
         final vendor = _parseVendor(orderData['vendor']);
 
-        if (order == null) {
-          print('⚠️ [OrdersScreen] Order is NULL at index $index!');
-          return const SizedBox.shrink();
-        }
-
-        print('   - Order: ${order.orderNumber}');
-        print('   - Restaurant: ${restaurant?['name'] ?? 'null'}');
-        print('   - Vendor: ${vendor?['name'] ?? 'null'}');
+        if (order == null) return const SizedBox.shrink();
 
         return OrderListItem(
           order: order,
@@ -539,13 +551,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
           vendor: vendor,
           themeColors: themeColors,
           onTap: () {
-            print('👆 [OrdersScreen] Order list item tapped: ${order.orderNumber}');
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OrderDetailScreen(order: order),
-              ),
-            );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) => OrderDetailScreen(order: order),
+            //   ),
+            // );
           },
           onShowMenu: _showOrderMenu,
         );
@@ -554,8 +565,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Widget _buildGridView(OrderProvider orderProvider, AppThemeColors themeColors) {
-    print('🎨 [OrdersScreen] Building GRID view');
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -570,24 +579,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
       itemCount: orderProvider.ordersWithDetails.length,
       itemBuilder: (context, index) {
         final orderData = orderProvider.ordersWithDetails[index];
-
-        print('\n📦 [OrdersScreen] Building grid order card #$index');
-        print('   - Order Data Keys: ${orderData.keys.join(", ")}');
-
         final order = orderData['order'] as Order?;
         final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
         final vendor = _parseVendor(orderData['vendor']);
         final orderItems = orderData['orderItems'] as List? ?? [];
 
-        if (order == null) {
-          print('⚠️ [OrdersScreen] Order is NULL at index $index!');
-          return const SizedBox.shrink();
-        }
-
-        print('   - Order: ${order.orderNumber}');
-        print('   - Restaurant: ${restaurant?['name'] ?? 'null'}');
-        print('   - Vendor: ${vendor?['name'] ?? 'null'}');
-        print('   - Items: ${orderItems.length}');
+        if (order == null) return const SizedBox.shrink();
 
         return OrderCard(
           order: order,
@@ -596,13 +593,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
           orderItems: orderItems,
           themeColors: themeColors,
           onTap: () {
-            print('👆 [OrdersScreen] Order card tapped: ${order.orderNumber}');
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OrderDetailScreen(order: order),
-              ),
-            );
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (context) => OrderDetailScreen(order: order),
+            //   ),
+            // );
           },
           onShowMenu: _showOrderMenu,
         );
@@ -642,6 +638,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 );
               },
             ),
+            if (order.orderType == 'Delivery')
+              ListTile(
+                leading: Icon(Icons.delivery_dining, color: AppTheme.warning),
+                title: const Text('Assign Delivery Partner'),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Navigate to delivery partner assignment
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Delivery assignment coming soon')),
+                  );
+                },
+              ),
             ListTile(
               leading: Icon(Icons.message, color: AppTheme.info),
               title: const Text('Send Message'),
@@ -692,4 +700,4 @@ class _OrdersScreenState extends State<OrdersScreen> {
       ),
     );
   }
-} 
+}
