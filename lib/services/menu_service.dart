@@ -1,396 +1,489 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:naivedhya/models/menu_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MenuService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  /// Get all menu items for a restaurant with their customizations
-  Future<List<MenuItem>> getMenuItems(String restaurantId) async {
+    // Get from environment variables
+    String get _petpoojaApiUrl => dotenv.env['PETPOOJA_API_URL'] ?? '';
+    String get _restaurantId => dotenv.env['PETPOOJA_RESTAURANT_ID'] ?? '324347';
+    // ignore: unused_element
+    String get _apiToken => dotenv.env['PETPOOJA_API_TOKEN'] ?? '';
+  
+  /// Sync menu from Petpooja
+  Future<Map<String, dynamic>> syncMenuFromPetpooja(String hotelId) async {
+    final startTime = DateTime.now();
+    int itemsSynced = 0;
+    int categoriesSynced = 0;
+    String status = 'success';
+    String? errorMessage;
+
     try {
-      // First, get menu items
-      final response = await _supabase
-          .from('menu_items')
-          .select()
-          .eq('hotel_id', restaurantId)
-          .order('name');
-
-      if (response.isEmpty) {
-        return [];
-      }
-
-      // Then, for each item, fetch its customizations separately
-      List<MenuItem> menuItems = [];
+      print('🔄 [MenuService] Starting menu sync from Petpooja...');
       
-      for (var itemData in response) {
-        // Fetch customizations for this item
-        final customizationsResponse = await _supabase
-            .from('menu_item_customizations')
-            .select()
-            .eq('item_id', itemData['item_id'])
-            .order('display_order');
-        
-        // For each customization, fetch its options
-        List<Map<String, dynamic>> customizationsWithOptions = [];
-        
-        for (var customizationData in customizationsResponse) {
-          final optionsResponse = await _supabase
-              .from('customization_options')
-              .select()
-              .eq('customization_id', customizationData['customization_id'])
-              .order('display_order');
-          
-          customizationData['options'] = optionsResponse;
-          customizationsWithOptions.add(customizationData);
-        }
-              
-        // Add customizations to the item data
-        itemData['customizations'] = customizationsWithOptions;
-        
-        menuItems.add(MenuItem.fromJson(itemData));
+      // Step 1: Fetch menu from Petpooja API
+      final menuData = await _fetchMenuFromPetpooja();
+      
+      if (menuData == null) {
+        throw Exception('Failed to fetch menu from Petpooja');
       }
 
-      return menuItems;
+      print('✅ [MenuService] Menu data received from Petpooja');
+      
+      // Step 2: Sync categories
+      if (menuData['categories'] != null) {
+        categoriesSynced = await _syncCategories(
+          hotelId, 
+          menuData['categories'] as List,
+        );
+        print('✅ [MenuService] Synced $categoriesSynced categories');
+      }
+
+      // Step 3: Sync menu items
+      if (menuData['items'] != null) {
+        itemsSynced = await _syncMenuItems(
+          hotelId,
+          menuData['items'] as List,
+        );
+        print('✅ [MenuService] Synced $itemsSynced items');
+      }
+
     } catch (e) {
-      print('Error fetching menu items: $e');
-      rethrow;
+      print('❌ [MenuService] Error syncing menu: $e');
+      status = 'failed';
+      errorMessage = e.toString();
     }
+
+    // Log sync result
+    final duration = DateTime.now().difference(startTime).inMilliseconds;
+    await _logMenuSync(
+      hotelId: hotelId,
+      status: status,
+      itemsSynced: itemsSynced,
+      categoriesSynced: categoriesSynced,
+      errorMessage: errorMessage,
+      durationMs: duration,
+    );
+
+    return {
+      'success': status == 'success',
+      'itemsSynced': itemsSynced,
+      'categoriesSynced': categoriesSynced,
+      'duration': duration,
+      'error': errorMessage,
+    };
   }
 
-  /// Get a single menu item by ID with customizations
-  Future<MenuItem?> getMenuItem(String itemId) async {
+  /// Fetch menu from Petpooja API
+  Future<Map<String, dynamic>?> _fetchMenuFromPetpooja() async {
     try {
-      // Get menu item
-      final response = await _supabase
-          .from('menu_items')
-          .select()
-          .eq('item_id', itemId)
-          .single();
+      print('📡 [MenuService] Calling Petpooja Push Menu API...');
+      
+      final response = await http.post(
+        Uri.parse(_petpoojaApiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'restaurantid': _restaurantId,
+          // Add any other required parameters from Petpooja
+        }),
+      );
 
-      // Fetch customizations
-      final customizationsResponse = await _supabase
-          .from('menu_item_customizations')
-          .select()
-          .eq('item_id', itemId)
-          .order('display_order');
-      
-      // For each customization, fetch its options
-      List<Map<String, dynamic>> customizationsWithOptions = [];
-      
-      for (var customizationData in customizationsResponse) {
-        final optionsResponse = await _supabase
-            .from('customization_options')
-            .select()
-            .eq('customization_id', customizationData['customization_id'])
-            .order('display_order');
+      print('📡 [MenuService] API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         
-        customizationData['options'] = optionsResponse;
-        customizationsWithOptions.add(customizationData);
+        if (data['success'] == '1') {
+          print('✅ [MenuService] Successfully fetched menu from Petpooja');
+          return data;
+        } else {
+          print('❌ [MenuService] Petpooja API returned success=0');
+          return null;
+        }
+      } else {
+        print('❌ [MenuService] HTTP Error: ${response.statusCode}');
+        return null;
       }
-          
-      response['customizations'] = customizationsWithOptions;
-      
-      return MenuItem.fromJson(response);
     } catch (e) {
-      print('Error fetching menu item: $e');
+      print('❌ [MenuService] Exception fetching from Petpooja: $e');
       return null;
     }
   }
 
-  /// Create a new menu item with customizations
-  Future<bool> createMenuItem(MenuItem menuItem) async {
+  /// Sync categories to database
+  Future<int> _syncCategories(String hotelId, List categories) async {
+    int synced = 0;
+
     try {
-      // 1. First, insert the menu item WITHOUT customizations
-      final itemData = menuItem.toJson();
-      itemData.remove('customizations');
-      itemData.remove('created_at');
-      itemData.remove('updated_at');
+      for (var category in categories) {
+        final categoryData = {
+          'hotel_id': hotelId,
+          'petpooja_category_id': category['categoryid'].toString(),
+          'category_name': category['categoryname'],
+          'category_rank': int.tryParse(category['categoryrank']?.toString() ?? '0') ?? 0,
+          'parent_category_id': category['parent_category_id']?.toString(),
+          'is_active': category['active'] == '1',
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+
+        // Upsert (insert or update)
+        await _supabase
+            .from('menu_categories')
+            .upsert(categoryData, onConflict: 'hotel_id,petpooja_category_id');
+
+        synced++;
+      }
+    } catch (e) {
+      print('❌ [MenuService] Error syncing categories: $e');
+    }
+
+    return synced;
+  }
+
+  /// Sync menu items to database
+  Future<int> _syncMenuItems(String hotelId, List items) async {
+    int synced = 0;
+
+    try {
+      for (var item in items) {
+        // Get item info
+        final itemInfo = item['item_info'] as Map<String, dynamic>?;
+        
+        final itemData = {
+          'hotel_id': hotelId,
+          'petpooja_item_id': item['itemid'].toString(),
+          'item_name': item['itemname'],
+          'item_code': item['itemid'].toString(),
+          'category_name': await _getCategoryName(hotelId, item['item_categoryid'].toString()),
+          'description': item['itemdescription'] ?? '',
+          'price': double.tryParse(item['price']?.toString() ?? '0') ?? 0.0,
+          'image_url': item['item_image_url']?.toString().isNotEmpty == true 
+              ? item['item_image_url'] 
+              : null,
+          'is_available': item['active'] == '1',
+          'in_stock': int.tryParse(item['in_stock']?.toString() ?? '2') ?? 2,
+          'item_attribute': _getAttributeName(item['item_attributeid']?.toString()),
+          'spice_level': itemInfo?['spice_level']?.toString(),
+          'is_from_petpooja': true,
+          'petpooja_raw_data': jsonEncode(item),
+          'last_synced_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+
+        // Upsert (insert or update)
+        await _supabase
+            .from('menu_items')
+            .upsert(itemData, onConflict: 'hotel_id,petpooja_item_id');
+
+        synced++;
+      }
+    } catch (e) {
+      print('❌ [MenuService] Error syncing menu items: $e');
+      print('Stack trace: ${StackTrace.current}');
+    }
+
+    return synced;
+  }
+
+  /// Get category name by Petpooja category ID
+  Future<String?> _getCategoryName(String hotelId, String categoryId) async {
+    try {
+      final response = await _supabase
+          .from('menu_categories')
+          .select('category_name')
+          .eq('hotel_id', hotelId)
+          .eq('petpooja_category_id', categoryId)
+          .maybeSingle();
+
+      return response?['category_name'];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Map attribute ID to name
+  String _getAttributeName(String? attributeId) {
+    switch (attributeId) {
+      case '1':
+        return 'veg';
+      case '2':
+        return 'non-veg';
+      case '24':
+        return 'egg';
+      default:
+        return 'veg';
+    }
+  }
+
+  /// Log menu sync operation
+  Future<void> _logMenuSync({
+    required String hotelId,
+    required String status,
+    required int itemsSynced,
+    required int categoriesSynced,
+    String? errorMessage,
+    required int durationMs,
+  }) async {
+    try {
+      await _supabase.from('menu_sync_logs').insert({
+        'hotel_id': hotelId,
+        'sync_status': status,
+        'items_synced': itemsSynced,
+        'categories_synced': categoriesSynced,
+        'error_message': errorMessage,
+        'sync_duration_ms': durationMs,
+        'synced_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('❌ [MenuService] Error logging sync: $e');
+    }
+  }
+
+  /// Get all menu items for a restaurant
+  Future<List<MenuItem>> getMenuItems(String hotelId) async {
+    try {
+      print('🔍 [MenuService] Fetching menu items for hotel: $hotelId');
       
       final response = await _supabase
           .from('menu_items')
-          .insert(itemData)
+          .select()
+          .eq('hotel_id', hotelId)
+          .order('category_name')
+          .order('item_name');
+
+      print('✅ [MenuService] Fetched ${response.length} menu items');
+
+      return (response as List)
+          .map((item) => MenuItem.fromJson(item))
+          .toList();
+    } catch (e) {
+      print('❌ [MenuService] Error fetching menu items: $e');
+      return [];
+    }
+  }
+
+  /// Get single menu item
+  Future<MenuItem?> getMenuItem(String itemId) async {
+    try {
+      final response = await _supabase
+          .from('menu_items')
+          .select()
+          .eq('item_id', itemId)
+          .single();
+
+      return MenuItem.fromJson(response);
+    } catch (e) {
+      print('❌ [MenuService] Error fetching menu item: $e');
+      return null;
+    }
+  }
+
+  /// Create custom menu item (not from Petpooja)
+  Future<MenuItem?> createMenuItem(Map<String, dynamic> itemData) async {
+    try {
+      print('➕ [MenuService] Creating custom menu item...');
+      
+      final data = {
+        ...itemData,
+        'is_from_petpooja': false,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabase
+          .from('menu_items')
+          .insert(data)
           .select()
           .single();
 
-      final String newItemId = response['item_id'];
+      print('✅ [MenuService] Menu item created successfully');
+      return MenuItem.fromJson(response);
+    } catch (e) {
+      print('❌ [MenuService] Error creating menu item: $e');
+      return null;
+    }
+  }
 
-      // 2. Then, insert customizations separately if any exist
-      if (menuItem.customizations.isNotEmpty) {
-        for (int i = 0; i < menuItem.customizations.length; i++) {
-          final customization = menuItem.customizations[i];
-          
-          // Insert customization
-          final customizationData = {
-            'item_id': newItemId,
-            'name': customization.name,
-            'type': customization.type,
-            'base_price': customization.basePrice,
-            'is_required': customization.isRequired,
-            'display_order': i,
-          };
-          
-          final customizationResponse = await _supabase
-              .from('menu_item_customizations')
-              .insert(customizationData)
-              .select()
-              .single();
-          
-          final String customizationId = customizationResponse['customization_id'];
-          
-          // Insert options for this customization
-          if (customization.options.isNotEmpty) {
-            final optionsData = customization.options.asMap().entries.map((entry) {
-              return {
-                'customization_id': customizationId,
-                'name': entry.value.name,
-                'additional_price': entry.value.additionalPrice,
-                'display_order': entry.key,
-              };
-            }).toList();
-            
-            await _supabase
-                .from('customization_options')
-                .insert(optionsData);
-          }
-        }
-      }
+  /// Update menu item
+  Future<bool> updateMenuItem(String itemId, Map<String, dynamic> updates) async {
+    try {
+      print('📝 [MenuService] Updating menu item: $itemId');
+      
+      final data = {
+        ...updates,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
 
+      await _supabase
+          .from('menu_items')
+          .update(data)
+          .eq('item_id', itemId);
+
+      print('✅ [MenuService] Menu item updated successfully');
       return true;
     } catch (e) {
-      print('Error creating menu item: $e');
+      print('❌ [MenuService] Error updating menu item: $e');
       return false;
     }
   }
 
-  /// Update an existing menu item
-  Future<bool> updateMenuItem(MenuItem menuItem) async {
-    if (menuItem.itemId == null) return false;
-
+  /// Delete menu item
+  Future<bool> deleteMenuItem(String itemId) async {
     try {
-      // 1. Update the menu item WITHOUT customizations
-      final itemData = {
-        'name': menuItem.name,
-        'description': menuItem.description,
-        'price': menuItem.price,
-        'is_available': menuItem.isAvailable,
-        'category': menuItem.category,
-        'stock_quantity': menuItem.stockQuantity,
-        'low_stock_threshold': menuItem.lowStockThreshold,
-      };
+      print('🗑️ [MenuService] Deleting menu item: $itemId');
       
       await _supabase
           .from('menu_items')
-          .update(itemData)
-          .eq('item_id', menuItem.itemId!);
-
-      // 2. Delete old customizations (CASCADE will delete options too)
-      await _supabase
-          .from('menu_item_customizations')
-          .delete()
-          .eq('item_id', menuItem.itemId!);
-
-      // 3. Insert new customizations (same as create method)
-      if (menuItem.customizations.isNotEmpty) {
-        for (int i = 0; i < menuItem.customizations.length; i++) {
-          final customization = menuItem.customizations[i];
-          
-          final customizationData = {
-            'item_id': menuItem.itemId!,
-            'name': customization.name,
-            'type': customization.type,
-            'base_price': customization.basePrice,
-            'is_required': customization.isRequired,
-            'display_order': i,
-          };
-          
-          final customizationResponse = await _supabase
-              .from('menu_item_customizations')
-              .insert(customizationData)
-              .select()
-              .single();
-          
-          final String customizationId = customizationResponse['customization_id'];
-          
-          if (customization.options.isNotEmpty) {
-            final optionsData = customization.options.asMap().entries.map((entry) {
-              return {
-                'customization_id': customizationId,
-                'name': entry.value.name,
-                'additional_price': entry.value.additionalPrice,
-                'display_order': entry.key,
-              };
-            }).toList();
-            
-            await _supabase
-                .from('customization_options')
-                .insert(optionsData);
-          }
-        }
-      }
-
-      return true;
-    } catch (e) {
-      print('Error updating menu item: $e');
-      return false;
-    }
-  }
-
-  /// Delete a menu item (CASCADE will delete customizations and options)
-  Future<bool> deleteMenuItem(String itemId) async {
-    try {
-      await _supabase
-          .from('menu_items')
           .delete()
           .eq('item_id', itemId);
+
+      print('✅ [MenuService] Menu item deleted successfully');
       return true;
     } catch (e) {
-      print('Error deleting menu item: $e');
+      print('❌ [MenuService] Error deleting menu item: $e');
       return false;
     }
   }
 
-  /// Update menu item availability
-  Future<bool> updateMenuItemAvailability(String itemId, bool isAvailable) async {
+  /// Toggle item availability
+  Future<bool> toggleItemAvailability(String itemId, bool isAvailable) async {
     try {
+      print('🔄 [MenuService] Toggling availability for: $itemId to $isAvailable');
+      
       await _supabase
           .from('menu_items')
-          .update({'is_available': isAvailable})
+          .update({
+            'is_available': isAvailable,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
           .eq('item_id', itemId);
+
+      print('✅ [MenuService] Availability updated successfully');
       return true;
     } catch (e) {
-      print('Error updating availability: $e');
+      print('❌ [MenuService] Error updating availability: $e');
       return false;
     }
   }
 
-  /// Update stock quantity
-  Future<bool> updateStockQuantity(String itemId, int quantity) async {
-    try {
-      await _supabase
-          .from('menu_items')
-          .update({'stock_quantity': quantity})
-          .eq('item_id', itemId);
-      return true;
-    } catch (e) {
-      print('Error updating stock: $e');
-      return false;
-    }
-  }
-
-  /// Get all unique categories for a restaurant
-  Future<List<String?>> getMenuCategories(String restaurantId) async {
+  /// Get all categories for a restaurant
+  Future<List<MenuCategory>> getCategories(String hotelId) async {
     try {
       final response = await _supabase
-          .from('menu_items')
-          .select('category')
-          .eq('hotel_id', restaurantId)
-          .not('category', 'is', null);
+          .from('menu_categories')
+          .select()
+          .eq('hotel_id', hotelId)
+          .order('category_rank');
 
-      if (response.isEmpty) {
-        return [];
-      }
+      return (response as List)
+          .map((cat) => MenuCategory.fromJson(cat))
+          .toList();
+    } catch (e) {
+      print('❌ [MenuService] Error fetching categories: $e');
+      return [];
+    }
+  }
 
-      // Extract unique categories
-      final categories = response
-          .map((item) => item['category'] as String?)
-          .where((category) => category != null && category.isNotEmpty)
+  /// Get unique category names for a restaurant
+  Future<List<String>> getCategoryNames(String hotelId) async {
+    try {
+      final items = await getMenuItems(hotelId);
+      
+      final categories = items
+          .where((item) => item.categoryName != null)
+          .map((item) => item.categoryName!)
           .toSet()
           .toList();
 
       categories.sort();
       return categories;
     } catch (e) {
-      print('Error fetching categories: $e');
+      print('❌ [MenuService] Error fetching category names: $e');
       return [];
     }
   }
 
-  /// Get low stock items
-  Future<List<MenuItem>> getLowStockItems(String restaurantId) async {
+  /// Get last sync log
+  Future<MenuSyncLog?> getLastSyncLog(String hotelId) async {
     try {
-      final items = await getMenuItems(restaurantId);
-      return items.where((item) => item.isLowStock).toList();
+      final response = await _supabase
+          .from('menu_sync_logs')
+          .select()
+          .eq('hotel_id', hotelId)
+          .order('synced_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      if (response != null) {
+        return MenuSyncLog.fromJson(response);
+      }
+      return null;
     } catch (e) {
-      print('Error fetching low stock items: $e');
-      return [];
+      print('❌ [MenuService] Error fetching last sync log: $e');
+      return null;
     }
   }
 
-  /// Get out of stock items
-  Future<List<MenuItem>> getOutOfStockItems(String restaurantId) async {
+  /// Get sync history
+  Future<List<MenuSyncLog>> getSyncHistory(String hotelId, {int limit = 10}) async {
     try {
-      final items = await getMenuItems(restaurantId);
-      return items.where((item) => !item.isInStock).toList();
+      final response = await _supabase
+          .from('menu_sync_logs')
+          .select()
+          .eq('hotel_id', hotelId)
+          .order('synced_at', ascending: false)
+          .limit(limit);
+
+      return (response as List)
+          .map((log) => MenuSyncLog.fromJson(log))
+          .toList();
     } catch (e) {
-      print('Error fetching out of stock items: $e');
+      print('❌ [MenuService] Error fetching sync history: $e');
       return [];
     }
   }
-
-  /// Bulk update availability
-/// Bulk update availability
-Future<bool> bulkUpdateAvailability(List<String> itemIds, bool isAvailable) async {
-  try {
-    await _supabase
-        .from('menu_items')
-        .update({'is_available': isAvailable})
-        .inFilter('item_id', itemIds);
-    return true;
-  } catch (e) {
-    print('Error bulk updating availability: $e');
-    return false;
-  }
-}
 
   /// Search menu items
-  Future<List<MenuItem>> searchMenuItems(String restaurantId, String query) async {
+  Future<List<MenuItem>> searchMenuItems(String hotelId, String query) async {
     try {
-      final items = await getMenuItems(restaurantId);
+      final items = await getMenuItems(hotelId);
       
-      if (query.isEmpty) {
-        return items;
-      }
+      if (query.isEmpty) return items;
 
       final lowerQuery = query.toLowerCase();
       return items.where((item) {
-        return item.name.toLowerCase().contains(lowerQuery) ||
+        return item.itemName.toLowerCase().contains(lowerQuery) ||
                (item.description?.toLowerCase().contains(lowerQuery) ?? false) ||
-               (item.category?.toLowerCase().contains(lowerQuery) ?? false);
+               (item.categoryName?.toLowerCase().contains(lowerQuery) ?? false);
       }).toList();
     } catch (e) {
-      print('Error searching menu items: $e');
+      print('❌ [MenuService] Error searching menu items: $e');
       return [];
     }
   }
 
-  
-/// Get total count of menu items for a restaurant
-Future<int> getMenuItemCount(String restaurantId) async {
-  try {
-    final response = await _supabase
-        .from('menu_items')
-        .select('item_id')
-        .eq('hotel_id', restaurantId);
-
-    return response.length;
-  } catch (e) {
-    print('Error fetching menu item count: $e');
-    return 0;
+  /// Get menu statistics
+  Future<Map<String, int>> getMenuStats(String hotelId) async {
+    try {
+      final items = await getMenuItems(hotelId);
+      
+      return {
+        'total': items.length,
+        'available': items.where((i) => i.isAvailable).length,
+        'unavailable': items.where((i) => !i.isAvailable).length,
+        'inStock': items.where((i) => i.isInStock).length,
+        'outOfStock': items.where((i) => !i.isInStock).length,
+        'fromPetpooja': items.where((i) => i.isFromPetpooja).length,
+        'custom': items.where((i) => !i.isFromPetpooja).length,
+      };
+    } catch (e) {
+      print('❌ [MenuService] Error fetching menu stats: $e');
+      return {};
+    }
   }
-}
-
-/// Get count of available menu items for a restaurant
-Future<int> getAvailableMenuItemCount(String restaurantId) async {
-  try {
-    final response = await _supabase
-        .from('menu_items')
-        .select('item_id', )
-        .eq('hotel_id', restaurantId)
-        .eq('is_available', true);
-
-    return response.length;
-  } catch (e) {
-    print('Error fetching available menu item count: $e');
-    return 0;
-  }
-}
 }

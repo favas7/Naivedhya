@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:naivedhya/config/supabase_config.dart'; 
 import 'package:naivedhya/firebase_options.dart';
 import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
+import 'package:naivedhya/providers/menu_provider.dart';
 import 'package:naivedhya/providers/restaurant_provider.dart';
 import 'package:naivedhya/providers/restaurant_provider_for_ventor.dart';
 import 'package:naivedhya/providers/location_provider.dart';
@@ -28,6 +30,8 @@ void main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );  
+  await dotenv.load(fileName: ".env");
+
 
   runApp(const MyApp());
 } 
@@ -49,6 +53,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DeliveryPersonnelProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ActivityProvider()),
+        ChangeNotifierProvider(create: (_) => MenuProvider()),
+
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

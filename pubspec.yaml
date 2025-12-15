@@ -30,6 +30,7 @@ dependencies:
   supabase_flutter: ^2.10.0
   uuid: ^4.5.1
   fluttertoast: ^8.2.8 
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -39,6 +40,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - .env 
     - assets/Naivedhya_Logo/
     - assets/Google_Logo/
     - assets/Onboard_screen_images/

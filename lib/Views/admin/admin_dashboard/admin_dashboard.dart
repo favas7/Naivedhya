@@ -7,6 +7,7 @@ import 'package:naivedhya/Views/admin/customer/customer_screen.dart';
 import 'package:naivedhya/Views/admin/dashboard/dashboard.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/delivery_staff_screen.dart';
 import 'package:naivedhya/Views/admin/map/map_screen.dart';
+import 'package:naivedhya/Views/admin/menu/menu_screen.dart'; // ✅ ADD THIS
 import 'package:naivedhya/Views/admin/notification/notification_screen.dart';
 import 'package:naivedhya/Views/admin/order/order_screen.dart';
 import 'package:naivedhya/Views/admin/payment/payment_screen.dart';
@@ -27,17 +28,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // ✅ Your Naivedhya restaurant ID
+  static const String _hotelId = 'eda88a9c-b223-4f8e-ab4f-87b32f062b84';
+
   final List<String> _menuItems = [
     'Dashboard',
     'Live Map',
     'Orders',
-    // 'Restaurants',
-    // 'Vendors',
+    'Menu Management', // ✅ ADD THIS
     'Delivery Staff',
     'Customers',
     'Payments',
     'Analytics',
-    'POS integration',
+    'POS Integration',
     'Notification',
     'Settings'
   ];
@@ -68,10 +71,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   _buildTopBar(isDesktop, isDark, colors),
                   // Content Area
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: _buildContent(),
-                    ),
+                    child: _buildContent(),
                   ),
                 ],
               ),
@@ -111,7 +111,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Icons.notifications,
               color: colors.textPrimary,
             ),
-            onPressed: () {},
+            onPressed: () {
+              // Navigate to notifications
+              setState(() {
+                _selectedIndex = 9; // Notification index
+              });
+            },
           ),
           const SizedBox(width: 10),
           CircleAvatar(
@@ -145,11 +150,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  'Admin Panel',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: colors.textPrimary,
-                      ),
+                Expanded(
+                  child: Text(
+                    'Naivedhya Admin',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -174,12 +183,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     leading: Icon(
                       _getIconForMenuItem(index),
                       color: isSelected ? colors.primary : colors.textSecondary,
+                      size: 22,
                     ),
                     title: Text(
                       _menuItems[index],
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: isSelected ? colors.primary : colors.textPrimary,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            fontSize: 14,
                           ),
                     ),
                     onTap: () {
@@ -197,7 +208,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             padding: const EdgeInsets.all(20),
             child: SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: () {
                   _logout(isDark, colors);
                 },
@@ -205,8 +216,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   backgroundColor: colors.error,
                   foregroundColor: AppTheme.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                child: const Text('Logout'),
+                icon: const Icon(Icons.logout, size: 18),
+                label: const Text('Logout'),
               ),
             ),
           ),
@@ -235,11 +250,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    'Admin Panel',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: colors.textPrimary,
-                        ),
+                  Expanded(
+                    child: Text(
+                      'Naivedhya Admin',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: colors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -264,12 +283,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       leading: Icon(
                         _getIconForMenuItem(index),
                         color: isSelected ? colors.primary : colors.textSecondary,
+                        size: 22,
                       ),
                       title: Text(
                         _menuItems[index],
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: isSelected ? colors.primary : colors.textPrimary,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              fontSize: 14,
                             ),
                       ),
                       onTap: () {
@@ -288,7 +309,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               padding: const EdgeInsets.all(20),
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
                     _logout(isDark, colors);
@@ -297,8 +318,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     backgroundColor: colors.error,
                     foregroundColor: AppTheme.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  child: const Text('Logout'),
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: const Text('Logout'),
                 ),
               ),
             ),
@@ -316,23 +341,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return Icons.location_on;
       case 2:
         return Icons.shopping_cart;
-      // case 3:
-      //   return Icons.home_work_outlined;
-      // case 4:
-      //   return Icons.playlist_add_check;
       case 3:
-        return Icons.delivery_dining;
+        return Icons.restaurant_menu; // ✅ Menu Management icon
       case 4:
-        return Icons.man;
+        return Icons.delivery_dining;
       case 5:
-        return Icons.payment;
+        return Icons.people;
       case 6:
-        return Icons.analytics;
+        return Icons.payment;
       case 7:
-        return Icons.polyline_sharp;
+        return Icons.analytics;
       case 8:
-        return Icons.notifications_active;
+        return Icons.point_of_sale;
       case 9:
+        return Icons.notifications_active;
+      case 10:
         return Icons.settings;
       default:
         return Icons.circle;
@@ -347,23 +370,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return const MapScreen();
       case 2:
         return const OrdersScreen();
-      // case 3:
-      //   return  const RestaurantScreenEnhanced();
-      // case 4:
-      //   return const VendorScreen();
       case 3:
-        return const DeliveryStaffScreen();
+        return MenuScreen(hotelId: _hotelId); // ✅ Menu Management
       case 4:
-        return const CustomerScreen();
+        return const DeliveryStaffScreen();
       case 5:
-        return const PaymentScreen();
+        return const CustomerScreen();
       case 6:
-        return const AnalyticsScreen();
+        return const PaymentScreen();
       case 7:
-        return const POSIntegrationScreen();
+        return const AnalyticsScreen();
       case 8:
-        return const NotificationScreen();
+        return const POSIntegrationScreen();
       case 9:
+        return const NotificationScreen();
+      case 10:
         return const SettingsScreen();
       default:
         return const DashboardScreen();
@@ -400,7 +421,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           TextButton(
             onPressed: () async {
               await Provider.of<AuthProvider>(context, listen: false).logout();
-              // ignore: use_build_context_synchronously
+              if (!context.mounted) return;
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),

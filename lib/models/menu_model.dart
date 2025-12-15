@@ -1,281 +1,244 @@
-// lib/models/menu_model.dart
-
-
-
-/// Customization Option Model (e.g., Small, Medium, Large for size)
-class CustomizationOption {
-  final String optionId;
-  final String customizationId;
-  final String name;
-  final double additionalPrice;
-  final int displayOrder;
-  final DateTime createdAt;
-
-  CustomizationOption({
-    required this.optionId,
-    required this.customizationId,
-    required this.name,
-    this.additionalPrice = 0,
-    this.displayOrder = 0,
-    required this.createdAt,
-  });
-
-  factory CustomizationOption.fromJson(Map<String, dynamic> json) {
-    return CustomizationOption(
-      optionId: json['option_id'] ?? '',
-      customizationId: json['customization_id'] ?? '',
-      name: json['name'] ?? '',
-      additionalPrice: (json['additional_price'] ?? 0).toDouble(),
-      displayOrder: json['display_order'] ?? 0,
-      createdAt: DateTime.parse(
-          json['created_at'] ?? DateTime.now().toIso8601String()),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'option_id': optionId,
-      'customization_id': customizationId,
-      'name': name,
-      'additional_price': additionalPrice,
-      'display_order': displayOrder,
-      'created_at': createdAt.toIso8601String(),
-    };
-  }
-
-  @override
-  String toString() => 'Option($name, +₹$additionalPrice)';
-}
-
-/// Menu Item Customization Model (e.g., Size, Toppings)
-class MenuItemCustomization {
-  final String customizationId;
-  final String itemId;
-  final String name;
-  final String type; // 'SIZE', 'TOPPING', 'ADDON', etc.
-  final double basePrice;
-  final bool isRequired;
-  final int displayOrder;
-  final List<CustomizationOption> options;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  MenuItemCustomization({
-    required this.customizationId,
-    required this.itemId,
-    required this.name,
-    required this.type,
-    this.basePrice = 0,
-    this.isRequired = false,
-    this.displayOrder = 0,
-    this.options = const [],
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  factory MenuItemCustomization.fromJson(Map<String, dynamic> json) {
-    return MenuItemCustomization(
-      customizationId: json['customization_id'] ?? '',
-      itemId: json['item_id'] ?? '',
-      name: json['name'] ?? '',
-      type: json['type'] ?? 'ADDON',
-      basePrice: (json['base_price'] ?? 0).toDouble(),
-      isRequired: json['is_required'] ?? false,
-      displayOrder: json['display_order'] ?? 0,
-      options: (json['options'] as List<dynamic>?)
-              ?.map((o) => CustomizationOption.fromJson(o))
-              .toList() ??
-          [],
-      createdAt: DateTime.parse(
-          json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(
-          json['updated_at'] ?? DateTime.now().toIso8601String()),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'customization_id': customizationId,
-      'item_id': itemId,
-      'name': name,
-      'type': type,
-      'base_price': basePrice,
-      'is_required': isRequired,
-      'display_order': displayOrder,
-      'options': options.map((o) => o.toJson()).toList(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-    };
-  }
-
-  @override
-  String toString() => 'Customization($name, $type, required: $isRequired)';
-}
-
-
-/// Enhanced Menu Item Model
 class MenuItem {
-  final String? itemId; 
-  final String restaurantId;
-  final String name;
+  final String itemId;
+  final String hotelId;
+  final String? petpoojaItemId;
+  final String itemName;
+  final String? itemCode;
+  final String? categoryName;
   final String? description;
   final double price;
+  final String? imageUrl;
   final bool isAvailable;
-  final String? category;
-  final int stockQuantity; // NEW: Inventory tracking
-  final int lowStockThreshold; // NEW: Low stock alert threshold
-  final List<MenuItemCustomization> customizations; // NEW: Customizations
+  final int inStock; // 1=out of stock, 2=in stock
+  final String? itemAttribute; // veg, non-veg, egg
+  final String? spiceLevel;
+  final bool isFromPetpooja;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? lastSyncedAt;
+
+  MenuItem({
+    required this.itemId,
+    required this.hotelId,
+    this.petpoojaItemId,
+    required this.itemName,
+    this.itemCode,
+    this.categoryName,
+    this.description,
+    required this.price,
+    this.imageUrl,
+    this.isAvailable = true,
+    this.inStock = 2,
+    this.itemAttribute,
+    this.spiceLevel,
+    this.isFromPetpooja = false,
+    this.createdAt,
+    this.updatedAt,
+    this.lastSyncedAt,
+  });
+
+  factory MenuItem.fromJson(Map<String, dynamic> json) {
+    return MenuItem(
+      itemId: json['item_id'],
+      hotelId: json['hotel_id'],
+      petpoojaItemId: json['petpooja_item_id'],
+      itemName: json['item_name'],
+      itemCode: json['item_code'],
+      categoryName: json['category_name'],
+      description: json['description'],
+      price: (json['price'] as num).toDouble(),
+      imageUrl: json['image_url'],
+      isAvailable: json['is_available'] ?? true,
+      inStock: json['in_stock'] ?? 2,
+      itemAttribute: json['item_attribute'],
+      spiceLevel: json['spice_level'],
+      isFromPetpooja: json['is_from_petpooja'] ?? false,
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : null,
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at']) 
+          : null,
+      lastSyncedAt: json['last_synced_at'] != null 
+          ? DateTime.parse(json['last_synced_at']) 
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'item_id': itemId,
+      'hotel_id': hotelId,
+      'petpooja_item_id': petpoojaItemId,
+      'item_name': itemName,
+      'item_code': itemCode,
+      'category_name': categoryName,
+      'description': description,
+      'price': price,
+      'image_url': imageUrl,
+      'is_available': isAvailable,
+      'in_stock': inStock,
+      'item_attribute': itemAttribute,
+      'spice_level': spiceLevel,
+      'is_from_petpooja': isFromPetpooja,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+      'last_synced_at': lastSyncedAt?.toIso8601String(),
+    };
+  }
+
+  MenuItem copyWith({
+    String? itemId,
+    String? hotelId,
+    String? petpoojaItemId,
+    String? itemName,
+    String? itemCode,
+    String? categoryName,
+    String? description,
+    double? price,
+    String? imageUrl,
+    bool? isAvailable,
+    int? inStock,
+    String? itemAttribute,
+    String? spiceLevel,
+    bool? isFromPetpooja,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? lastSyncedAt,
+  }) {
+    return MenuItem(
+      itemId: itemId ?? this.itemId,
+      hotelId: hotelId ?? this.hotelId,
+      petpoojaItemId: petpoojaItemId ?? this.petpoojaItemId,
+      itemName: itemName ?? this.itemName,
+      itemCode: itemCode ?? this.itemCode,
+      categoryName: categoryName ?? this.categoryName,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isAvailable: isAvailable ?? this.isAvailable,
+      inStock: inStock ?? this.inStock,
+      itemAttribute: itemAttribute ?? this.itemAttribute,
+      spiceLevel: spiceLevel ?? this.spiceLevel,
+      isFromPetpooja: isFromPetpooja ?? this.isFromPetpooja,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+    );
+  }
+
+  // Helper: Get attribute icon
+  String get attributeIcon {
+    switch (itemAttribute?.toLowerCase()) {
+      case 'veg':
+        return '🟢';
+      case 'non-veg':
+        return '🔴';
+      case 'egg':
+        return '🟡';
+      default:
+        return '⚪';
+    }
+  }
+
+  // Helper: Check if in stock
+  bool get isInStock => inStock == 2;
+
+  @override
+  String toString() {
+    return 'MenuItem(itemName: $itemName, category: $categoryName, price: $price)';
+  }
+}
+
+// Menu Category Model
+class MenuCategory {
+  final String categoryId;
+  final String hotelId;
+  final String? petpoojaCategoryId;
+  final String categoryName;
+  final int categoryRank;
+  final String? parentCategoryId;
+  final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  MenuItem({
-    this.itemId,
-    required this.restaurantId,
-    required this.name,
-    this.description,
-    required this.price,
-    this.isAvailable = true,
-    this.category,
-    this.stockQuantity = 0,
-    this.lowStockThreshold = 5,
-    this.customizations = const [],
+  MenuCategory({
+    required this.categoryId,
+    required this.hotelId,
+    this.petpoojaCategoryId,
+    required this.categoryName,
+    this.categoryRank = 0,
+    this.parentCategoryId,
+    this.isActive = true,
     this.createdAt,
     this.updatedAt,
   });
 
-  // ✅ FIXED: Check if item is in stock
-  // Primary check: is_available flag (user-controlled availability)
-  // Secondary check: stock_quantity (only matters if > 0, meaning inventory tracking is enabled)
-  bool get isInStock {
-    // If item is marked as not available, it's out of stock
-    if (!isAvailable) return false;
-    
-    // If stock quantity is 0 or null, assume unlimited stock (no inventory tracking)
-    // This allows items to be available even without explicit stock tracking
-    if (stockQuantity == 0) return true;
-    
-    // If stock tracking is enabled (quantity > 0), check if stock exists
-    return stockQuantity > 0;
-  }
-  
-  // ✅ FIXED: Only show low stock warning if inventory tracking is actually enabled
-  bool get isLowStock {
-    // Only consider low stock if:
-    // 1. Item is available
-    // 2. Stock tracking is enabled (quantity > 0)
-    // 3. Stock is below threshold
-    return isAvailable && 
-           stockQuantity > 0 && 
-           stockQuantity <= lowStockThreshold;
-  }
-
-  // Factory constructor to create MenuItem from JSON
-  factory MenuItem.fromJson(Map<String, dynamic> json) {
-    return MenuItem(
-      itemId: json['item_id'],
-      restaurantId: json['hotel_id'],
-      name: json['name'],
-      description: json['description'],
-      price: (json['price'] ?? 0.0).toDouble(),
-      isAvailable: json['is_available'] ?? true,
-      category: json['category'],
-      stockQuantity: json['stock_quantity'] ?? 0,
-      lowStockThreshold: json['low_stock_threshold'] ?? 5,
-      customizations: (json['customizations'] as List<dynamic>?)
-              ?.map((c) => MenuItemCustomization.fromJson(c))
-              .toList() ??
-          [],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+  factory MenuCategory.fromJson(Map<String, dynamic> json) {
+    return MenuCategory(
+      categoryId: json['category_id'],
+      hotelId: json['hotel_id'],
+      petpoojaCategoryId: json['petpooja_category_id'],
+      categoryName: json['category_name'],
+      categoryRank: json['category_rank'] ?? 0,
+      parentCategoryId: json['parent_category_id'],
+      isActive: json['is_active'] ?? true,
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
           : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at']) 
           : null,
     );
   }
 
-  // Convert MenuItem to JSON
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {
-      'hotel_id': restaurantId,
-      'name': name,
-      'description': description,
-      'price': price,
-      'is_available': isAvailable,
-      'category': category,
-      'stock_quantity': stockQuantity,
-      'low_stock_threshold': lowStockThreshold,
-      'customizations': customizations.map((c) => c.toJson()).toList(),
+    return {
+      'category_id': categoryId,
+      'hotel_id': hotelId,
+      'petpooja_category_id': petpoojaCategoryId,
+      'category_name': categoryName,
+      'category_rank': categoryRank,
+      'parent_category_id': parentCategoryId,
+      'is_active': isActive,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
-
-    // Only include item_id if it's not null (for updates)
-    if (itemId != null) {
-      data['item_id'] = itemId;
-    }
-
-    return data;
   }
+}
 
-  // Copy with method for easy updates
-  MenuItem copyWith({
-    String? itemId,
-    String? restaurantId,
-    String? name,
-    String? description,
-    double? price,
-    bool? isAvailable,
-    String? category,
-    int? stockQuantity,
-    int? lowStockThreshold,
-    List<MenuItemCustomization>? customizations,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return MenuItem(
-      itemId: itemId ?? this.itemId,
-      restaurantId: restaurantId ?? this.restaurantId,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      price: price ?? this.price,
-      isAvailable: isAvailable ?? this.isAvailable,
-      category: category ?? this.category,
-      stockQuantity: stockQuantity ?? this.stockQuantity,
-      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
-      customizations: customizations ?? this.customizations,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+// Menu Sync Log Model
+class MenuSyncLog {
+  final String logId;
+  final String hotelId;
+  final String syncStatus;
+  final int itemsSynced;
+  final int categoriesSynced;
+  final String? errorMessage;
+  final int? syncDurationMs;
+  final DateTime syncedAt;
+
+  MenuSyncLog({
+    required this.logId,
+    required this.hotelId,
+    required this.syncStatus,
+    required this.itemsSynced,
+    required this.categoriesSynced,
+    this.errorMessage,
+    this.syncDurationMs,
+    required this.syncedAt,
+  });
+
+  factory MenuSyncLog.fromJson(Map<String, dynamic> json) {
+    return MenuSyncLog(
+      logId: json['log_id'],
+      hotelId: json['hotel_id'],
+      syncStatus: json['sync_status'],
+      itemsSynced: json['items_synced'] ?? 0,
+      categoriesSynced: json['categories_synced'] ?? 0,
+      errorMessage: json['error_message'],
+      syncDurationMs: json['sync_duration_ms'],
+      syncedAt: DateTime.parse(json['synced_at']),
     );
-  }
-
-  @override
-  String toString() {
-    return 'MenuItem{itemId: $itemId, RestaurantId: $restaurantId, name: $name, price: $price, stock: $stockQuantity, customizations: ${customizations.length}}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is MenuItem &&
-        other.itemId == itemId &&
-        other.restaurantId == restaurantId &&
-        other.name == name &&
-        other.description == description &&
-        other.price == price &&
-        other.isAvailable == isAvailable &&
-        other.category == category &&
-        other.stockQuantity == stockQuantity;
-  }
-
-  @override
-  int get hashCode {
-    return itemId.hashCode ^
-        restaurantId.hashCode ^
-        name.hashCode ^
-        description.hashCode ^
-        price.hashCode ^
-        isAvailable.hashCode ^
-        category.hashCode ^
-        stockQuantity.hashCode;
   }
 }

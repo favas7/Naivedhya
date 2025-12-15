@@ -1,7 +1,5 @@
 // screens/orders_screen.dart - WITH ORDER TYPE FILTERS
 import 'package:flutter/material.dart';
-import 'package:naivedhya/Views/admin/order/add_order_screen/add_order_screen.dart';
-import 'package:naivedhya/Views/admin/order/edit_order/edit_order_screen.dart';
 import 'package:naivedhya/Views/admin/order/widget/assign_delivery_partner_dialog.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_card.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_list_item.dart';
@@ -225,12 +223,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
               const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AddOrderScreen(),
-                    ),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => const OrderScreen(),
+                  //   ),
+                  // );
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Add Order'),
@@ -702,18 +700,18 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
                 ),
               ),
             
-            ListTile(
-              leading: Icon(Icons.edit, color: AppTheme.primary),
-              title: const Text('Edit Order'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditOrderScreen(orderId: order.orderId),
-                  ),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: Icon(Icons.edit, color: AppTheme.primary),
+            //   title: const Text('Edit Order'),
+            //   onTap: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => EditOrderScreen(orderId: order.orderId),
+            //       ),
+            //     );
+            //   },
+            // ),
             ListTile(
               leading: Icon(Icons.message, color: AppTheme.info),
               title: const Text('Send Message'),
