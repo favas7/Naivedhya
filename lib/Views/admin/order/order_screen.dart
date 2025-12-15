@@ -11,6 +11,7 @@ import 'package:naivedhya/Views/admin/order/widget/order_search_bar.dart';
 import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/providers/order_provider.dart';
+import 'package:naivedhya/services/toast_notification_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 
@@ -46,23 +47,49 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return null;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    print('\n🎬 [OrdersScreen] initState called');
+    @override
+    void initState() {
+      super.initState();
+      print('\n🎬 [OrdersScreen] initState called');
 
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
+      _scrollController = ScrollController();
+      _scrollController.addListener(_onScroll);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderProvider>().initialize(useEnrichedData: true);
-    });
-  }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Initialize toast
+        ToastNotificationService.init(context);
+        
+        // Initialize orders
+        context.read<OrderProvider>().initialize(useEnrichedData: true);
+        
+        // Subscribe to real-time updates
+        context.read<OrderProvider>().subscribeToOrderUpdates();
+        
+        // Set callback for new orders
+        context.read<OrderProvider>().setNewOrderCallback((orderData) {
+          print('🔔 [OrdersScreen] New order callback triggered!');
+          
+          // Show toast notification
+          ToastNotificationService.showNewOrderNotification(
+            orderNumber: orderData['order_number']?.toString() ?? 'Unknown',
+            orderType: orderData['order_type'] ?? 'Order',
+            totalAmount: (orderData['total_amount'] as num?)?.toDouble() ?? 0.0,
+            customerName: orderData['customer_name'] ?? 'Customer',
+            onTap: () {
+              print('🔔 [OrdersScreen] Toast tapped - refreshing orders');
+              // Optional: Navigate to delivery filter
+              // context.read<OrderProvider>().setOrderTypeFilter('Delivery');
+            },
+          );
+        });
+      });
+    }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    context.read<OrderProvider>().unsubscribeFromOrderUpdates(); // Add this line
     super.dispose();
   }
 

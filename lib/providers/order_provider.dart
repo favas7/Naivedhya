@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/services/order/order_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderProvider extends ChangeNotifier {
   final OrderService _orderService = OrderService();
@@ -12,6 +13,10 @@ class OrderProvider extends ChangeNotifier {
   Map<String, dynamic>? _selectedOrderDetails;
   String? _selectedStatusFilter;
   String? _selectedOrderTypeFilter; // ✅ ADD THIS LINE
+
+  // Add after existing state variables (around line 20)
+  RealtimeChannel? _ordersSubscription;
+  final _supabase = Supabase.instance.client;
 
   int _currentPage = 0;
   bool _isLoading = false;
@@ -457,4 +462,82 @@ Future<void> setOrderTypeFilter(String? orderType) async {
     _selectedOrderDetails = null;
     notifyListeners();
   }
+
+
+
+  /// Subscribe to real-time order updates
+void subscribeToOrderUpdates() {
+  print('🔔 [OrderProvider] Subscribing to real-time order updates...');
+  
+  try {
+    _ordersSubscription = _supabase
+        .channel('orders_realtime')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'orders',
+          callback: (payload) {
+            print('🔔 [OrderProvider] New order inserted!');
+            print('📊 [OrderProvider] Payload: ${payload.newRecord}');
+            
+            // Check if it's a Petpooja delivery order
+            final newRecord = payload.newRecord;
+            final orderType = newRecord['order_type'] as String?;
+            final petpoojaOrderId = newRecord['petpooja_order_id'];
+            final status = newRecord['status'] as String?;
+            
+            print('📊 [OrderProvider] Order Type: $orderType');
+            print('📊 [OrderProvider] Petpooja ID: $petpoojaOrderId');
+            print('📊 [OrderProvider] Status: $status');
+            
+            // Only notify for Petpooja Delivery orders with Pending status
+            if (orderType == 'Delivery' && 
+                petpoojaOrderId != null && 
+                status == 'Pending') {
+              
+              print('✅ [OrderProvider] This is a new Petpooja delivery order!');
+              
+              // Refresh orders list
+              refreshOrders();
+              
+              // Trigger notification callback if set
+              _onNewOrderCallback?.call(newRecord);
+            } else {
+              print('ℹ️ [OrderProvider] Order does not match notification criteria');
+            }
+          },
+        )
+        .subscribe((status, error) {
+          print('📡 [OrderProvider] Subscription status: $status');
+          if (error != null) {
+            print('❌ [OrderProvider] Subscription error: $error');
+          }
+        });
+    
+    print('✅ [OrderProvider] Successfully subscribed to orders channel');
+  } catch (e) {
+    print('❌ [OrderProvider] Error subscribing to orders: $e');
+  }
+}
+
+/// Unsubscribe from real-time updates
+void unsubscribeFromOrderUpdates() {
+  print('🔍 [OrderProvider] Unsubscribing from order updates...');
+  _ordersSubscription?.unsubscribe();
+  _ordersSubscription = null;
+  print('✅ [OrderProvider] Unsubscribed from orders');
+}
+
+/// Callback for new orders
+void Function(Map<String, dynamic>)? _onNewOrderCallback;
+
+void setNewOrderCallback(void Function(Map<String, dynamic>) callback) {
+  _onNewOrderCallback = callback;
+}
+
+@override
+void dispose() {
+  unsubscribeFromOrderUpdates();
+  super.dispose();
+}
 }
