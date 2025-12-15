@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/order/add_order_screen/add_order_screen.dart';
 import 'package:naivedhya/Views/admin/order/edit_order/edit_order_screen.dart';
+import 'package:naivedhya/Views/admin/order/widget/assign_delivery_partner_dialog.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_card.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_list_item.dart';
 import 'package:naivedhya/Views/admin/order/widget/compact_stats_card.dart';
@@ -626,6 +627,54 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
               ),
             ),
             const Divider(),
+            
+            // ✅ ADD ASSIGN DELIVERY PARTNER OPTION (ONLY FOR DELIVERY ORDERS)
+            if (order.orderType == 'Delivery' && order.deliveryPersonId == null)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.warning.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.delivery_dining, color: AppTheme.warning),
+                ),
+                title: const Text('Assign Delivery Partner'),
+                subtitle: const Text('Select available partner'),
+                onTap: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (context) => AssignDeliveryPartnerDialog(order: order),
+                  );
+                },
+              ),
+            
+            // ✅ SHOW CURRENT PARTNER IF ASSIGNED
+            if (order.orderType == 'Delivery' && order.deliveryPersonId != null)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.check_circle, color: AppTheme.success),
+                ),
+                title: const Text('Partner Assigned'),
+                subtitle: Text('ID: ${order.deliveryPersonId}'),
+                trailing: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // TODO: Show partner details or reassign option
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Partner details coming soon')),
+                    );
+                  },
+                  child: const Text('View'),
+                ),
+              ),
+            
             ListTile(
               leading: Icon(Icons.edit, color: AppTheme.primary),
               title: const Text('Edit Order'),
@@ -638,18 +687,6 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
                 );
               },
             ),
-            if (order.orderType == 'Delivery')
-              ListTile(
-                leading: Icon(Icons.delivery_dining, color: AppTheme.warning),
-                title: const Text('Assign Delivery Partner'),
-                onTap: () {
-                  Navigator.pop(context);
-                  // TODO: Navigate to delivery partner assignment
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Delivery assignment coming soon')),
-                  );
-                },
-              ),
             ListTile(
               leading: Icon(Icons.message, color: AppTheme.info),
               title: const Text('Send Message'),
@@ -674,8 +711,8 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
       ),
     );
   }
-
-  void _showCancelDialog(BuildContext context, Order order) {
+  
+    void _showCancelDialog(BuildContext context, Order order) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

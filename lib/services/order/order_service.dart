@@ -19,6 +19,67 @@ class OrderService {
   final AddOrderItemService _orderItemService = AddOrderItemService();
 
 
+
+
+  Future<bool> assignDeliveryPartner({
+    required String orderId,
+    required String deliveryPersonId,
+  }) async {
+    try {
+      print('🚚 [OrderService] Assigning delivery partner...');
+      print('   - Order ID: $orderId');
+      print('   - Delivery Person ID: $deliveryPersonId');
+
+      // Update order with delivery person and status
+      await _supabase.from(_tableName).update({
+        'delivery_person_id': deliveryPersonId,
+        'delivery_status': 'Assigned',
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('order_id', orderId);
+
+      print('✅ [OrderService] Order updated with delivery partner');
+
+      // Get current assigned orders for the delivery person
+      final deliveryPerson = await _supabase
+          .from('delivery_personnel')
+          .select('assigned_orders')
+          .eq('user_id', deliveryPersonId)
+          .single();
+
+      print('📦 [OrderService] Current assigned orders: ${deliveryPerson['assigned_orders']}');
+
+      // Handle both NULL and existing arrays
+      List<String> currentOrders = [];
+      if (deliveryPerson['assigned_orders'] != null) {
+        // It's a text[] in PostgreSQL, comes as List in Dart
+        currentOrders = List<String>.from(deliveryPerson['assigned_orders']);
+      }
+
+      // Add new order if not already present
+      if (!currentOrders.contains(orderId)) {
+        currentOrders.add(orderId);
+      }
+
+      print('📦 [OrderService] Updated assigned orders: $currentOrders');
+
+      // Update delivery personnel
+      await _supabase.from('delivery_personnel').update({
+        'assigned_orders': currentOrders, // Supabase will convert to text[]
+        'is_available': false, // Set as unavailable
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('user_id', deliveryPersonId);
+
+      print('✅ [OrderService] Delivery partner assigned_orders updated');
+      print('✅ [OrderService] Assignment completed successfully!');
+
+      return true;
+    } catch (e) {
+      print('❌ [OrderService] ERROR assigning delivery partner: $e');
+      print('❌ [OrderService] Stack trace: ${StackTrace.current}');
+      throw Exception('Failed to assign delivery partner: $e');
+    }
+  }
+
     Future<List<Order>> fetchOrders({
       int page = 0,
       String? statusFilter,

@@ -48,6 +48,61 @@ Future<void> initialize({bool useEnrichedData = true}) async {
   print('✅ [OrderProvider] ========== INITIALIZATION COMPLETE ==========\n');
 }
 
+/// Assign delivery partner to order
+Future<bool> assignDeliveryPartner({
+  required String orderId,
+  required String deliveryPersonId,
+}) async {
+  try {
+    print('\n🚚 [OrderProvider] Assigning delivery partner...');
+    print('   - Order ID: $orderId');
+    print('   - Partner ID: $deliveryPersonId');
+    
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final success = await _orderService.assignDeliveryPartner(
+      orderId: orderId,
+      deliveryPersonId: deliveryPersonId,
+    );
+
+    if (success) {
+      // Update local order if it exists
+      final orderIndex = _orders.indexWhere((o) => o.orderId == orderId);
+      if (orderIndex >= 0) {
+        _orders[orderIndex] = _orders[orderIndex].copyWith(
+          deliveryPersonId: deliveryPersonId,
+          deliveryStatus: 'Assigned',
+        );
+      }
+
+      // Update ordersWithDetails if it exists
+      final detailsIndex = _ordersWithDetails
+          .indexWhere((od) => (od['order'] as Order).orderId == orderId);
+      if (detailsIndex >= 0) {
+        final order = _ordersWithDetails[detailsIndex]['order'] as Order;
+        _ordersWithDetails[detailsIndex]['order'] = order.copyWith(
+          deliveryPersonId: deliveryPersonId,
+          deliveryStatus: 'Assigned',
+        );
+      }
+
+      print('✅ [OrderProvider] Delivery partner assigned successfully');
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return success;
+  } catch (e) {
+    print('❌ [OrderProvider] ERROR assigning delivery partner: $e');
+    _errorMessage = e.toString();
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+}
+
   /// Set order type filter and reload orders
 Future<void> setOrderTypeFilter(String? orderType) async {
   print('\n🏷️ [OrderProvider] setOrderTypeFilter called: $orderType');
