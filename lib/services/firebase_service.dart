@@ -1,11 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/user_model.dart';
 
 class FirebaseService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  
+  // FIXED: Web requires explicit clientId
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb 
+      ? '964586361849-refd5en4n6p53g0jruufcl87e2riioof.apps.googleusercontent.com'
+      : null,
+  );
+  
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Get current user
@@ -15,14 +23,14 @@ class FirebaseService {
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
   // Get user data from Supabase database
-Future<Map<String, dynamic>?> getUser(String userid) async {
-  try {
-    final response = await _supabase.from('profiles').select().eq('id', userid).single();
-    return response;
-  } catch (e) {
-    return null;
+  Future<Map<String, dynamic>?> getUser(String userid) async {
+    try {
+      final response = await _supabase.from('profiles').select().eq('id', userid).single();
+      return response;
+    } catch (e) {
+      return null;
+    }
   }
-}
 
   // Sign in with email and password
   Future<User?> signIn(String email, String password) async {
@@ -46,11 +54,10 @@ Future<Map<String, dynamic>?> getUser(String userid) async {
       );
       
       if (credential.user != null) {
-        // Create a new UserModel with the Firebase auth user ID
         final userWithId = user.copyWith(
           id: credential.user!.uid,
-          userid: credential.user!.uid,);
-
+          userid: credential.user!.uid,
+        );
         await _supabase.from('profiles').insert(userWithId.toJson());
       }
       
@@ -66,10 +73,23 @@ Future<Map<String, dynamic>?> getUser(String userid) async {
     await _googleSignIn.signOut();
   }
 
-  // Google Sign In
+  // FIXED: Google Sign In with web support
   Future<User?> googleSignIn() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      GoogleSignInAccount? googleUser;
+      
+      if (kIsWeb) {
+        // Web: Try silent sign-in first
+        googleUser = await _googleSignIn.signInSilently();
+        
+        // If silent sign-in fails, use popup (this is the unreliable part)
+        googleUser ??= await _googleSignIn.signIn();
+        
+      } else {
+        // Mobile: Use standard sign-in
+        googleUser = await _googleSignIn.signIn();
+      }
+      
       if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -81,7 +101,6 @@ Future<Map<String, dynamic>?> getUser(String userid) async {
       final userCredential = await _firebaseAuth.signInWithCredential(credential);
       
       if (userCredential.user != null) {
-        // Save or update user data in Supabase database
         await _supabase.from('profiles').upsert({
           'id': userCredential.user!.uid,
           'name': userCredential.user!.displayName ?? 'Unknown',
@@ -100,6 +119,12 @@ Future<Map<String, dynamic>?> getUser(String userid) async {
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       throw Exception(_getErrorMessage(e.code));
+    } catch (e) {
+      // Catch Google Sign-In specific errors
+      if (kIsWeb) {
+        throw Exception('Google Sign-In failed on web. Make sure popup blockers are disabled.');
+      }
+      throw Exception('Google Sign-In failed: ${e.toString()}');
     }
   }
 
@@ -131,9 +156,10 @@ Future<Map<String, dynamic>?> getUser(String userid) async {
         return 'Too many requests. Please try again later.';
       case 'network-request-failed':
         return 'Network error. Please check your connection.';
+      case 'popup-closed-by-user':
+        return 'Sign-in popup was closed. Please try again.';
       default:
         return 'An error occurred. Please try again.';
     }
   }
-
 }
