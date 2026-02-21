@@ -198,15 +198,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
 
-                // Stats Cards
-                GridView.count(
-                  crossAxisCount: isDesktop ? 4 : 2,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: isDesktop ? 1.5 : 1.3,
-                  children: [
+// Stats Cards
+LayoutBuilder(
+  builder: (context, constraints) {
+    final crossAxisCount = isDesktop ? 4 : 2;
+    const spacing = 20.0;
+    final totalSpacing = spacing * (crossAxisCount - 1);
+    final cardWidth = (constraints.maxWidth - totalSpacing) / crossAxisCount;
+
+    // Card content height breakdown:
+    // top padding: 20 + icon row: 24 + gap: 10 + value text: ~32
+    // + gap: 5 + label text: ~20 + bottom padding: 20 = ~131
+    const cardContentHeight = 131.0;
+    final aspectRatio = cardWidth / cardContentHeight;
+
+    return GridView.count(
+      crossAxisCount: crossAxisCount,
+      crossAxisSpacing: spacing,
+      mainAxisSpacing: spacing,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: aspectRatio,
+      children: [
                     _buildStatCard(
                       context,
                       'Total Users',
@@ -248,7 +261,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       dashboardProvider.isLoading,
                     ),
                   ],
-                ),
+
+            );
+          },
+        ),
+
+
+                
 
                 const SizedBox(height: 20),
 
@@ -339,9 +358,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String value,
     IconData icon,
     Color color,
-    bool isLoading) {
+    bool isLoading,
+  ) {
     final colors = AppTheme.of(context);
-
+    final cardWidth = (MediaQuery.of(context).size.width - 40 - 20) / 2;
+    final isSmall = cardWidth < 120; // flag for very narrow cards
+    
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
@@ -355,59 +377,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isSmall ? 12 : 20), // reduce padding when narrow
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Row(
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: isLoading
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(color),
-                        ),
-                      )
-                    : Icon(
-                        Icons.trending_up,
-                        color: color,
-                        size: 16,
-                      ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colors.textSecondary,
-                ),
+          Icon(icon, color: color, size: isSmall ? 18 : 24),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: isLoading
+                ? SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  )
+                : Icon(Icons.trending_up, color: color, size: 14),
           ),
         ],
       ),
-    );
-  }
+      const SizedBox(height: 6),
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          value,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+        ),
+      ),
+      const SizedBox(height: 4),
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+        ),
+      ),
+    ],
+  ),
+      );
+    }
+
 }
