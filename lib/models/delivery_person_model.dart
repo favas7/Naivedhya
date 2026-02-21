@@ -13,7 +13,7 @@ class DeliveryPersonnel {
   final String vehicleModel;
   final String numberPlate;
   final String? licenseImageUrl;
-  final String? aadhaarImageUrl;
+  final String? aadhaarImageUrl; 
   final double? latitude;
   final double? longitude;
   final bool isAvailable;

@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:naivedhya/Views/bottom_navigator/bottom_navigator.dart';
+import 'package:naivedhya/Views/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import '../../../models/user_model.dart';
@@ -91,7 +91,7 @@ class SignUpScreenState extends State<SignUpScreen> {
           orderhistory: [],
           created_at: DateTime.now(),
           updated_at: DateTime.now(),
-          usertype: 'user',
+          usertype: 'admin',
         );
         
         await Navigator.push(
@@ -337,7 +337,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const BottomNavigator(),
+                                      builder: (_) => const AdminDashboardScreen(),
                                     ),
                                   );
                                 }
@@ -525,7 +525,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                                     if (success) {
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(builder: (_) => const BottomNavigator()),
+                                        MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
                                       );
                                     }
                                   } catch (e) {

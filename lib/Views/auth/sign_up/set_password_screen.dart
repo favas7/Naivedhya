@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:naivedhya/Views/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import '../../../models/user_model.dart';
@@ -9,8 +10,7 @@ import '../../../providers/theme_provider.dart';
 import '../../../utils/widgets/custom_button.dart';
 import '../../../utils/widgets/custom_text_field.dart';
 import '../../../utils/validator.dart';
-import '../../user/onboarding/onboarding_screen.dart';
-
+// 
 class SetPasswordScreen extends StatefulWidget {
   final UserModel user;
 
@@ -64,7 +64,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         if (success) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+            MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
             (route) => false,
           );
         }

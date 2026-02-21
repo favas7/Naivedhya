@@ -87,7 +87,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
-    context.read<OrderProvider>().unsubscribeFromOrderUpdates(); // Add this line
+    context.read<OrderProvider>().unsubscribeFromOrderUpdates();
     super.dispose();
   }
 
@@ -211,35 +211,35 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 onPressed: () => context.read<OrderProvider>().refreshOrders(),
                 tooltip: 'Refresh Orders',
               ),
-              IconButton(
-                icon: const Icon(Icons.download),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Export feature coming soon')),
-                  );
-                },
-                tooltip: 'Export',
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.download),
+              //   onPressed: () {
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(content: Text('Export feature coming soon')),
+              //     );
+              //   },
+              //   tooltip: 'Export',
+              // ),
               const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => const OrderScreen(),
-                  //   ),
-                  // );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Order'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
+              // ElevatedButton.icon(
+              //   onPressed: () {
+              //     // Navigator.push(
+              //     //   context,
+              //     //   MaterialPageRoute(
+              //     //     builder: (context) => const OrderScreen(),
+              //     //   ),
+              //     // );
+              //   },
+              //   icon: const Icon(Icons.add),
+              //   label: const Text('Add Order'),
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: AppTheme.primary,
+              //     foregroundColor: Colors.white,
+              //     shape: RoundedRectangleBorder(
+              //       borderRadius: BorderRadius.circular(8),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ],
@@ -327,50 +327,50 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
           ),
           const SizedBox(height: 16),
 
-          // ✅ ORDER TYPE FILTERS (PRIMARY)
-          Text(
-            'Order Type',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: themeColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                OrderFilterChip(
-                  label: 'All Orders',
-                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == null,
-                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter(null),
-                  themeColors: themeColors,
-                ),
-                OrderFilterChip(
-                  label: '🚚 Delivery',
-                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Delivery',
-                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Delivery'),
-                  themeColors: themeColors,
-                  color: AppTheme.warning,
-                ),
-                OrderFilterChip(
-                  label: '🍽️ Dine In',
-                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Dine In',
-                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Dine In'),
-                  themeColors: themeColors,
-                ),
-                OrderFilterChip(
-                  label: '📦 Takeaway',
-                  isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Takeaway',
-                  onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Takeaway'),
-                  themeColors: themeColors,
-                ),
-              ],
-            ),
-          ),
+          // // ✅ ORDER TYPE FILTERS (PRIMARY)
+          // Text(
+          //   'Order Type',
+          //   style: TextStyle(
+          //     fontSize: 13,
+          //     fontWeight: FontWeight.w600,
+          //     color: themeColors.textSecondary,
+          //   ),
+          // ),
+          // const SizedBox(height: 8),
+          // SingleChildScrollView(
+          //   scrollDirection: Axis.horizontal,
+          //   child: Row(
+          //     children: [
+          //       OrderFilterChip(
+          //         label: 'All Orders',
+          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == null,
+          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter(null),
+          //         themeColors: themeColors,
+          //       ),
+          //       OrderFilterChip(
+          //         label: '🚚 Delivery',
+          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Delivery',
+          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Delivery'),
+          //         themeColors: themeColors,
+          //         color: AppTheme.warning,
+          //       ),
+          //       OrderFilterChip(
+          //         label: '🍽️ Dine In',
+          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Dine In',
+          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Dine In'),
+          //         themeColors: themeColors,
+          //       ),
+          //       OrderFilterChip(
+          //         label: '📦 Takeaway',
+          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Takeaway',
+          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Takeaway'),
+          //         themeColors: themeColors,
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
-          const SizedBox(height: 16),
+          // const SizedBox(height: 16),
 
           // STATUS FILTERS (SECONDARY)
           Text(

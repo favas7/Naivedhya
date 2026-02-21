@@ -252,18 +252,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 const SizedBox(height: 20),
 
-                // Vendors stat card (full width)
-                _buildStatCard(
-                  context,
-                  'Total Vendors',
-                  dashboardProvider.isLoading
-                      ? '...'
-                      : '${dashboardProvider.totalVendors}',
-                  Icons.store,
-                  colors.info,
-                  dashboardProvider.isLoading,
-                  isFullWidth: true,
-                ),
+                // // Vendors stat card (full width)
+                // _buildStatCard(
+                //   context,
+                //   'Total Vendors',
+                //   dashboardProvider.isLoading
+                //       ? '...'
+                //       : '${dashboardProvider.totalVendors}',
+                //   Icons.store,
+                //   colors.info,
+                //   dashboardProvider.isLoading,
+                //   isFullWidth: true,
+                // ),
 
                 const SizedBox(height: 30),
 
@@ -339,9 +339,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String value,
     IconData icon,
     Color color,
-    bool isLoading, {
-    bool isFullWidth = false,
-  }) {
+    bool isLoading) {
     final colors = AppTheme.of(context);
 
     return Container(

@@ -346,27 +346,37 @@ class DeliveryPersonnelService {
 
 
   
-  // ============ NEW METHODS FOR MAP FUNCTIONALITY ============
-
   /// Fetch delivery personnel with location data for map display
   Future<List<DeliveryPersonnel>> fetchDeliveryPersonnelWithLocation() async {
     try {
+      // Use ST_AsGeoJSON to convert geography to coordinates
       final response = await _supabase
           .from('delivery_personnel')
-          .select('*')  // Get all fields including current_location
-          .not('current_location', 'is', null)  // Only personnel with location
+          .select('''
+            *,
+            lat:ST_Y(current_location::geometry),
+            lng:ST_X(current_location::geometry)
+          ''')
+          .not('current_location', 'is', null)
           .order('updated_at', ascending: false);
 
-      return (response as List)
-          .map((json) => DeliveryPersonnel.fromJson(json))
-          .where((person) => person.hasLocation)  // Double-check location validity
+      print('🔍 Raw response: ${response.length} records'); // DEBUG
+      
+      final personnel = (response as List)
+          .map((json) {
+            print('🔍 Record: ${json['name']}, lat=${json['lat']}, lng=${json['lng']}'); // DEBUG
+            return DeliveryPersonnel.fromJson(json);
+          })
+          .where((person) => person.hasLocation)
           .toList();
+      
+      print('🔍 Filtered personnel: ${personnel.length} with valid locations'); // DEBUG
+      return personnel;
     } catch (e) {
-      print('Error fetching delivery personnel with location: $e');
+      print('❌ Error fetching delivery personnel with location: $e');
       return [];
     }
   }
-
   /// Subscribe to real-time location updates
   RealtimeChannel subscribeToLocationUpdates(
     Function(DeliveryPersonnel) onInsert,
