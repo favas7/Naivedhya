@@ -7,7 +7,6 @@ import 'package:naivedhya/Views/admin/order/widget/compact_stats_card.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_filter_chip.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_search_bar.dart';
 import 'package:naivedhya/models/order_model.dart';
-import 'package:naivedhya/models/ventor_model.dart';
 import 'package:naivedhya/providers/order_provider.dart';
 import 'package:naivedhya/services/toast_notification_service.dart';
 import 'package:naivedhya/utils/color_theme.dart';
@@ -25,25 +24,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   late ScrollController _scrollController;
   bool _isGridView = false;
 
-  Map<String, dynamic>? _parseVendor(dynamic vendorData) {
-    if (vendorData == null) return null;
-    if (vendorData is Map<String, dynamic>) return vendorData;
-
-    try {
-      if (vendorData is Vendor) {
-        return {
-          'id': vendorData.id,
-          'name': vendorData.name,
-          'email': vendorData.email,
-          'phone': vendorData.phone,
-        };
-      }
-    } catch (e) {
-      print('Error parsing vendor: $e');
-    }
-
-    return null;
-  }
 
     @override
     void initState() {
@@ -567,14 +547,16 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
         final orderData = orderProvider.ordersWithDetails[index];
         final order = orderData['order'] as Order?;
         final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
-        final vendor = _parseVendor(orderData['vendor']);
+        final customer = orderData['customer'] as Map<String, dynamic>?;
+        final resolvedAddress = orderData['resolvedAddress'] as String?;
 
         if (order == null) return const SizedBox.shrink();
 
         return OrderListItem(
           order: order,
           restaurant: restaurant,
-          vendor: vendor,
+          customer: customer,
+          resolvedAddress: resolvedAddress,
           themeColors: themeColors,
           onTap: () {
             // Navigator.push(
@@ -607,16 +589,18 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
         final orderData = orderProvider.ordersWithDetails[index];
         final order = orderData['order'] as Order?;
         final restaurant = orderData['restaurant'] as Map<String, dynamic>?;
-        final vendor = _parseVendor(orderData['vendor']);
         final orderItems = orderData['orderItems'] as List? ?? [];
+        final customer = orderData['customer'] as Map<String, dynamic>?;
+        final resolvedAddress = orderData['resolvedAddress'] as String?;
 
         if (order == null) return const SizedBox.shrink();
 
         return OrderCard(
           order: order,
           restaurant: restaurant,
-          vendor: vendor,
           orderItems: orderItems,
+          customer: customer,
+          resolvedAddress: resolvedAddress,
           themeColors: themeColors,
           onTap: () {
             // Navigator.push(

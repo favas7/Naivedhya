@@ -4,7 +4,6 @@ import 'package:naivedhya/models/order_item_model.dart';
 class Order {
   final String orderId;
   final String? customerId;
-  final String? vendorId;  // ✅ Must be nullable
   final String restaurantId;  // ✅ This stays required
   final String orderNumber;
   final double totalAmount;
@@ -18,9 +17,11 @@ class Order {
   final DateTime? deliveryTime;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  final String? deliveryAddress;
   final String? specialInstructions;
   final String? paymentMethod;
+  final String? paymentType;  
+  final String? deliveryAddressId; 
+  final String? deliveryAddressText;
   
   // ✅ Petpooja-specific fields
   final int? petpoojaOrderId;
@@ -47,7 +48,6 @@ class Order {
   Order({
     required this.orderId,
     this.customerId,
-    this.vendorId,
     required this.restaurantId,  // Keep this required - we always have hotel_id
     required this.orderNumber,
     required this.totalAmount,
@@ -61,7 +61,6 @@ class Order {
     this.deliveryTime,
     this.createdAt,
     this.updatedAt,
-    this.deliveryAddress,
     this.specialInstructions,
     this.paymentMethod,
     this.petpoojaOrderId,
@@ -80,6 +79,9 @@ class Order {
     this.restaurant,
     this.vendor,
     this.deliveryPerson,
+    this.paymentType,
+    this.deliveryAddressId,
+    this.deliveryAddressText,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -102,7 +104,6 @@ class Order {
     return Order(
       orderId: json['order_id'] as String,
       customerId: json['customer_id'] as String?,  // ✅ Explicitly cast as nullable
-      vendorId: json['vendor_id'] as String?,      // ✅ Explicitly cast as nullable
       restaurantId: json['hotel_id'] as String,
       orderNumber: json['order_number'] as String,
       totalAmount: (json['total_amount'] as num).toDouble(),
@@ -126,8 +127,10 @@ class Order {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
-      deliveryAddress: json['delivery_address'] as String?,
       specialInstructions: json['special_instructions'] as String?,
+      paymentType: json['payment_type'] as String?,
+      deliveryAddressId: json['delivery_address'] as String?,   // UUID from DB
+      deliveryAddressText: json['delivery_address_text'] as String?, 
       paymentMethod: json['payment_method'] as String?,
       petpoojaOrderId: json['petpooja_order_id'] as int?,
       petpoojaRestId: json['petpooja_rest_id'] as String?,
@@ -161,7 +164,8 @@ class Order {
     return {
       'order_id': orderId,
       'customer_id': customerId,
-      'vendor_id': vendorId,
+      'payment_type': paymentType,
+      'delivery_address': deliveryAddressId,
       'hotel_id': restaurantId,
       'order_number': orderNumber,
       'total_amount': totalAmount,
@@ -175,7 +179,6 @@ class Order {
       'delivery_time': deliveryTime?.toIso8601String(),
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
-      'delivery_address': deliveryAddress,
       'special_instructions': specialInstructions,
       'payment_method': paymentMethod,
       'petpooja_order_id': petpoojaOrderId,
@@ -197,7 +200,6 @@ class Order {
   Map<String, dynamic> toJsonForUpdate() {
     return {
       'customer_id': customerId,
-      'vendor_id': vendorId,
       'hotel_id': restaurantId,
       'order_number': orderNumber,
       'total_amount': totalAmount,
@@ -209,7 +211,6 @@ class Order {
       'proposed_delivery_time': proposedDeliveryTime?.toIso8601String(),
       'pickup_time': pickupTime?.toIso8601String(),
       'delivery_time': deliveryTime?.toIso8601String(),
-      'delivery_address': deliveryAddress,
       'special_instructions': specialInstructions,
       'payment_method': paymentMethod,
       'order_items': orderItems.map((item) => item.toJsonComplete()).toList(),
@@ -220,7 +221,6 @@ class Order {
   Order copyWith({
     String? orderId,
     String? customerId,
-    String? vendorId,
     String? restaurantId,
     String? orderNumber,
     double? totalAmount,
@@ -234,7 +234,6 @@ class Order {
     DateTime? deliveryTime,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? deliveryAddress,
     String? specialInstructions,
     String? paymentMethod,
     int? petpoojaOrderId,
@@ -253,11 +252,13 @@ class Order {
     Map<String, dynamic>? restaurant,
     Map<String, dynamic>? vendor,
     Map<String, dynamic>? deliveryPerson,
+    String? paymentType,
+    String? deliveryAddressId,
+    String? deliveryAddressText,
   }) {
     return Order(
       orderId: orderId ?? this.orderId,
       customerId: customerId ?? this.customerId,
-      vendorId: vendorId ?? this.vendorId,
       restaurantId: restaurantId ?? this.restaurantId,
       orderNumber: orderNumber ?? this.orderNumber,
       totalAmount: totalAmount ?? this.totalAmount,
@@ -271,7 +272,9 @@ class Order {
       deliveryTime: deliveryTime ?? this.deliveryTime,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      paymentType: paymentType ?? this.paymentType,
+      deliveryAddressId: deliveryAddressId ?? this.deliveryAddressId,
+      deliveryAddressText: deliveryAddressText ?? this.deliveryAddressText,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       petpoojaOrderId: petpoojaOrderId ?? this.petpoojaOrderId,

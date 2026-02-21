@@ -3,7 +3,6 @@ import 'package:naivedhya/models/order_model.dart';
 import 'package:naivedhya/services/delivery_person_service.dart';
 import 'package:naivedhya/services/order/order_item_service.dart';
 import 'package:naivedhya/services/restaurant_service.dart';
-import 'package:naivedhya/services/ventor_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderService {
@@ -14,7 +13,6 @@ class OrderService {
   
 
   final _restaurantService = RestaurantService();
-  final VendorService _vendorService = VendorService();
   final DeliveryPersonnelService _deliveryService = DeliveryPersonnelService();
   final AddOrderItemService _orderItemService = AddOrderItemService();
 
@@ -190,7 +188,6 @@ class OrderService {
       print('\n🔧 [OrderService] === Enriching Order Data ===');
       print('🆔 Order ID: ${order.orderId}');
       print('🏨 Restaurant ID: ${order.restaurantId}');
-      print('🏪 Vendor ID: ${order.vendorId}');
       print('🚚 Delivery Person ID: ${order.deliveryPersonId}');
       
       // Fetch restaurant details
@@ -216,29 +213,29 @@ class OrderService {
       } catch (e) {
         print('❌ [OrderService] ERROR fetching restaurant: $e');
       }
-      
-    // Fetch vendor details
-    print('\n🏪 [OrderService] Fetching vendor details...');
-    Map<String, dynamic>? vendorDetails;
-
-    // ✅ ONLY FETCH IF vendor_id EXISTS AND IS NOT NULL
-    if (order.vendorId != null && order.vendorId!.isNotEmpty) {
-      try {
-        vendorDetails = await _vendorService.fetchVendorById(order.vendorId!);
-        if (vendorDetails != null) {
-          print('✅ [OrderService] Vendor found: ${vendorDetails['name']}');
+       // Fetch customer profile
+        print('\n👤 [OrderService] Fetching customer profile...');
+        Map<String, dynamic>? customerProfile;
+        if (order.customerId != null) {
+          customerProfile = await _fetchCustomerProfile(order.customerId!);
+          if (customerProfile != null) {
+            print('✅ [OrderService] Customer found: ${customerProfile['full_name']}');
+          }
         } else {
-          print('⚠️ [OrderService] Vendor not found for ID: ${order.vendorId}');
+          print('ℹ️ [OrderService] No customer_id (POS order)');
         }
-      } catch (e) {
-        print('❌ [OrderService] ERROR fetching vendor: $e');
-        // Don't throw - just set to null
-        vendorDetails = null;
-      }
-    } else {
-      print('ℹ️ [OrderService] No vendor assigned (POS order or NULL vendor_id)');
-      vendorDetails = null;
-    }
+
+        // Fetch delivery address
+        print('\n📍 [OrderService] Fetching delivery address...');
+        String? resolvedAddress;
+        if (order.deliveryAddressId != null) {
+          resolvedAddress = await _fetchAddressText(order.deliveryAddressId!);
+          print('✅ [OrderService] Address resolved: $resolvedAddress');
+        } else {
+          print('ℹ️ [OrderService] No delivery_address UUID on this order');
+        }
+      
+
       // Fetch order items
       print('\n📦 [OrderService] Fetching order items...');
       List orderItems = [];
@@ -275,10 +272,12 @@ class OrderService {
         print('ℹ️ [OrderService] No delivery person assigned yet');
       }
 
+
       final enrichedData = {
         'order': order,
         'restaurant': restaurantMap,
-        'vendor': vendorDetails,
+        'customer': customerProfile,       // NEW
+        'resolvedAddress': resolvedAddress, // NEW
         'deliveryPersonnel': deliveryDetails,
         'orderItems': orderItems,
       };
@@ -286,7 +285,6 @@ class OrderService {
       print('\n✅ [OrderService] === Enrichment Complete ===');
       print('📊 Summary:');
       print('   - Restaurant: ${restaurantMap != null ? "✅" : "❌"}');
-      print('   - Vendor: ${vendorDetails != null ? "✅" : "❌"}');
       print('   - Order Items: ${orderItems.length} items');
       print('   - Delivery Personnel: ${deliveryDetails != null ? "✅" : "ℹ️ Not assigned"}');
       
@@ -436,6 +434,36 @@ class OrderService {
       throw Exception('Failed to fetch customer orders: $e');
     }
   }
+
+  Future<String?> _fetchAddressText(String addressId) async {
+  try {
+    final response = await _supabase
+        .from('addresses')
+        .select('fulladdress, label')
+        .eq('addressid', addressId)
+        .single();
+    final label = response['label'] as String?;
+    final full = response['fulladdress'] as String;
+    return label != null ? '$label: $full' : full;
+  } catch (e) {
+    print('⚠️ [OrderService] Could not fetch address $addressId: $e');
+    return null;
+  }
+}
+
+Future<Map<String, dynamic>?> _fetchCustomerProfile(String customerId) async {
+  try {
+    final response = await _supabase
+        .from('profiles')
+        .select('id, full_name, phone, email, avatar_url')
+        .eq('id', customerId)
+        .single();
+    return response;
+  } catch (e) {
+    print('⚠️ [OrderService] Could not fetch customer profile $customerId: $e');
+    return null;
+  }
+}
 
 
   /// Get all available order statuses

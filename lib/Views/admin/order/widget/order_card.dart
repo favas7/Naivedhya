@@ -7,21 +7,23 @@ import 'package:naivedhya/utils/color_theme.dart';
 class OrderCard extends StatelessWidget {
   final Order order;
   final Map<String, dynamic>? restaurant;
-  final Map<String, dynamic>? vendor;
   final List orderItems;
   final AppThemeColors themeColors;
   final VoidCallback onTap;
   final Function(BuildContext, Order, AppThemeColors) onShowMenu;
+  final Map<String, dynamic>? customer;
+  final String? resolvedAddress;
 
   const OrderCard({
     super.key,
     required this.order,
     required this.restaurant,
-    required this.vendor,
     required this.orderItems,
     required this.themeColors,
     required this.onTap,
     required this.onShowMenu,
+    this.customer,
+    this.resolvedAddress,
   });
 
   String _formatTime(DateTime dateTime) {
@@ -130,7 +132,7 @@ class OrderCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '+91 XXXXXX XXXX',
+                          customer?['phone'] ?? customer?['email'] ?? 'No contact info',
                           style: TextStyle(
                             fontSize: 12,
                             color: themeColors.textSecondary,
@@ -176,41 +178,19 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      restaurant?['city'] ?? 'Location',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: themeColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    resolvedAddress ?? restaurant?['address'] ?? 'No address',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: themeColors.textSecondary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   ),
                 ],
               ),
             ),
 
-            // Vendor Info
-            if (vendor != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.store, size: 16, color: AppTheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        vendor!['name'] ?? 'Unknown Vendor',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: themeColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
             // Items Display
             Padding(
@@ -229,6 +209,22 @@ class OrderCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.payment, size: 16, color: themeColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text(
+                    [
+                      order.paymentMethod,
+                      order.paymentType,
+                    ].where((s) => s != null && s.isNotEmpty).join(' • '),
+                    style: TextStyle(fontSize: 12, color: themeColors.textSecondary),
                   ),
                 ],
               ),

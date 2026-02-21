@@ -5,19 +5,21 @@ import 'package:naivedhya/utils/color_theme.dart';
 class OrderListItem extends StatelessWidget {
   final Order order;
   final Map<String, dynamic>? restaurant;
-  final Map<String, dynamic>? vendor;
   final AppThemeColors themeColors;
   final VoidCallback onTap;
   final Function(BuildContext, Order, AppThemeColors) onShowMenu;
+  final Map<String, dynamic>? customer;
+  final String? resolvedAddress;
 
   const OrderListItem({
     super.key,
     required this.order,
     this.restaurant,
-    this.vendor,
     required this.themeColors,
     required this.onTap,
     required this.onShowMenu,
+    this.customer,
+    this.resolvedAddress,
   });
 
   String _formatTime(DateTime dateTime) {
@@ -155,6 +157,62 @@ class OrderListItem extends StatelessWidget {
                         ],
                       ],
                     ),
+                    // After the third Row(...) inside the Column, add:
+
+                    // Customer contact
+                    if (customer?['phone'] != null || customer?['email'] != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          children: [
+                            Icon(Icons.phone_outlined, size: 13, color: themeColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              customer?['phone'] ?? customer?['email'] ?? '',
+                              style: TextStyle(fontSize: 12, color: themeColors.textSecondary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Delivery address (only for delivery orders)
+                    if (order.orderType == 'Delivery' && resolvedAddress != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on_outlined, size: 13, color: themeColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                resolvedAddress!,
+                                style: TextStyle(fontSize: 12, color: themeColors.textSecondary),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Payment info
+                    if (order.paymentMethod != null || order.paymentType != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          children: [
+                            Icon(Icons.payment, size: 13, color: themeColors.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              [order.paymentMethod, order.paymentType]
+                                  .where((s) => s != null && s.isNotEmpty)
+                                  .join(' • '),
+                              style: TextStyle(fontSize: 12, color: themeColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
