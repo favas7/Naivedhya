@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:naivedhya/Views/auth/launch_screen.dart';
 import 'package:naivedhya/config/supabase_config.dart'; 
 import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
@@ -15,7 +16,6 @@ import 'package:naivedhya/providers/theme_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'Views/user/splash_screen.dart';
 import 'providers/auth_provider.dart';
 
 void main() async {
@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
                 theme: AppTheme.lightTheme,      // Fixed: changed from lightTheme to light
                 darkTheme: AppTheme.darkTheme,   // Fixed: changed from darkTheme to dark
                 themeMode: themeProvider.themeMode,
-                home: const SplashScreen(),
+                home: const LaunchScreen(),
               );
             },
           );
