@@ -1,16 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:naivedhya/Views/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
-import '../../../models/user_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../utils/widgets/custom_button.dart';
 import '../../../utils/widgets/custom_text_field.dart';
 import '../../../utils/validator.dart';
-import 'set_password_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -78,36 +75,12 @@ class SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _handleSignUp() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final user = UserModel(
-          id: DateTime.now().millisecondsSinceEpoch.toString(), 
-          name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          phone: _phoneController.text.trim(),
-          dob: _dobController.text,
-          address: '',
-          pendingpayments: 0.0,
-          orderhistory: [],
-          created_at: DateTime.now(),
-          updated_at: DateTime.now(),
-          usertype: 'admin',
-        );
-        
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SetPasswordScreen(user: user),
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Admin accounts are created by the system administrator.'),
+      ),
+    );
   }
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -332,15 +305,15 @@ class SignUpScreenState extends State<SignUpScreen> {
                           return GestureDetector(
                             onTap: () async {
                               try {
-                                final success = await authProvider.googleSignIn();
-                                if (success) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const AdminDashboardScreen(),
-                                    ),
-                                  );
-                                }
+                                // final success = await authProvider.googleSignIn();
+                                // if (success) {
+                                //   Navigator.pushReplacement(
+                                //     context,
+                                //     MaterialPageRoute(
+                                //       builder: (_) => const AdminDashboardScreen(),
+                                //     ),
+                                //   );
+                                // }
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(e.toString())),
@@ -521,13 +494,13 @@ class SignUpScreenState extends State<SignUpScreen> {
                               GestureDetector(
                                 onTap: () async {
                                   try {
-                                    final success = await authProvider.googleSignIn();
-                                    if (success) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-                                      );
-                                    }
+                                    // final success = await authProvider.googleSignIn();
+                                    // if (success) {
+                                    //   Navigator.pushReplacement(
+                                    //     context,
+                                    //     MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+                                    //   );
+                                    // }
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text(e.toString())),

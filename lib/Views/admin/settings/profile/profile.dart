@@ -19,10 +19,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final user = context.read<AuthProvider>().currentUser;
-    _nameController = TextEditingController(text: user?.fullName ?? '');
+    // Use _user (UserModel) from AuthProvider, not currentUser
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.user; // UserModel?
+    _nameController = TextEditingController(text: user?.name ?? '');
     _emailController = TextEditingController(text: user?.email ?? '');
-    _phoneController = TextEditingController(text: user?.phoneNumber ?? '');
+    _phoneController = TextEditingController(text: user?.phone ?? '');
   }
 
   @override

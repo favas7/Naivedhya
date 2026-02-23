@@ -317,61 +317,61 @@ class LoginScreenState extends State<LoginScreen> {
                       
                       const SizedBox(height: 24),
                       
-                      // Google Sign In
-                      Consumer<AuthProvider>(
-                        builder: (context, authProvider, child) {
-                          if (authProvider.isLoading) return const SizedBox.shrink();
+                      // // Google Sign In
+                      // Consumer<AuthProvider>(
+                      //   builder: (context, authProvider, child) {
+                      //     if (authProvider.isLoading) return const SizedBox.shrink();
                           
-                          return GestureDetector(
-                            onTap: () async {
-                              try {
-                                final success = await authProvider.googleSignIn();
-                                if (success) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const BottomNavigator(),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(e.toString())),
-                                );
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppTheme.darkSurfaceVariant : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isDark 
-                                    ? AppTheme.darkTextHint 
-                                    : AppTheme.textHint.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    'assets/Google_Logo/google-logo.png',
-                                    height: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Continue with Google',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                      //     return GestureDetector(
+                      //       onTap: () async {
+                      //         try {
+                      //           final success = await authProvider.googleSignIn();
+                      //           if (success) {
+                      //             Navigator.pushReplacement(
+                      //               context,
+                      //               MaterialPageRoute(
+                      //                 builder: (_) => const BottomNavigator(),
+                      //               ),
+                      //             );
+                      //           }
+                      //         } catch (e) {
+                      //           ScaffoldMessenger.of(context).showSnackBar(
+                      //             SnackBar(content: Text(e.toString())),
+                      //           );
+                      //         }
+                      //       },
+                      //       child: Container(
+                      //         padding: const EdgeInsets.all(12),
+                      //         decoration: BoxDecoration(
+                      //           color: isDark ? AppTheme.darkSurfaceVariant : Colors.white,
+                      //           borderRadius: BorderRadius.circular(12),
+                      //           border: Border.all(
+                      //             color: isDark 
+                      //               ? AppTheme.darkTextHint 
+                      //               : AppTheme.textHint.withOpacity(0.3),
+                      //             width: 1,
+                      //           ),
+                      //         ),
+                      //         child: Row(
+                      //           mainAxisAlignment: MainAxisAlignment.center,
+                      //           children: [
+                      //             Image.asset(
+                      //               'assets/Google_Logo/google-logo.png',
+                      //               height: 24,
+                      //             ),
+                      //             const SizedBox(width: 12),
+                      //             Text(
+                      //               'Continue with Google',
+                      //               style: theme.textTheme.titleMedium?.copyWith(
+                      //                 fontWeight: FontWeight.w600,
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         ),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                       
                       const SizedBox(height: 24),
                       
@@ -621,61 +621,61 @@ class LoginScreenState extends State<LoginScreen> {
                             
                             SizedBox(height: 20.h),
                             
-                            // Google Sign In
-                            if (!authProvider.isLoading)
-                              GestureDetector(
-                                onTap: () async {
-                                  try {
-                                    final success = await authProvider.googleSignIn();
-                                    if (success) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const BottomNavigator(),
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(e.toString())),
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.all(12.r),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    border: Border.all(
-                                      color: theme.colorScheme.outline,
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: theme.colorScheme.shadow,
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        'assets/Google_Logo/google-logo.png',
-                                        height: 24.h,
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      Text(
-                                        'Continue with Google',
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            // // Google Sign In
+                            // if (!authProvider.isLoading)
+                            //   GestureDetector(
+                            //     onTap: () async {
+                            //       try {
+                            //         final success = await authProvider.googleSignIn();
+                            //         if (success) {
+                            //           Navigator.pushReplacement(
+                            //             context,
+                            //             MaterialPageRoute(
+                            //               builder: (_) => const BottomNavigator(),
+                            //             ),
+                            //           );
+                            //         }
+                            //       } catch (e) {
+                            //         ScaffoldMessenger.of(context).showSnackBar(
+                            //           SnackBar(content: Text(e.toString())),
+                            //         );
+                            //       }
+                            //     },
+                            //     child: Container(
+                            //       padding: EdgeInsets.all(12.r),
+                            //       decoration: BoxDecoration(
+                            //         color: theme.colorScheme.surface,
+                            //         borderRadius: BorderRadius.circular(12.r),
+                            //         border: Border.all(
+                            //           color: theme.colorScheme.outline,
+                            //           width: 1,
+                            //         ),
+                            //         boxShadow: [
+                            //           BoxShadow(
+                            //             color: theme.colorScheme.shadow,
+                            //             blurRadius: 4,
+                            //             offset: const Offset(0, 2),
+                            //           ),
+                            //         ],
+                            //       ),
+                            //       child: Row(
+                            //         mainAxisAlignment: MainAxisAlignment.center,
+                            //         children: [
+                            //           Image.asset(
+                            //             'assets/Google_Logo/google-logo.png',
+                            //             height: 24.h,
+                            //           ),
+                            //           SizedBox(width: 12.w),
+                            //           Text(
+                            //             'Continue with Google',
+                            //             style: theme.textTheme.titleMedium?.copyWith(
+                            //               fontWeight: FontWeight.w600,
+                            //             ),
+                            //           ),
+                            //         ],
+                            //       ),
+                            //     ),
+                            //   ),
                             
                             SizedBox(height: 20.h),
                             

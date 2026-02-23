@@ -1,193 +1,159 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
-import '../services/firebase_service.dart';
-final _supabase = Supabase.instance.client;
 
 class AuthProvider with ChangeNotifier {
-  final FirebaseService _firebaseService = FirebaseService();
+  final SupabaseClient _supabase = Supabase.instance.client;
   UserModel? _user;
   bool _isLoading = false;
 
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
+  User? get currentUser => _supabase.auth.currentUser;
 
-  get currentUser => null;
+  AuthProvider() {
+    // Restore session on app start
+    _restoreSession();
+    // Listen to auth state changes
+    _supabase.auth.onAuthStateChange.listen((data) {
+      if (data.session == null) {
+        _user = null;
+        notifyListeners();
+      }
+    });
+  }
+
+  Future<void> _restoreSession() async {
+    try {
+      final supabaseUser = _supabase.auth.currentUser;
+      if (supabaseUser != null) {
+        await _loadUserProfile(supabaseUser.id);
+      }
+    } catch (e) {
+      // Session restore failed silently
+    }
+  }
 
   Future<void> checkAuthStatus() async {
     try {
-      final firebaseUser = _firebaseService.currentUser;
-      if (firebaseUser != null) {
-        final userData = await _firebaseService.getUser(firebaseUser.uid);
-        if (userData != null) {
-          _user = UserModel.fromJson(userData);
-          notifyListeners();
-        }
+      final supabaseUser = _supabase.auth.currentUser;
+      if (supabaseUser != null) {
+        await _loadUserProfile(supabaseUser.id);
       }
     } catch (e) {
-      ///('Check auth status error: $e');
+      // Auth check failed silently
     }
   }
 
-  // Add this method for splash screen to get user type
+  Future<void> _loadUserProfile(String userId) async {
+    final userData = await _supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
+    _user = UserModel.fromJson(userData);
+    notifyListeners();
+  }
+
   Future<String?> getUserType() async {
     try {
-      final firebaseUser = _firebaseService.currentUser;
-      if (firebaseUser != null) {
-        return await checkUserType(firebaseUser.uid);
+      final supabaseUser = _supabase.auth.currentUser;
+      if (supabaseUser != null) {
+        return await checkUserType(supabaseUser.id);
       }
       return null;
     } catch (e) {
-      ///('Get user type error: $e');
-      return 'user'; // Default to user if error
+      return null; // Do NOT default to 'user' for admin app — fail explicitly
     }
   }
 
-  // Updated login method in your AuthProvider
   Future<Map<String, dynamic>> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
-      ///('Attempting sign-in for $email');
-      final firebaseUser = await _firebaseService.signIn(email, password);
-      ///('Sign-in result: $firebaseUser');
-      
-      if (firebaseUser != null) {
-        ///('Fetching user data for UID: ${firebaseUser.uid}');
-        final userData = await _firebaseService.getUser(firebaseUser.uid);
-        ///('User data result: $userData');
-        
-        if (userData != null) {
-          _user = UserModel.fromJson(userData);
-          
-          // Check usertype from Supabase profiles table
-          ///('Checking user type for UID: ${firebaseUser.uid}');
-          final usertype = await checkUserType(firebaseUser.uid);
-          ///('User type result: $usertype');
-          
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      if (response.user != null) {
+        await _loadUserProfile(response.user!.id);
+
+        final usertype = await checkUserType(response.user!.id);
+
+        // Block non-admins from logging into admin app
+        if (usertype != 'admin') {
+          await _supabase.auth.signOut();
+          _user = null;
           _isLoading = false;
           notifyListeners();
-          
           return {
-            'success': true,
-            'usertype': usertype,
-            'user': _user,
+            'success': false,
+            'usertype': null,
+            'user': null,
+            'error': 'Access denied. Admin accounts only.',
           };
         }
+
+        _isLoading = false;
+        notifyListeners();
+        return {
+          'success': true,
+          'usertype': usertype,
+          'user': _user,
+        };
       }
-      
+
       _isLoading = false;
       notifyListeners();
       return {
         'success': false,
         'usertype': null,
         'user': null,
+        'error': 'Login failed.',
       };
-      
+
+    } on AuthException catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      throw Exception(e.message);
     } catch (e) {
-      ///('Login error: $e');
       _isLoading = false;
       notifyListeners();
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
-  // Helper method to check user type from Supabase (add this if not already present)
   Future<String?> checkUserType(String uid) async {
     try {
-      // Replace with your actual Supabase client and query
       final response = await _supabase
           .from('profiles')
           .select('usertype')
           .eq('id', uid)
-          .single();
-      
-      if (response['usertype'] != null) {
-        return response['usertype'].toString();
-      }
-      
-      // Default to 'user' if no usertype found
-      return 'user';
+          .maybeSingle(); 
+
+      return response?['usertype']?.toString();
     } catch (e) {
-      ///('Error checking user type: $e');
-      // Default to 'user' if there's an error
-      return 'user';
+      return null;
     }
   }
-
-  Future<bool> signUp(UserModel user, String password) async {
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      final firebaseUser = await _firebaseService.signUp(user, password);
-      
-      if (firebaseUser != null) {
-        _user = user.copyWith(id: firebaseUser.uid);
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      }
-      
-      ///('SignUp failed: No user returned');
-      _isLoading = false;
-      notifyListeners();
-      return false;
-      
-    } catch (e) {
-      ///('SignUp error: $e');
-      _isLoading = false;
-      notifyListeners();
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
-    }
-  }
-
   Future<void> logout() async {
     try {
-      await _firebaseService.signOut();
+      await _supabase.auth.signOut();
       _user = null;
       notifyListeners();
     } catch (e) {
-      ///('Logout error: $e');
-    }
-  }
-
-  Future<bool> googleSignIn() async {
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      final firebaseUser = await _firebaseService.googleSignIn();
-      
-      if (firebaseUser != null) {
-        final userData = await _firebaseService.getUser(firebaseUser.uid);
-        if (userData != null) {
-          _user = UserModel.fromJson(userData);
-        }
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      }
-      
-      ///('Google SignIn failed: No user returned');
-      _isLoading = false;
-      notifyListeners();
-      return false;
-      
-    } catch (e) {
-      ///('Google SignIn error: $e');
-      _isLoading = false;
-      notifyListeners();
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
+      // Logout error silently ignored
     }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await _firebaseService.sendPasswordResetEmail(email);
+      await _supabase.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     } catch (e) {
-      ///('Password reset error: $e');
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }

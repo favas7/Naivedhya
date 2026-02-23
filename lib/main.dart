@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:naivedhya/config/supabase_config.dart'; 
-import 'package:naivedhya/firebase_options.dart';
 import 'package:naivedhya/providers/activity_provider.dart';
 import 'package:naivedhya/providers/dashboard_provider.dart';
 import 'package:naivedhya/providers/delivery_personal_provider.dart';
@@ -16,26 +15,20 @@ import 'package:naivedhya/providers/theme_provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'Views/user/splash_screen.dart';
 import 'providers/auth_provider.dart';
 
-void main() async { 
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
-  );  
+  );
   await dotenv.load(fileName: ".env");
 
-
   runApp(const MyApp());
-} 
- 
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

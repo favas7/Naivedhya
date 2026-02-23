@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/admin_dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import 'package:naivedhya/utils/color_theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/user_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/theme_provider.dart';
@@ -59,23 +60,25 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       }
 
       try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        final success = await authProvider.signUp(widget.user, _passwordController.text);
-        if (success) {
+        // Update password for already-authenticated user (via invite link)
+        final response = await Supabase.instance.client.auth.updateUser(
+          UserAttributes(password: _passwordController.text),
+        );
+
+        if (response.user != null) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
             (route) => false,
           );
         }
-      } catch (e) {
+      } on AuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(e.message)),
         );
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;

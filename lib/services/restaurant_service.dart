@@ -2,30 +2,16 @@
 import 'package:naivedhya/models/restaurant_model.dart';
 import 'package:naivedhya/models/ventor_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/location.dart';
 import '../models/manager.dart';
 
 class RestaurantService {
   final SupabaseClient _client = Supabase.instance.client;
   final SupabaseClient client = Supabase.instance.client;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  // FIXED: Get current Firebase user's email
   Future<String?> getCurrentUserEmail() async {
-    try {
-      final currentUser = _firebaseAuth.currentUser;
-      if (currentUser == null) {
-        print('No authenticated user found');
-        return null;
-      }
-      return currentUser.email;
-    } catch (e) {
-      print('Error getting current user email: $e');
-      return null;
-    }
+    return _client.auth.currentUser?.email;
   }
-
   // Get enterprise ID
   Future<String?> getEnterpriseId() async {
     try {
@@ -457,13 +443,13 @@ class RestaurantService {
   // FIXED: Get the current user's Restaurant (using Firebase Auth)
   Future<Restaurant?> getCurrentUserRestaurant() async {
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user?.email == null) return null;
+      final email = _client.auth.currentUser?.email;
+      if (email == null) return null;
 
       final response = await _client
-          .from('restaurant')  // FIXED: Correct table name
+          .from('restaurant')
           .select()
-          .eq('adminemail', user!.email!)
+          .eq('adminemail', email)
           .maybeSingle();
 
       if (response == null) return null;
@@ -473,70 +459,51 @@ class RestaurantService {
     }
   }
 
-  // // FIXED: Get Restaurant by ID
-  // Future<Restaurant?> getRestaurantById(String restaurantId) async {
-  //   try {
-  //     final response = await _client
-  //         .from('restaurant')  // FIXED: Correct table name
-  //         .select()
-  //         .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
-  //         .maybeSingle();
-
-  //     if (response == null) return null;
-  //     return Restaurant.fromJson(response);
-  //   } catch (e) {
-  //     return null;
-  //   }
-  // }
 
   // FIXED: Get all Restaurants for current user (using Firebase Auth)
   Future<List<Restaurant>> getRestaurantsForCurrentUser() async {
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user?.email == null) return [];
+      final email = _client.auth.currentUser?.email;
+      if (email == null) return [];
 
       final response = await _client
-          .from('restaurant')  // FIXED: Correct table name
+          .from('restaurant')
           .select()
-          .eq('adminemail', user!.email!)
+          .eq('adminemail', email)
           .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((json) => Restaurant.fromJson(json))
-          .toList();
+      return (response as List).map((json) => Restaurant.fromJson(json)).toList();
     } catch (e) {
-      print('Error getting Restaurants for current user: $e');
+      print('Error getting restaurants for current user: $e');
       return [];
     }
   }
-
+  
   // FIXED: Create Restaurant with current user as admin (using Firebase Auth)
   Future<Restaurant?> createRestaurant(String name, String address) async {
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user?.email == null) {
-        throw Exception('User not authenticated');
-      }
+      final email = _client.auth.currentUser?.email;
+      if (email == null) throw Exception('User not authenticated');
 
       final restaurant = Restaurant(
         name: name,
         address: address,
-        adminEmail: user!.email!,
+        adminEmail: email,
       );
 
       final response = await _client
-          .from('restaurant')  // FIXED: Correct table name
+          .from('restaurant')
           .insert(restaurant.toJson())
           .select()
           .single();
 
       return Restaurant.fromJson(response);
     } catch (e) {
-      print('Error creating Restaurant: $e');
+      print('Error creating restaurant: $e');
       rethrow;
     }
   }
-
+  
   // FIXED: Update Restaurant basic information
   Future<Restaurant?> updateRestaurant(String restaurantId, String name, String address) async {
     try {
@@ -575,40 +542,20 @@ class RestaurantService {
   // FIXED: Check if current user can edit Restaurant (using Firebase Auth)
   Future<bool> canEditRestaurant(String restaurantId) async {
     try {
-      final user = _firebaseAuth.currentUser;
-      if (user?.email == null) return false;
+      final email = _client.auth.currentUser?.email;
+      if (email == null) return false;
 
       final response = await _client
-          .from('restaurant')  // FIXED: Correct table name
+          .from('restaurant')
           .select('adminemail')
-          .eq('hotel_id', restaurantId)  // FIXED: Lowercase column name
+          .eq('hotel_id', restaurantId)
           .single();
 
-      return response['adminemail'] == user!.email!;
+      return response['adminemail'] == email;
     } catch (e) {
       return false;
     }
   }
-
-
-// getRestaurantDetails(String restaurantId) async {
-//     try {
-//       final restaurant = await getRestaurantById(restaurantId);
-//       if (restaurant == null) return null;
-
-//       final manager = await getManagerByrestaurantId(restaurantId);
-//       final location = await getLocationByrestaurantId(restaurantId);
-
-//       return {
-//         'restaurant': restaurant,
-//         'manager': manager,
-//         'location': location,
-//       };
-//     } catch (e) {
-//       print('Error getting Restaurant details: $e');
-//       return null;
-//     }
-//   }
 
   
   /// Get order by ID
