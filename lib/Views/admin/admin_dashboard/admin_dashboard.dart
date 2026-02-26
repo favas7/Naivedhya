@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:naivedhya/providers/auth_provider.dart';
 import 'package:naivedhya/providers/theme_provider.dart';
-import 'package:naivedhya/Views/admin/analytics/analatics_screen.dart';
+// import 'package:naivedhya/Views/admin/analytics/analatics_screen.dart';  // ❌ COMMENTED OUT
 import 'package:naivedhya/Views/admin/customer/customer_screen.dart';
 import 'package:naivedhya/Views/admin/dashboard/dashboard.dart';
 import 'package:naivedhya/Views/admin/delivery_staff/delivery_staff_screen.dart';
 import 'package:naivedhya/Views/admin/map/map_screen.dart';
-import 'package:naivedhya/Views/admin/menu/menu_screen.dart'; // ✅ ADD THIS
+// import 'package:naivedhya/Views/admin/menu/menu_screen.dart';             // ❌ COMMENTED OUT
 import 'package:naivedhya/Views/admin/notification/notification_screen.dart';
 import 'package:naivedhya/Views/admin/order/order_screen.dart';
-import 'package:naivedhya/Views/admin/payment/payment_screen.dart';
+// import 'package:naivedhya/Views/admin/payment/payment_screen.dart';       // ❌ COMMENTED OUT
 import 'package:naivedhya/Views/admin/pos/pos_integration_screen.dart';
 import 'package:naivedhya/Views/admin/settings/settings_screen.dart';
 import 'package:naivedhya/Views/auth/login/login_screen.dart';
@@ -29,20 +29,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // ✅ Your Naivedhya restaurant ID
-  static const String _hotelId = 'eda88a9c-b223-4f8e-ab4f-87b32f062b84';
+  // static const String _hotelId = 'eda88a9c-b223-4f8e-ab4f-87b32f062b84'; // ❌ COMMENTED OUT (used only by MenuScreen)
 
   final List<String> _menuItems = [
-    'Dashboard',
-    'Live Map',
-    'Orders',
-    'Menu Management', // ✅ ADD THIS
-    'Delivery Staff',
-    'Customers',
-    'Payments',
-    'Analytics',
-    'POS Integration',
-    'Notification',
-    'Settings'
+    'Dashboard',      // 0
+    'Live Map',       // 1
+    'Orders',         // 2
+    // 'Menu Management', // ❌ COMMENTED OUT
+    'Delivery Staff', // 3
+    'Customers',      // 4
+    // 'Payments',     // ❌ COMMENTED OUT
+    // 'Analytics',    // ❌ COMMENTED OUT
+    'POS Integration',// 5
+    'Notification',   // 6
+    'Settings'        // 7
   ];
 
   @override
@@ -114,7 +114,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             onPressed: () {
               // Navigate to notifications
               setState(() {
-                _selectedIndex = 9; // Notification index
+                _selectedIndex = 6; // Notification index (updated)
               });
             },
           ),
@@ -341,21 +341,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return Icons.location_on;
       case 2:
         return Icons.shopping_cart;
+      // case 3: Icons.restaurant_menu  // ❌ COMMENTED OUT - Menu Management
       case 3:
-        return Icons.restaurant_menu; // ✅ Menu Management icon
-      case 4:
         return Icons.delivery_dining;
-      case 5:
+      case 4:
         return Icons.people;
-      case 6:
-        return Icons.payment;
-      case 7:
-        return Icons.analytics;
-      case 8:
+      // case 5: Icons.payment          // ❌ COMMENTED OUT - Payments
+      // case 6: Icons.analytics        // ❌ COMMENTED OUT - Analytics
+      case 5:
         return Icons.point_of_sale;
-      case 9:
+      case 6:
         return Icons.notifications_active;
-      case 10:
+      case 7:
         return Icons.settings;
       default:
         return Icons.circle;
@@ -370,21 +367,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return const MapScreen();
       case 2:
         return const OrdersScreen();
+      // case 3: return MenuScreen(hotelId: _hotelId);  // ❌ COMMENTED OUT - Menu Management
       case 3:
-        return MenuScreen(hotelId: _hotelId); // ✅ Menu Management
-      case 4:
         return const DeliveryStaffScreen();
-      case 5:
+      case 4:
         return const CustomerScreen();
-      case 6:
-        return const PaymentScreen();
-      case 7:
-        return const AnalyticsScreen();
-      case 8:
+      // case 5: return const PaymentScreen();          // ❌ COMMENTED OUT - Payments
+      // case 6: return const AnalyticsScreen();        // ❌ COMMENTED OUT - Analytics
+      case 5:
         return const POSIntegrationScreen();
-      case 9:
+      case 6:
         return const NotificationScreen();
-      case 10:
+      case 7:
         return const SettingsScreen();
       default:
         return const DashboardScreen();
