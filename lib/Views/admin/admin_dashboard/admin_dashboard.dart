@@ -144,8 +144,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               children: [
                 CircleAvatar(
                   backgroundColor: colors.primary,
-                  child: Icon(
-                    Icons.admin_panel_settings,
+                  child: Image.asset(
+                    'assets/Naivedhya_Logo/naivedhya_logo.png',
+                    width: 24,
+                    height: 24,
                     color: isDark ? AppTheme.darkBackground : AppTheme.white,
                   ),
                 ),
