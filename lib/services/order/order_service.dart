@@ -62,8 +62,7 @@ class OrderService {
 
       // Update delivery personnel
       await _supabase.from('delivery_personnel').update({
-        'assigned_orders': currentOrders, // Supabase will convert to text[]
-        'is_available': false, // Set as unavailable
+        'assigned_orders': currentOrders,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('user_id', deliveryPersonId);
 
