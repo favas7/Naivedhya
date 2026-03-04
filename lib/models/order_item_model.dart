@@ -23,17 +23,17 @@ class OrderItem {
   /// Factory for reading FROM database (includes item_name from join)
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      orderId: json['order_id'],
-      itemId: json['item_id'],
-      quantity: json['quantity'],
-      price: (json['price'] as num).toDouble(),
-      itemName: json['item_name'], // ✅ Read from join
+      orderId: json['order_id'] as String? ?? '',
+      itemId: json['item_id'] as String? ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      itemName: json['item_name'] as String?,
       selectedCustomizations: (json['selected_customizations'] as List<dynamic>?)
               ?.map((c) => SelectedCustomization.fromJson(c))
               .toList() ??
           [],
       customizationAdditionalPrice:
-          (json['customization_additional_price'] ?? 0).toDouble(),
+          (json['customization_additional_price'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
