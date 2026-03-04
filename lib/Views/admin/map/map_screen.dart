@@ -120,32 +120,19 @@ class _MapScreenState extends State<MapScreen> {
   void _setupRealtimeSubscription() {
     _realtimeChannel = _personnelService.subscribeToLocationUpdates(
       (newPerson) {
-        // Handle insert
+        // Insert: full refetch (avoids WKB parsing issue)
         if (mounted) {
-          setState(() {
-            if (!_allPersonnel.any((p) => p.userId == newPerson.userId)) {
-              _allPersonnel.add(newPerson);
-            }
-            _applyFilters();
-          });
+          _loadDeliveryPersonnel();
         }
       },
-      (updatedPerson) {
-        // Handle update
+      (updatedUserId) {
+        // Update: full refetch so ST_Y/ST_X resolves coordinates correctly
         if (mounted) {
-          setState(() {
-            final index = _allPersonnel.indexWhere((p) => p.userId == updatedPerson.userId);
-            if (index != -1) {
-              _allPersonnel[index] = updatedPerson;
-            } else {
-              _allPersonnel.add(updatedPerson);
-            }
-            _applyFilters();
-          });
+          _loadDeliveryPersonnel();
         }
       },
       (userId) {
-        // Handle delete
+        // Delete: can handle locally, no location parsing needed
         if (mounted) {
           setState(() {
             _allPersonnel.removeWhere((p) => p.userId == userId);
@@ -155,7 +142,8 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
-
+  
+  
   void _setupPeriodicRefresh() {
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
@@ -378,14 +366,6 @@ class _MapScreenState extends State<MapScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Control Panel
-              if (isDesktop)
-                Container(
-                  width: 300,
-                  margin: const EdgeInsets.only(right: 20),
-                  child: _buildControlPanel(theme),
-                ),
-
               // Map Container
               Expanded(
                 child: _buildMapContainer(theme, isDesktop, isTablet),
@@ -396,7 +376,7 @@ class _MapScreenState extends State<MapScreen> {
           // Mobile Control Panel
           if (!isDesktop) ...[
             const SizedBox(height: 20),
-            _buildControlPanel(theme),
+            // _buildControlPanel(theme),
           ],
 
           const SizedBox(height: 20),
@@ -413,135 +393,135 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildControlPanel(AppThemeColors theme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Map Controls',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 20),
+  // Widget _buildControlPanel(AppThemeColors theme) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: theme.surface,
+  //       borderRadius: BorderRadius.circular(12),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           spreadRadius: 1,
+  //           blurRadius: 10,
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           'Map Controls',
+  //           style: Theme.of(context).textTheme.headlineMedium,
+  //         ),
+  //         const SizedBox(height: 20),
 
-          // Filter Dropdown
-          DropdownButtonFormField<String>(
-            value: selectedFilter,
-            decoration: const InputDecoration(
-              labelText: 'Filter by Status',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'All', child: Text('All')),
-              DropdownMenuItem(value: 'Active', child: Text('Active')),
-              DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
-              DropdownMenuItem(value: 'Delivering', child: Text('Delivering')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                selectedFilter = value!;
-                _applyFilters();
-              });
-            },
-          ),
-          const SizedBox(height: 20),
+  //         // Filter Dropdown
+  //         DropdownButtonFormField<String>(
+  //           value: selectedFilter,
+  //           decoration: const InputDecoration(
+  //             labelText: 'Filter by Status',
+  //             border: OutlineInputBorder(),
+  //           ),
+  //           items: const [
+  //             DropdownMenuItem(value: 'All', child: Text('All')),
+  //             DropdownMenuItem(value: 'Active', child: Text('Active')),
+  //             DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+  //             DropdownMenuItem(value: 'Delivering', child: Text('Delivering')),
+  //           ],
+  //           onChanged: (value) {
+  //             setState(() {
+  //               selectedFilter = value!;
+  //               _applyFilters();
+  //             });
+  //           },
+  //         ),
+  //         const SizedBox(height: 20),
 
-          // Toggle Switches
-          Text(
-            'Show on Map',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 10),
+  //         // Toggle Switches
+  //         Text(
+  //           'Show on Map',
+  //           style: Theme.of(context).textTheme.titleMedium,
+  //         ),
+  //         const SizedBox(height: 10),
 
-          SwitchListTile(
-            title: const Text('Delivery Staff'),
-            subtitle: Text(
-              'Active delivery personnel',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            value: showDeliveryStaff,
-            onChanged: (value) {
-              setState(() {
-                showDeliveryStaff = value;
-                _applyFilters();
-              });
-            },
-            activeColor: theme.primary,
-          ),
+  //         SwitchListTile(
+  //           title: const Text('Delivery Staff'),
+  //           subtitle: Text(
+  //             'Active delivery personnel',
+  //             style: Theme.of(context).textTheme.bodySmall,
+  //           ),
+  //           value: showDeliveryStaff,
+  //           onChanged: (value) {
+  //             setState(() {
+  //               showDeliveryStaff = value;
+  //               _applyFilters();
+  //             });
+  //           },
+  //           activeColor: theme.primary,
+  //         ),
 
-          SwitchListTile(
-            title: const Text('Customers'),
-            subtitle: Text(
-              'Customer locations (Coming soon)',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            value: showCustomers,
-            onChanged: null,
-            activeColor: theme.primary,
-          ),
+  //         SwitchListTile(
+  //           title: const Text('Customers'),
+  //           subtitle: Text(
+  //             'Customer locations (Coming soon)',
+  //             style: Theme.of(context).textTheme.bodySmall,
+  //           ),
+  //           value: showCustomers,
+  //           onChanged: null,
+  //           activeColor: theme.primary,
+  //         ),
 
-          SwitchListTile(
-            title: const Text('Restaurants'),
-            subtitle: Text(
-              'Partner Restaurants (Coming soon)',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            value: showRestaurants,
-            onChanged: null,
-            activeColor: theme.primary,
-          ),
+  //         SwitchListTile(
+  //           title: const Text('Restaurants'),
+  //           subtitle: Text(
+  //             'Partner Restaurants (Coming soon)',
+  //             style: Theme.of(context).textTheme.bodySmall,
+  //           ),
+  //           value: showRestaurants,
+  //           onChanged: null,
+  //           activeColor: theme.primary,
+  //         ),
 
-          const SizedBox(height: 20),
+  //         const SizedBox(height: 20),
 
-          // Action Buttons
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : _loadDeliveryPersonnel,
-              icon: _isLoading 
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.surface,
-                    ),
-                  )
-                : const Icon(Icons.refresh),
-              label: Text(_isLoading ? 'Refreshing...' : 'Refresh Map'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _filteredPersonnel.isEmpty ? null : _centerMapOnPersonnel,
-              icon: const Icon(Icons.center_focus_strong),
-              label: const Text('Center on Staff'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //         // Action Buttons
+  //         SizedBox(
+  //           width: double.infinity,
+  //           child: ElevatedButton.icon(
+  //             onPressed: _isLoading ? null : _loadDeliveryPersonnel,
+  //             icon: _isLoading 
+  //               ? SizedBox(
+  //                   width: 16,
+  //                   height: 16,
+  //                   child: CircularProgressIndicator(
+  //                     strokeWidth: 2,
+  //                     color: theme.surface,
+  //                   ),
+  //                 )
+  //               : const Icon(Icons.refresh),
+  //             label: Text(_isLoading ? 'Refreshing...' : 'Refresh Map'),
+  //             style: ElevatedButton.styleFrom(
+  //               padding: const EdgeInsets.symmetric(vertical: 12),
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(height: 10),
+  //         SizedBox(
+  //           width: double.infinity,
+  //           child: OutlinedButton.icon(
+  //             onPressed: _filteredPersonnel.isEmpty ? null : _centerMapOnPersonnel,
+  //             icon: const Icon(Icons.center_focus_strong),
+  //             label: const Text('Center on Staff'),
+  //             style: OutlinedButton.styleFrom(
+  //               padding: const EdgeInsets.symmetric(vertical: 12),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildMapContainer(AppThemeColors theme, bool isDesktop, bool isTablet) {
     return Container(

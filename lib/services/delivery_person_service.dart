@@ -349,54 +349,46 @@ class DeliveryPersonnelService {
   /// Fetch delivery personnel with location data for map display
   Future<List<DeliveryPersonnel>> fetchDeliveryPersonnelWithLocation() async {
     try {
-      // Use ST_AsGeoJSON to convert geography to coordinates
-      final response = await _supabase
-          .from('delivery_personnel')
-          .select('''
-            *,
-            lat:ST_Y(current_location::geometry),
-            lng:ST_X(current_location::geometry)
-          ''')
-          .not('current_location', 'is', null)
-          .order('updated_at', ascending: false);
+      // Use RPC to get coordinates — ST_Y/ST_X in select() doesn't work in PostgREST
+      final response = await _supabase.rpc('get_delivery_personnel_with_location');
 
-      print('🔍 Raw response: ${response.length} records'); // DEBUG
-      
+      print('🔍 Raw response: ${response.length} records');
+
       final personnel = (response as List)
           .map((json) {
-            print('🔍 Record: ${json['name']}, lat=${json['lat']}, lng=${json['lng']}'); // DEBUG
+            print('🔍 Record: ${json['full_name']}, lat=${json['lat']}, lng=${json['lng']}');
             return DeliveryPersonnel.fromJson(json);
           })
           .where((person) => person.hasLocation)
           .toList();
-      
-      print('🔍 Filtered personnel: ${personnel.length} with valid locations'); // DEBUG
+
+      print('🔍 Filtered personnel: ${personnel.length} with valid locations');
       return personnel;
     } catch (e) {
       print('❌ Error fetching delivery personnel with location: $e');
       return [];
     }
   }
+    
   /// Subscribe to real-time location updates
   RealtimeChannel subscribeToLocationUpdates(
     Function(DeliveryPersonnel) onInsert,
-    Function(DeliveryPersonnel) onUpdate,
+    Function(String) onUpdate, 
     Function(String) onDelete,
   ) {
     final channel = _supabase
         .channel('delivery_personnel_locations')
         .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
+          event: PostgresChangeEvent.update,
           schema: 'public',
           table: 'delivery_personnel',
           callback: (payload) {
             try {
-              final person = DeliveryPersonnel.fromJson(payload.newRecord);
-              if (person.hasLocation) {
-                onInsert(person);
-              }
+              // Don't parse payload.newRecord — geography comes as raw WKB hex
+              // Signal the caller to refetch instead
+              onUpdate(payload.newRecord['user_id']);
             } catch (e) {
-              print('Error processing insert: $e');
+              print('Error processing update: $e');
             }
           },
         )
@@ -408,7 +400,7 @@ class DeliveryPersonnelService {
             try {
               final person = DeliveryPersonnel.fromJson(payload.newRecord);
               if (person.hasLocation) {
-                onUpdate(person);
+                onUpdate(person.userId);
               }
             } catch (e) {
               print('Error processing update: $e');

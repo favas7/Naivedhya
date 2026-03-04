@@ -57,32 +57,35 @@ class DeliveryPersonnel {
 
   
   factory DeliveryPersonnel.fromJson(Map<String, dynamic> json) {
-    // Handle PostGIS geography type for current_location
-    double? lat;
-    double? lng;
-    
-    if (json['current_location'] != null) {
-      final location = json['current_location'];
-      
-      if (location is Map && location['coordinates'] != null) {
-        // GeoJSON format: {"type": "Point", "coordinates": [lng, lat]}
-        final coords = location['coordinates'] as List;
-        lng = (coords[0] as num).toDouble();
-        lat = (coords[1] as num).toDouble();
-      } else if (location is String) {
-        // WKT format: "POINT(lng lat)" or "(lng,lat)"
-        final pointRegex = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)');
-        final match = pointRegex.firstMatch(location);
-        if (match != null) {
-          lng = double.tryParse(match.group(1)!);
-          lat = double.tryParse(match.group(2)!);
-        } else {
-          // Try coordinate format: "(lng,lat)"
-          final coordRegex = RegExp(r'\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)');
-          final coordMatch = coordRegex.firstMatch(location);
-          if (coordMatch != null) {
-            lng = double.tryParse(coordMatch.group(1)!);
-            lat = double.tryParse(coordMatch.group(2)!);
+    // RPC response provides lat/lng directly — check these first
+    double? lat = (json['lat'] as num?)?.toDouble();
+    double? lng = (json['lng'] as num?)?.toDouble();
+
+    // Fall back to current_location parsing only if lat/lng not present
+    if (lat == null || lng == null) {
+      if (json['current_location'] != null) {
+        final location = json['current_location'];
+
+        if (location is Map && location['coordinates'] != null) {
+          // GeoJSON format: {"type": "Point", "coordinates": [lng, lat]}
+          final coords = location['coordinates'] as List;
+          lng = (coords[0] as num).toDouble();
+          lat = (coords[1] as num).toDouble();
+        } else if (location is String) {
+          // WKT format: "POINT(lng lat)"
+          final pointRegex = RegExp(r'POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)');
+          final match = pointRegex.firstMatch(location);
+          if (match != null) {
+            lng = double.tryParse(match.group(1)!);
+            lat = double.tryParse(match.group(2)!);
+          } else {
+            // Try coordinate format: "(lng,lat)"
+            final coordRegex = RegExp(r'\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)');
+            final coordMatch = coordRegex.firstMatch(location);
+            if (coordMatch != null) {
+              lng = double.tryParse(coordMatch.group(1)!);
+              lat = double.tryParse(coordMatch.group(2)!);
+            }
           }
         }
       }
@@ -116,7 +119,6 @@ class DeliveryPersonnel {
       totalDeliveries: (json['total_deliveries'] as num?)?.toInt() ?? 0,
     );
   }
-
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {
       'user_id': userId,
