@@ -373,22 +373,20 @@ class DeliveryPersonnelService {
   /// Subscribe to real-time location updates
   RealtimeChannel subscribeToLocationUpdates(
     Function(DeliveryPersonnel) onInsert,
-    Function(String) onUpdate, 
+    Function(String) onUpdate,
     Function(String) onDelete,
   ) {
     final channel = _supabase
         .channel('delivery_personnel_locations')
         .onPostgresChanges(
-          event: PostgresChangeEvent.update,
+          event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'delivery_personnel',
           callback: (payload) {
             try {
-              // Don't parse payload.newRecord — geography comes as raw WKB hex
-              // Signal the caller to refetch instead
-              onUpdate(payload.newRecord['user_id']);
+              onInsert(DeliveryPersonnel.fromJson(payload.newRecord));
             } catch (e) {
-              print('Error processing update: $e');
+              print('Error processing insert: $e');
             }
           },
         )
@@ -398,10 +396,7 @@ class DeliveryPersonnelService {
           table: 'delivery_personnel',
           callback: (payload) {
             try {
-              final person = DeliveryPersonnel.fromJson(payload.newRecord);
-              if (person.hasLocation) {
-                onUpdate(person.userId);
-              }
+              onUpdate(payload.newRecord['user_id'] as String);
             } catch (e) {
               print('Error processing update: $e');
             }
@@ -413,8 +408,7 @@ class DeliveryPersonnelService {
           table: 'delivery_personnel',
           callback: (payload) {
             try {
-              final userId = payload.oldRecord['user_id'] as String;
-              onDelete(userId);
+              onDelete(payload.oldRecord['user_id'] as String);
             } catch (e) {
               print('Error processing delete: $e');
             }
@@ -424,7 +418,7 @@ class DeliveryPersonnelService {
 
     return channel;
   }
-
+  
   /// Unsubscribe from real-time updates
   Future<void> unsubscribeFromLocationUpdates(RealtimeChannel channel) async {
     try {

@@ -20,6 +20,7 @@ class _MapScreenState extends State<MapScreen> {
   bool showDeliveryStaff = true;
   bool showCustomers = true;
   bool showRestaurants = true;
+  Timer? _debounceTimer;
 
   // Map variables
   GoogleMapController? _mapController;
@@ -126,10 +127,13 @@ class _MapScreenState extends State<MapScreen> {
         }
       },
       (updatedUserId) {
-        // Update: full refetch so ST_Y/ST_X resolves coordinates correctly
-        if (mounted) {
-          _loadDeliveryPersonnel();
-        }
+        // Debounce: wait 2s after last update before refetching
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            _loadDeliveryPersonnel();
+          }
+        });
       },
       (userId) {
         // Delete: can handle locally, no location parsing needed
@@ -213,7 +217,7 @@ class _MapScreenState extends State<MapScreen> {
             _detailRow('Email', person.email, theme),
             _detailRow('Vehicle', person.vehicleInfo, theme),
             _detailRow('Active Orders', person.activeOrdersCount.toString(), theme),
-            _detailRow('Rating', '${person.rating.toStringAsFixed(1)} ⭐', theme),
+            // _detailRow('Rating', '${person.rating.toStringAsFixed(1)} ⭐', theme),
             _detailRow('Total Deliveries', person.totalDeliveries.toString(), theme),
           ],
         ),
@@ -308,8 +312,8 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
-    _mapController?.dispose();
     _refreshTimer?.cancel();
+    _debounceTimer?.cancel();
     if (_realtimeChannel != null) {
       _personnelService.unsubscribeFromLocationUpdates(_realtimeChannel!);
     }
@@ -352,7 +356,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Real-time tracking of delivery staff, customers, and Restaurants',
+                  'Real-time tracking of delivery staff locations across the city. Monitor active deliveries and staff availability at a glance.',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: theme.textSecondary,
                       ),
@@ -549,10 +553,11 @@ class _MapScreenState extends State<MapScreen> {
               ),
               markers: _markers,
               onMapCreated: (controller) {
+                if (!mounted) return;
                 _mapController = controller;
                 if (_filteredPersonnel.isNotEmpty) {
                   Future.delayed(const Duration(milliseconds: 500), () {
-                    _centerMapOnPersonnel();
+                    if (mounted) _centerMapOnPersonnel();
                   });
                 }
               },

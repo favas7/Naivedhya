@@ -218,8 +218,8 @@ class OrderService {
         if (order.customerId != null) {
           customerProfile = await _fetchCustomerProfile(order.customerId!);
           if (customerProfile != null) {
-            print('✅ [OrderService] Customer found: ${customerProfile['full_name']}');
-          }
+        print('✅ [OrderService] Customer found: ${customerProfile['name']}'); // ✅          }
+        }
         } else {
           print('ℹ️ [OrderService] No customer_id (POS order)');
         }
@@ -454,16 +454,15 @@ Future<Map<String, dynamic>?> _fetchCustomerProfile(String customerId) async {
   try {
     final response = await _supabase
         .from('profiles')
-        .select('id, full_name, phone, email, avatar_url')
+        .select('id, name, phone, email')
         .eq('id', customerId)
-        .single();
-    return response;
+        .maybeSingle();
+    return response; // ✅ actually return it
   } catch (e) {
     print('⚠️ [OrderService] Could not fetch customer profile $customerId: $e');
     return null;
   }
 }
-
 
   /// Get all available order statuses
   static const List<String> orderStatuses = [

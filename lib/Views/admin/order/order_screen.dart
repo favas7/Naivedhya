@@ -23,6 +23,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   late ScrollController _scrollController;
   bool _isGridView = false;
+  OrderProvider? _orderProvider; // ✅ Add this
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _orderProvider = context.read<OrderProvider>(); // ✅ Cache here, safe to call
+  }
 
 
     @override
@@ -67,7 +75,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
-    context.read<OrderProvider>().unsubscribeFromOrderUpdates();
+    _orderProvider?.unsubscribeFromOrderUpdates();
     super.dispose();
   }
 

@@ -366,10 +366,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 0:
         return const DashboardScreen();
       case 1:
-        return const MapScreen();
+        return const KeyedSubtree(
+          key: ValueKey('map_screen'),
+          child: MapScreen(),
+        );
       case 2:
-        return const OrdersScreen();
-      // case 3: return MenuScreen(hotelId: _hotelId);  // ❌ COMMENTED OUT - Menu Management
+        return const KeyedSubtree(
+          key: ValueKey('orders_screen'),
+          child: OrdersScreen(),
+        );
       case 3:
         return const DeliveryStaffScreen();
       case 4:
