@@ -382,7 +382,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       // case 5: return const PaymentScreen();          // ❌ COMMENTED OUT - Payments
       // case 6: return const AnalyticsScreen();        // ❌ COMMENTED OUT - Analytics
       case 5:
-        return const POSIntegrationScreen();
+        return const PetpoojaProviderScreen();
       case 6:
         return const NotificationScreen();
       case 7:
