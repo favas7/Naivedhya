@@ -180,25 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Account Stats Section
-            _buildSectionHeader('Account Stats', Icons.analytics, colors, isDesktop),
-            Card(
-              elevation: 1,
-              color: colors.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: EdgeInsets.all(isDesktop ? 20 : 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatCard('Orders', '150', Icons.shopping_bag, colors),
-                    _buildStatCard('Revenue', '₹45,000', Icons.currency_rupee, colors),
-                    _buildStatCard('Customers', '89', Icons.people, colors),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: isDesktop ? 32 : 24),
           ],
         ),
       ),
@@ -241,16 +222,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, AppThemeColors colors) {
-    return Column(
-      children: [
-        Icon(icon, color: colors.primary, size: 32),
-        const SizedBox(height: 8),
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.textPrimary)),
-        Text(label, style: TextStyle(fontSize: 14, color: colors.textSecondary)),
-      ],
-    );
-  }
 
   Widget _buildSectionHeader(String title, IconData icon, AppThemeColors colors, bool isDesktop) {
     return Row(

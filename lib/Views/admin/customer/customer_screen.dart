@@ -200,17 +200,21 @@ class _CustomerScreenState extends State<CustomerScreen> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      body: Column(
-        children: [
-          _buildHeader(colors),
-          Expanded(
-            child: _isLoading ? _buildLoading(colors) : _buildContent(colors),
-          ),
-        ],
-      ),
+      body: _isLoading
+          ? _buildLoading(colors)
+          : CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeader(colors)),
+                if (_filteredCustomers.isEmpty)
+                  SliverFillRemaining(child: _buildEmptyState(colors))
+                else ...[
+                  SliverToBoxAdapter(child: _buildStatsBar(colors)),
+                  _isGridView ? _buildSliverGrid() : _buildSliverList(),
+                ],
+              ],
+            ),
     );
   }
-
   Widget _buildHeader(AppThemeColors colors) {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -410,26 +414,6 @@ class _CustomerScreenState extends State<CustomerScreen> {
     );
   }
 
-  Widget _buildContent(AppThemeColors colors) {
-    if (_filteredCustomers.isEmpty) {
-      return _buildEmptyState(colors);
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadCustomers,
-      color: colors.primary,
-      child: Column(
-        children: [
-          _buildStatsBar(colors),
-          Expanded(
-            child: _isGridView
-                ? _buildGridView()
-                : _buildListView(),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildStatsBar(AppThemeColors colors) {
     final activeCustomers =
@@ -546,47 +530,52 @@ class _CustomerScreenState extends State<CustomerScreen> {
       ),
     );
   }
-
-  Widget _buildGridView() {
-    return GridView.builder(
+    Widget _buildSliverGrid() {
+    return SliverPadding(
       padding: const EdgeInsets.all(24),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 400,
-        crossAxisSpacing: 24,
-        mainAxisSpacing: 24,
-
+      sliver: SliverGrid(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final customer = _filteredCustomers[index];
+            return CustomerCard(
+              customer: customer,
+              onEdit: () => _showEditDialog(customer),
+              onDelete: () => _deleteCustomer(customer),
+              onViewDetails: () => _showCustomerDetails(customer),
+              onViewOrders: () => _showOrdersDialog(customer),
+            );
+          },
+          childCount: _filteredCustomers.length,
+        ),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 400,
+          crossAxisSpacing: 24,
+          mainAxisSpacing: 24,
+        ),
       ),
-      itemCount: _filteredCustomers.length,
-      itemBuilder: (context, index) {
-        final customer = _filteredCustomers[index];
-        return CustomerCard(
-          customer: customer,
-          onEdit: () => _showEditDialog(customer),
-          onDelete: () => _deleteCustomer(customer),
-          onViewDetails: () => _showCustomerDetails(customer),
-          onViewOrders: () => _showOrdersDialog(customer),
-        );
-      },
     );
   }
-
-  Widget _buildListView() {
-    return ListView.builder(
+  Widget _buildSliverList() {
+    return SliverPadding(
       padding: const EdgeInsets.all(24),
-      itemCount: _filteredCustomers.length,
-      itemBuilder: (context, index) {
-        final customer = _filteredCustomers[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: CustomerCard(
-            customer: customer,
-            onEdit: () => _showEditDialog(customer),
-            onDelete: () => _deleteCustomer(customer),
-            onViewDetails: () => _showCustomerDetails(customer),
-            onViewOrders: () => _showOrdersDialog(customer),
-          ),
-        );
-      },
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final customer = _filteredCustomers[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: CustomerCard(
+                customer: customer,
+                onEdit: () => _showEditDialog(customer),
+                onDelete: () => _deleteCustomer(customer),
+                onViewDetails: () => _showCustomerDetails(customer),
+                onViewOrders: () => _showOrdersDialog(customer),
+              ),
+            );
+          },
+          childCount: _filteredCustomers.length,
+        ),
+      ),
     );
   }
 }

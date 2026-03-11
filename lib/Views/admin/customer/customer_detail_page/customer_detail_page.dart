@@ -459,7 +459,6 @@ class _CustomerDetailPageState extends State<CustomerDetailPage>
         tabs: const [
           Tab(text: 'Details', icon: Icon(Icons.person)),
           Tab(text: 'Orders', icon: Icon(Icons.shopping_bag)),
-          Tab(text: 'Payments', icon: Icon(Icons.payment)),
         ],
       ),
     );

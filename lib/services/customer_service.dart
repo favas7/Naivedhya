@@ -13,7 +13,7 @@ class CustomerService {
       final response = await _supabase
           .from('profiles')
           .select()
-          .eq('usertype', 'user') // Filter to only show users, not admins
+          .eq('usertype', 'customer') // Filter to only show users, not admins
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -32,7 +32,7 @@ class CustomerService {
       final response = await _supabase
           .from('profiles')
           .select()
-          .eq('usertype', 'user') // Filter to only show users, not admins
+          .eq('usertype', 'customer') // Filter to only show users, not admins
           .or('name.ilike.%$query%,email.ilike.%$query%,phone.ilike.%$query%')
           .limit(10)
           .order('created_at', ascending: false);
@@ -98,7 +98,7 @@ class CustomerService {
           .from('profiles')
           .select()
           .eq('id', customerId)
-          .eq('usertype', 'user') // Ensure we only get users, not admins
+          .eq('usertype', 'customer') // Ensure we only get users, not admins
           .maybeSingle();
 
       if (response == null) return null;
@@ -118,7 +118,7 @@ class CustomerService {
           .from('profiles')
           .update(updates)
           .eq('id', id)
-          .eq('usertype', 'user') // Ensure we only update users, not admins
+          .eq('usertype', 'customer') // Ensure we only update users, not admins
           .select()
           .single();
 
@@ -135,7 +135,7 @@ class CustomerService {
           .from('profiles')
           .delete()
           .eq('id', id)
-          .eq('usertype', 'user'); // Ensure we only delete users, not admins
+          .eq('usertype', 'customer'); // Ensure we only delete users, not admins
     } catch (e) {
       throw Exception('Failed to delete customer: $e');
     }
@@ -147,7 +147,7 @@ class CustomerService {
       final response = await _supabase
           .from('profiles')
           .select()
-          .eq('usertype', 'user') // Filter to only show users, not admins
+          .eq('usertype', 'customer') // Filter to only show users, not admins
           .gt('pendingpayments', 0)
           .order('pendingpayments', ascending: false);
 
@@ -165,7 +165,7 @@ class CustomerService {
       final response = await _supabase
           .from('profiles')
           .select('pendingpayments, orderhistory')
-          .eq('usertype', 'user'); // Only calculate stats for users, not admins
+          .eq('usertype', 'customer'); // Only calculate stats for users, not admins
 
       int totalCustomers = response.length;
       double totalPendingPayments = 0;
@@ -216,7 +216,7 @@ class CustomerService {
       final response = await _supabase
           .from('profiles')
           .select()
-          .eq('usertype', 'admin')
+          .eq('usertype', 'customer')
           .order('created_at', ascending: false);
 
       return (response as List)
