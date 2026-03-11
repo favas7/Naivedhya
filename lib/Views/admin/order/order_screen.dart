@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:naivedhya/Views/admin/order/widget/assign_delivery_partner_dialog.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_card.dart';
+import 'package:naivedhya/Views/admin/order/widget/order_detail_dialog.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_list_item.dart';
 import 'package:naivedhya/Views/admin/order/widget/compact_stats_card.dart';
 import 'package:naivedhya/Views/admin/order/widget/order_filter_chip.dart';
@@ -199,35 +200,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 onPressed: () => context.read<OrderProvider>().refreshOrders(),
                 tooltip: 'Refresh Orders',
               ),
-              // IconButton(
-              //   icon: const Icon(Icons.download),
-              //   onPressed: () {
-              //     ScaffoldMessenger.of(context).showSnackBar(
-              //       const SnackBar(content: Text('Export feature coming soon')),
-              //     );
-              //   },
-              //   tooltip: 'Export',
-              // ),
-              const SizedBox(width: 8),
-              // ElevatedButton.icon(
-              //   onPressed: () {
-              //     // Navigator.push(
-              //     //   context,
-              //     //   MaterialPageRoute(
-              //     //     builder: (context) => const OrderScreen(),
-              //     //   ),
-              //     // );
-              //   },
-              //   icon: const Icon(Icons.add),
-              //   label: const Text('Add Order'),
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: AppTheme.primary,
-              //     foregroundColor: Colors.white,
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(8),
-              //     ),
-              //   ),
-              // ),
+
             ],
           ),
         ],
@@ -314,51 +287,6 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
             themeColors: themeColors,
           ),
           const SizedBox(height: 16),
-
-          // // ✅ ORDER TYPE FILTERS (PRIMARY)
-          // Text(
-          //   'Order Type',
-          //   style: TextStyle(
-          //     fontSize: 13,
-          //     fontWeight: FontWeight.w600,
-          //     color: themeColors.textSecondary,
-          //   ),
-          // ),
-          // const SizedBox(height: 8),
-          // SingleChildScrollView(
-          //   scrollDirection: Axis.horizontal,
-          //   child: Row(
-          //     children: [
-          //       OrderFilterChip(
-          //         label: 'All Orders',
-          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == null,
-          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter(null),
-          //         themeColors: themeColors,
-          //       ),
-          //       OrderFilterChip(
-          //         label: '🚚 Delivery',
-          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Delivery',
-          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Delivery'),
-          //         themeColors: themeColors,
-          //         color: AppTheme.warning,
-          //       ),
-          //       OrderFilterChip(
-          //         label: '🍽️ Dine In',
-          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Dine In',
-          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Dine In'),
-          //         themeColors: themeColors,
-          //       ),
-          //       OrderFilterChip(
-          //         label: '📦 Takeaway',
-          //         isSelected: context.watch<OrderProvider>().selectedOrderTypeFilter == 'Takeaway',
-          //         onTap: () => context.read<OrderProvider>().setOrderTypeFilter('Takeaway'),
-          //         themeColors: themeColors,
-          //       ),
-          //     ],
-          //   ),
-          // ),
-
-          // const SizedBox(height: 16),
 
           // STATUS FILTERS (SECONDARY)
           Text(
@@ -567,12 +495,19 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
           resolvedAddress: resolvedAddress,
           themeColors: themeColors,
           onTap: () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) => OrderDetailScreen(order: order),
-            //   ),
-            // );
+                    {
+                      showDialog(
+                        context: context,
+                        builder: (_) => OrderDetailDialog(
+                          order: order,
+                          restaurant: restaurant,
+                          customer: customer,
+                          resolvedAddress: resolvedAddress,
+                          themeColors: themeColors,
+                        ),
+                      );
+
+                              };
           },
           onShowMenu: _showOrderMenu,
         );
@@ -691,37 +626,6 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
                   child: const Text('View'),
                 ),
               ),
-            
-            // ListTile(
-            //   leading: Icon(Icons.edit, color: AppTheme.primary),
-            //   title: const Text('Edit Order'),
-            //   onTap: () {
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => EditOrderScreen(orderId: order.orderId),
-            //       ),
-            //     );
-            //   },
-            // ),
-            ListTile(
-              leading: Icon(Icons.message, color: AppTheme.info),
-              title: const Text('Send Message'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Message feature coming soon')),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete, color: AppTheme.error),
-              title: const Text('Cancel Order'),
-              onTap: () {
-                Navigator.pop(context);
-                _showCancelDialog(context, order);
-              },
-            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -729,29 +633,4 @@ Widget _buildCompactStatsSection(AppThemeColors themeColors) {
     );
   }
   
-    void _showCancelDialog(BuildContext context, Order order) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Order'),
-        content: const Text('Are you sure you want to cancel this order?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () {
-              context.read<OrderProvider>().updateOrderStatus(order.orderId, 'cancelled');
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Order cancelled successfully')),
-              );
-            },
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
 }
